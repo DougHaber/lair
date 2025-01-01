@@ -1,4 +1,4 @@
-# LAIR - Lousy AI Resources
+# LAIR
 
 ## Overview
 
