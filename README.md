@@ -127,14 +127,14 @@ Images can be attached by enclosing file names within angle brackets, such as `<
 
 In the following example, an image of two alpacas at a birthday party is provided:
 
-```python
+```
 crocodile> In just a few words, describe what these alpacas are up to. <~/alpaca.png>
 Alpaca birthday party with cupcakes.
 ```
 
 By default, filenames are not provided, but that behavior can be changed via `model.provide_attachment_filenames`.
 
-```python
+```
 # Enable providing filenames
 crocodile> /set model.provide_attachment_filenames true
 
@@ -157,7 +157,7 @@ These descriptions are really bad. This was using `llama3.2-vision:11b`, which g
 Lower `session.max_history_length` to `1`, provides only the prompt and the current message with no history. This can be useful in cases where a conversation history is not desirable, or where one-off requests are being sent.
 
 
-```python
+```
 crocodile> /prompt Respond with a snappy one-liner joke about the provided topic
 crocodile> /set session.max_history_length 1
 crocodile> Python programming language
@@ -169,7 +169,7 @@ Why did Java go to the doctor? Because it had a class problem!
 ```
 #### Model Settings
 
-```python
+```
 crocodile> /prompt Respond with a one-liner joke about the provided topic
 crocodile> /set session.max_history_length 1
 
@@ -197,7 +197,7 @@ The `/save` and `/load` commands can be used for session management.
 
 The `/save` command creates a session file, including the current active configuration, chat history, and some other active state, such as the system prompt.
 
-```python
+```
 # Start a new session
 crocodile> In 3 words or less, what is the meaning of life?
 Find purpose and joy.
@@ -215,7 +215,7 @@ Session written to /home/doug/meaning_of_life.session
 
 The session that can be loaded with the `/load` command:
 
-```python
+```
 $ lair chat
 Welcome to the LAIR
 crocodile> /load meaning_of_life.session
