@@ -1,0 +1,12 @@
+default_mode: 'openai'
+
+openai:
+  _description: 'Chat with OpenAI models'
+  model.name: 'gpt-4o'
+  session.type: 'openai_chat'
+
+openai_local:
+  _description: 'Local OpenAI compatible endpoint'
+  model.name: 'llama3.2:3b'
+  openai.api_base: 'http://localhost:11434/v1'
+  session.type: 'openai_chat'

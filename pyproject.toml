@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "lair"
+version = "0.1.0-pre"
+description = "Lousy AI Resources"
+license = "BSD-3-Clause"
+authors = ["Doug Haber <dhaber@leshylabs.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^1.56.2"
+rich = "^13.6.0"
+prompt-toolkit = "^3.0.40"
+jsonschema = "^4.19.2"
+torch = "^2.5.1"
+diffusers = "^0.31.0"
+transformers = "^4.45.1"
+compel = "^2.0.3"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+lair = "lair.cli.run:start"

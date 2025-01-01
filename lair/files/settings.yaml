@@ -1,0 +1,95 @@
+# These are the default settings
+# - All settings are defined here
+# - The types used in this file are enforced
+
+_description: Default settings
+
+# Show the bottom toolbar in the chat interface
+chat.enable_toolbar: true
+# The history file to use in the chat interface for readline history.
+# When set to an empty string, there is no history file
+chat.history_file: '~/.lair/history'
+# When enabled, pressing enter will move to the new line instead of submitting. To submit, us M-RET (escape enter.)
+chat.multiline_input: false
+
+# These are from the original lair. The open source lair currently has
+# no database and so these have no effect.
+# NOTE: These are only here as convenience for me, since I use both the old and new lair. -dhaber
+database.host: 'localhost'
+database.host_environment_variable: 'DB_HOST'
+database.name: 'lair'
+database.name_environment_variable: 'DB_NAME'
+# WARNING: database.password is discouraged except for local test
+# All settings are stored in saved session files, including passwords.
+database.password: 'lair'
+database.password_environment_variable: 'DB_PASS'
+database.port: 5432
+database.port_environment_variable: 'DB_PORT'
+database.user: 'lair'
+database.user_environment_variable: 'DB_USER'
+
+# This used to toggle langchain verbose mode.
+# It currently might not do anything, and will likely be removed in the future.
+debug.verbose: false
+
+# When displaying fields in the toolbar, use this style for enabled flags
+chat.flag_off_style: 'bg:#006f6f'
+# When displaying fields in the toolbar, use this style for disabled flags
+chat.flag_on_style: 'bg:#00f1f1 bold'
+# The prompt to use in the chat interface. This is a python f-string
+# Provided variables: flags, mode, model
+chat.prompt_template: '<style fg="#8f8f8f">{mode}</style>> '
+# Toolbar style when a notification is being shown
+chat.toolbar_flash_style: 'fg:#101080 bg:#f1f1f1'
+# The default toolbar style
+chat.toolbar_style: 'fg:#1f1f1f bg:#f1f1f1'
+# This toolbar template to use. This is a python f-string and should not have any newlines.
+# The YAML ">-" keeps it folded so that there are no newlines.
+# Provided variables: flags, mode, model
+chat.toolbar_template: >-
+  [{flags}]
+  <style bg="#6f6f6f">mode</style> <b>{mode}</b> 
+  <style bg="#6f6f6f">model</style> <b>{model}</b>
+# The Default toolbar text style
+chat.toolbar_text_style: 'fg:#1f1f1f bg:#f1f1f1'
+# Whether or not output should word-wrap, or be written as-is
+
+# The max_completion_tokens to set in the API request, for endpoints that honor this
+model.max_tokens: __null_int
+# The name of the model to run, used by the API
+model.name: ''
+# The temperature to set in the API request
+model.temperature: __null_float
+# When enabled and attachments are used, the filenames are provided to the model.
+model.provide_attachment_filenames: false
+
+# The base URL to use when talking to OpenAI compatible APIs.  Set as null
+# for the default official OpenAI URL. For ollama, use something like http://localhost:11434/v1
+openai.api_base: __null_str
+# Environment variable name containing API key to use against OpenAI compatible APIs.
+openai.api_key_environment_variable: 'OPENAI_API_KEY'
+openai.max_retries: 2,
+openai.timeout: 65,
+
+# How many entries to store in the history file.
+session.max_history_length: __null_int
+# The type of session to use
+# Currently, open openai_chat is supported.
+#   openai_chat: Use an OpenAI Compatible API
+session.type: 'openai_chat'
+
+style.error: 'red'
+style.human_output: ''
+style.human_output_heading: 'bold white'
+style.llm_output: 'dim cyan'
+style.llm_output_heading: 'bold cyan'
+# When showing responses, this determines if they are rendered as markdown or shown as text
+style.render_markdown: true
+# When displaying errors, this determines whether rich tracebacks or standard ones should be shown
+style.render_rich_tracebacks: false
+style.system_message: 'dim magenta'
+style.system_message_heading: 'bold magenta'
+style.tool_message: 'dim green'
+style.tool_message_heading: 'bold green'
+style.user_error: 'dim red'
+style.word_wrap: true

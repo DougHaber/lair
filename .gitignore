@@ -1,0 +1,19 @@
+# Emacs temp files:
+*~
+\#*\#
+\.#*
+
+# Python virtualenv
+venv
+.venv
+
+# Python files
+*.pyc
+__pycache__
+MANIFEST
+build
+dist
+
+# Misc
+.env
+*.session
