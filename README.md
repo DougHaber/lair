@@ -342,7 +342,7 @@ fractal_thanksgiving.png: A fractal image of a turkey on Thanksgiving.
 stained_glass.png: A stained glass window depicting a floral pattern.
 ```
 
-Unfortunately, at a lot of models currently get confused when provided multiple images. That should improve in the future, but for now, a safer (and slower) alternative might be to run the command once per image. This also makes the prior example possible without providing the filenames, which definitely impacted the previous response. For example:
+Unfortunately, models may get confused when provided multiple images. That should improve in the future, but for now, a safer (and slower) alternative might be to run the command once per image. This also makes the prior example possible without providing the filenames, which definitely impacted the previous response. For example:
 
 ```bash
 $ for file in *.png; do
