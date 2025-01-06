@@ -68,7 +68,8 @@ class ComfyCaller():
     async def workflow_generate_image(self, *, model_name, prompt,
                                       negative_prompt='',
                                       output_width=512, output_height=512, batch_size=1,
-                                      seed=None, steps=20, cfg=8, sampler='euler', scheduler='normal', denoise=1.0):
+                                      seed=None, steps=20, cfg=8,
+                                      sampler='euler', scheduler='normal', denoise=1.0):
         async with Workflow():
             model, clip, vae = CheckpointLoaderSimple(model_name)
             positive_conditioning = CLIPTextEncode(prompt, clip)

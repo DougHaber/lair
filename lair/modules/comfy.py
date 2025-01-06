@@ -55,7 +55,7 @@ class Comfy():
         command_parser.add_argument('-x', '--seed', default=None, type=int,
                                     help='The seed to use when sampling  (default is random)')
 
-    def _save_output(self, results, filename):
+    def _save_output(self, results, filename, start_index, single_output=False):
         """
         Saves a list of outputs to disk.
 
@@ -64,8 +64,11 @@ class Comfy():
             filename (str): Base filename to save the outputs. If multiple outputs, filenames
                             will increment as {basename}{x}.{extension}.
         """
-        if len(results) == 1:  # Save single output with provided filename
+        output_files = []
+
+        if single_output:  # Save single output with provided filename
             results[0].save(filename)
+            output_files.append(filename)
         else:
             if not os.path.splitext(filename)[1]:
                 raise ValueError("Filename must have an extension (e.g., 'output.png').")
@@ -73,10 +76,13 @@ class Comfy():
             basename, extension = os.path.splitext(filename)
 
             # Save multiple outputs with incrementing filenames
-            for i, output in enumerate(results):
+            for i, output in enumerate(results, start=start_index):
                 padded_index = f"{i:06d}"  # Zero-padded to 6 digits
                 output_filename = f"{basename}{padded_index}{extension}"
                 output.save(output_filename)
+                output_files.append(output_filename)
+
+        logger.debug(f"saved: {', '.join(output_files)}")
 
     def run(self, arguments):
         comfy = lair.comfy_caller.ComfyCaller(arguments.comfy_url)
@@ -85,18 +91,20 @@ class Comfy():
             'image': comfy.workflow_generate_image,
         }
 
-        output = []
-        for _ in range(0, arguments.repeat):
-            handler = commands[arguments.comfy_command]
+        # Create a dictionary containing only the supported arguments for the handler
+        handler = commands[arguments.comfy_command]
+        arguments_dict = vars(arguments)
+        parameters = inspect.signature(handler).parameters
+        function_arguments = {key: value for key,
+                              value in arguments_dict.items() if key in parameters}
 
-            # Call the handler, passing in only the existing parameters
-            arguments_dict = vars(arguments)
-            parameters = inspect.signature(handler).parameters
-            function_arguments = {key: value for key,
-                                  value in arguments_dict.items() if key in parameters}
+        # True when there is only a single file output
+        single_output = (arguments.repeat == 1 and arguments.batch_size == 1)
 
-            if 'seed' in function_arguments and function_arguments['seed'] is None:
+        for i in range(0, arguments.repeat):
+            if 'seed' in function_arguments and arguments_dict['seed'] is None:
                 function_arguments['seed'] = random.randint(0, 2**31 - 1)
-            output.extend(handler(**function_arguments))
 
-        self._save_output(output, arguments.output_file)
+            output = handler(**function_arguments)
+            self._save_output(output, arguments.output_file, i * len(output),
+                              single_output=single_output)
