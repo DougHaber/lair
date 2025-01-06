@@ -13,6 +13,7 @@
 
 import asyncio
 import contextlib
+import functools
 import importlib
 import io
 
@@ -51,18 +52,19 @@ class ComfyCaller():
             'generate_image': self.workflow_generate_image
         }
 
-    def run_workflow(self, workflow, *args, **kwargs):
-        '''Run a workflow, blocking into it completes and returning its output'''
-        workflow_handler = self.workflows.get(workflow)
+    @staticmethod
+    def workflow_caller(func):
+        '''Decorator for running an async workflow in a blocking manner.'''
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Use contextlib to try to prevent the noise output of comfy_script.
+            # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                # Run the async function in a blocking manner
+                return asyncio.run(func(*args, **kwargs))
+        return wrapper
 
-        if not workflow_handler:
-            raise ValueError("Undefined workflow: %s" % workflow)
-
-        # Use contextlib to try to prevent the noise output of comfy_script.
-        # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            return asyncio.run(workflow_handler(*args, **kwargs))
-
+    @workflow_caller
     async def workflow_generate_image(self, *, model_name, prompt,
                                       negative_prompt='',
                                       output_width=512, output_height=512, batch_size=1,
