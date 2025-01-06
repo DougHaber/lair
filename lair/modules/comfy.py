@@ -32,6 +32,8 @@ class Comfy():
                                     help='Classifier-free guidance scale')
         command_parser.add_argument('-H', '--output-height', default=512, type=int,
                                     help='Output file height  (default is 512)')
+        command_parser.add_argument('-l', '--lora', nargs='*', type=str, dest='loras',
+                                    help='Loras to use. Can be specified multiple times. Processed in order.  (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})')
         command_parser.add_argument('-m', '--model-name', required=True, type=str,
                                     help='Name of the image diffusion model  (required)')
         command_parser.add_argument('-n', '--negative-prompt', default='', type=str,

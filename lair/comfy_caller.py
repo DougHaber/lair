@@ -17,6 +17,8 @@ import functools
 import importlib
 import io
 
+from lair.logging import logger  # noqa
+
 
 # This never executes, but it helps trick code editors into accepting the symbols.
 # Without this, all the symbols would be highlighted as being unknown.
@@ -64,14 +66,34 @@ class ComfyCaller():
                 return asyncio.run(func(*args, **kwargs))
         return wrapper
 
+    def _parse_lora_argument(self, lora):
+        parts = lora.split(':', maxsplit=3)
+
+        lora_model = parts.pop(0)
+        weight = 1.0
+        clip_weight = 1.0
+
+        # If there are more values, override the defaults for their components
+        if parts:
+            weight = float(parts.pop(0))
+        if parts:
+            clip_weight = float(parts.pop(0))
+
+        return lora_model, weight, clip_weight
+
     @workflow_caller
     async def workflow_generate_image(self, *, model_name, prompt,
-                                      negative_prompt='',
+                                      loras=None, negative_prompt='',
                                       output_width=512, output_height=512, batch_size=1,
                                       seed=None, steps=20, cfg=8,
                                       sampler='euler', scheduler='normal', denoise=1.0):
         async with Workflow():
             model, clip, vae = CheckpointLoaderSimple(model_name)
+
+            for lora in loras or []:
+                lora_model, weight, clip_weight = self._parse_lora_argument(lora)
+                model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+
             positive_conditioning = CLIPTextEncode(prompt, clip)
             negative_conditioning = CLIPTextEncode(negative_prompt, clip)
             latent = EmptyLatentImage(output_width, output_height, batch_size)
