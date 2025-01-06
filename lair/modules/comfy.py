@@ -1,5 +1,6 @@
 import inspect
 import os
+import random
 
 import lair
 import lair.cli
@@ -21,6 +22,9 @@ class Comfy():
     def __init__(self, parser):
         sub_parser = parser.add_subparsers(dest='comfy_command', required=True)
 
+        self._add_argparse_image(sub_parser)
+
+    def _add_argparse_image(self, sub_parser):
         command_parser = sub_parser.add_parser('image', help='Basic image creation workflow')
         command_parser.add_argument('-b', '--batch-size', default=1, type=int,
                                     help='Batch size  (default is 1)')
@@ -38,8 +42,8 @@ class Comfy():
                                     help='File to write output to. When batch size is greater than 1, the basename becomes a prefix.  (default is output.png)')
         command_parser.add_argument('-p', '--prompt', required=True, type=str,
                                     help='Prompt to use for image diffusion  (required)')
-        command_parser.add_argument('-r', '--seed', default=None, type=int,
-                                    help='The seed to use when sampling  (default is random)')
+        command_parser.add_argument('-r', '--repeat', default=1, type=int,
+                                    help='Number of times to repeat. Total images generated is number of repeats times batch size.  (default is 1)')
         command_parser.add_argument('-s', '--sampler', default='euler', type=str,
                                     help='Sampler to use for image diffusion  (default is euler)')
         command_parser.add_argument('-S', '--scheduler', default='normal', type=str,
@@ -48,6 +52,8 @@ class Comfy():
                                     help='URL for the Comfy UI API  (default is http://127.0.0.1:8188)')
         command_parser.add_argument('-w', '--output-width', default=512, type=int,
                                     help='Output file width  (default is 512)')
+        command_parser.add_argument('-x', '--seed', default=None, type=int,
+                                    help='The seed to use when sampling  (default is random)')
 
     def _save_output(self, results, filename):
         """
@@ -67,7 +73,7 @@ class Comfy():
             basename, extension = os.path.splitext(filename)
 
             # Save multiple outputs with incrementing filenames
-            for i, output in enumerate(results, start=1):
+            for i, output in enumerate(results):
                 padded_index = f"{i:06d}"  # Zero-padded to 6 digits
                 output_filename = f"{basename}{padded_index}{extension}"
                 output.save(output_filename)
@@ -79,13 +85,18 @@ class Comfy():
             'image': comfy.workflow_generate_image,
         }
 
-        handler = commands[arguments.comfy_command]
+        output = []
+        for _ in range(0, arguments.repeat):
+            handler = commands[arguments.comfy_command]
 
-        # Call the handler, passing in only the existing parameters
-        arguments_dict = vars(arguments)
-        parameters = inspect.signature(handler).parameters
-        function_arguments = {key: value for key,
-                              value in arguments_dict.items() if key in parameters}
-        output = handler(**function_arguments)
+            # Call the handler, passing in only the existing parameters
+            arguments_dict = vars(arguments)
+            parameters = inspect.signature(handler).parameters
+            function_arguments = {key: value for key,
+                                  value in arguments_dict.items() if key in parameters}
+
+            if 'seed' in function_arguments and function_arguments['seed'] is None:
+                function_arguments['seed'] = random.randint(0, 2**31 - 1)
+            output.extend(handler(**function_arguments))
 
         self._save_output(output, arguments.output_file)
