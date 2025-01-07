@@ -187,6 +187,7 @@ class ComfyCaller():
             'clip_name': lair.config.get('comfy.ltxv_i2v.clip_name', 't5xxl_fp16.safetensors'),
             'denoise': lair.config.get('comfy.ltxv_i2v.denoise', 1.0),
             'florence_model_name': lair.config.get('comfy.ltxv_i2v.florence_model_name', 'microsoft/Florence-2-base'),
+            'florence_seed': lair.config.get('comfy.ltxv_i2v.florence_seed', 42),
             'frame_rate': lair.config.get('comfy.ltxv_i2v.frame_rate', 25),
             'image': None,
             'image_resize_height': lair.config.get('comfy.ltxv_i2v.image_resize_height', 800),
@@ -221,11 +222,14 @@ class ComfyCaller():
                                  florence_model_name='microsoft/Florence-2-base', negative_prompt='',
                                  auto_prompt_suffix='', auto_prompt_extra='', prompt=None, cfg=3.0, stg=1.0,
                                  stg_rescale=0.75, sampler='euler ancestral', scheduler='normal', steps=25,
-                                 pingpong=False, output_format='video/h264-mp4', denoise=1.0, seed=None):
+                                 pingpong=False, output_format='video/h264-mp4', denoise=1.0, seed=None,
+                                 florence_seed=None):
         if image is None:
             raise ValueError("ltxv-i2v: Image must not be None")
         if seed is None:
             seed = random.randint(0, 2**31 - 1)
+        if florence_seed is None:
+            florence_seed = random.randint(0, 2**31 - 1)
 
         with Workflow():
             noise = RandomNoise(seed)
@@ -240,7 +244,7 @@ class ComfyCaller():
             if prompt is None:  # If a prompt is not provided, automatically generate one
                 florence2_model = DownloadAndLoadFlorence2Model(florence_model_name, 'fp16', 'sdpa', None)
                 _, _, prompt, _ = Florence2Run(image, florence2_model, '', 'more_detailed_caption', True, False, 256,
-                                               3, True, '', 42)  # TODO: Configitize seed
+                                               3, True, '', florence_seed)
                 prompt = StringReplaceMtb(prompt, 'image', 'video')
                 prompt = StringReplaceMtb(prompt, 'photo', 'video')
                 prompt = StringReplaceMtb(prompt, 'painting', 'video')

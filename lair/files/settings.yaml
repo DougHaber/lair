@@ -45,6 +45,9 @@ comfy.ltxv_i2v.cfg: 3.0
 comfy.ltxv_i2v.clip_name: 't5xxl_fp16.safetensors'
 comfy.ltxv_i2v.denoise: 1.0
 comfy.ltxv_i2v.florence_model_name: 'microsoft/Florence-2-base'
+# The seed for the florence model to use. If set to null, it will be randomly selected each cycle. Setting to null
+# effectively disables caching of Florence results.
+comfy.ltxv_i2v.florence_seed: 42
 comfy.ltxv_i2v.frame_rate: 25
 comfy.ltxv_i2v.image_resize_height: 800
 comfy.ltxv_i2v.image_resize_width: 800
@@ -68,6 +71,9 @@ comfy.ltxv_i2v.scheduler: 'normal'
 comfy.ltxv_i2v.seed: null
 comfy.ltxv_i2v.steps: 25
 comfy.ltxv_i2v.stg: 1.0
+# This is the block_indices parameter from the LTXV Apply STG node
+# The Comfy LTXV I2V workflow recommends 11, 14, and 19.
+# The value is a string and can contain multiple comma delimited items.
 comfy.ltxv_i2v.stg_block_indices: '14'
 comfy.ltxv_i2v.stg_rescale: 0.75
 
