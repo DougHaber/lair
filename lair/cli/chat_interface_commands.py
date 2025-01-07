@@ -143,7 +143,7 @@ class ChatInterfaceCommands():
             lair.config.change_mode(arguments[0])
             old_session = self.chat_session
             self.chat_session = lair.sessions.get_session(
-                lair.config.active.get('session.type'),
+                lair.config.get('session.type'),
                 history=old_session.history)
         else:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /mode [name?]")

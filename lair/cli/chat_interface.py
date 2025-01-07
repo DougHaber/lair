@@ -23,7 +23,7 @@ class ChatInterface(ChatInterfaceCommands):
 
     def __init__(self):
         self.chat_session = lair.sessions.get_session(
-            lair.config.active.get('session.type'))
+            lair.config.get('session.type'))
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
 
@@ -43,7 +43,7 @@ class ChatInterface(ChatInterfaceCommands):
         self._init_prompt_session()
 
     def _init_history(self):
-        history_file = lair.config.active.get('chat.history_file')
+        history_file = lair.config.get('chat.history_file')
         if history_file:
             self.history = prompt_toolkit.history.FileHistory(os.path.expanduser(history_file))
         else:

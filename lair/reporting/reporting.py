@@ -39,7 +39,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
     def print_rich(self, *args, **kwargs):
         """Print using rich."""
-        kwargs['no_wrap'] = not lair.config.active.get('style.word_wrap')
+        kwargs['no_wrap'] = not lair.config.get('style.word_wrap')
 
         self.console.print(*args, **kwargs)
 
@@ -101,11 +101,11 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         self.print_rich(table)
 
     def table_system(self, *args, **kwargs):
-        kwargs['style'] = lair.config.active.get('style.system_message')
+        kwargs['style'] = lair.config.get('style.system_message')
         self.table(*args, **kwargs)
 
     def exception(self):
-        if lair.config.active.get('style.render_rich_tracebacks'):
+        if lair.config.get('style.render_rich_tracebacks'):
             self.print_rich(rich.traceback.Traceback())
         else:
             traceback.print_exception(*sys.exc_info())
@@ -121,44 +121,44 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             self.exception()
 
         self.print_rich(self.plain('ERROR: ' + message),
-                        style=lair.config.active.get('style.error'))
+                        style=lair.config.get('style.error'))
 
     def tool_message(self, message, show_heading=False):
         if show_heading:
             self.console.print('TOOL',
-                               style=lair.config.active.get('style.tool_message_heading'))
+                               style=lair.config.get('style.tool_message_heading'))
 
         self.print_rich(self.plain(message),
                         markup=False,
-                        style=lair.config.active.get('style.tool_message'))
+                        style=lair.config.get('style.tool_message'))
 
     def user_error(self, message):
         self.print_rich(self.plain(message),
-                        style=lair.config.active.get('style.user_error'))
+                        style=lair.config.get('style.user_error'))
 
     def system_message(self, message, show_heading=False):
         if show_heading:
             self.print_rich('SYSTEM',
-                            style=lair.config.active.get('style.system_message_heading'))
+                            style=lair.config.get('style.system_message_heading'))
 
-        if lair.config.active.get('style.render_markdown'):
+        if lair.config.get('style.render_markdown'):
             self.print_rich(rich.markdown.Markdown(message),
-                            style=lair.config.active.get('style.system_message'))
+                            style=lair.config.get('style.system_message'))
         else:
             self.print_rich(self.plain(message),
-                            style=lair.config.active.get('style.system_message'))
+                            style=lair.config.get('style.system_message'))
 
     def llm_output(self, message, show_heading=False):
         if show_heading:
             self.print_rich('AI',
-                            style=lair.config.active.get('style.llm_output_heading'))
+                            style=lair.config.get('style.llm_output_heading'))
 
-        if lair.config.active.get('style.render_markdown'):
+        if lair.config.get('style.render_markdown'):
             self.print_rich(rich.markdown.Markdown(message),
-                            style=lair.config.active.get('style.llm_output'))
+                            style=lair.config.get('style.llm_output'))
         else:
             self.print_rich(self.plain(message),
-                            style=lair.config.active.get('style.llm_output'))
+                            style=lair.config.get('style.llm_output'))
 
     def format_content_list(self, content_list):
         message_parts = ['[multipart message]']
@@ -182,8 +182,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         if message['role'] == 'user':
             self.print_rich('HUMAN',
-                            style=lair.config.active.get('style.human_output_heading'))
-            self.print_rich(content, style=lair.config.active.get('style.human_output'))
+                            style=lair.config.get('style.human_output_heading'))
+            self.print_rich(content, style=lair.config.get('style.human_output'))
         elif message['role'] == 'assistant':
             self.llm_output(content, show_heading=True)
         elif message['role'] == 'system':

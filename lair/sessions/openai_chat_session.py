@@ -28,14 +28,14 @@ class OpenAIChatSession():
         lair.events.subscribe('config.update', lambda d: self.recreate_openai_client())
 
     def _get_openai_client(self):
-        logger.debug("Create OpenAI() client: base_url=%s" % lair.config.active.get('openai.api_base'))
+        logger.debug("Create OpenAI() client: base_url=%s" % lair.config.get('openai.api_base'))
         self.openai = openai.OpenAI(
-            api_key=os.environ.get(lair.config.active.get('openai.api_key_environment_variable')) or 'none',
-            base_url=lair.config.active.get('openai.api_base'),
+            api_key=os.environ.get(lair.config.get('openai.api_key_environment_variable')) or 'none',
+            base_url=lair.config.get('openai.api_base'),
         )
 
     def recreate_openai_client(self):
-        self.model_name = self.fixed_model_name or lair.config.active.get('model.name')
+        self.model_name = self.fixed_model_name or lair.config.get('model.name')
         logger.debug("OpenAIChatSession(): Rebuild model (model_name=%s)" % self.model_name)
         self._get_openai_client()
 
@@ -62,8 +62,8 @@ class OpenAIChatSession():
         answer = self.openai.chat.completions.create(
             messages=messages,
             model=self.model_name,
-            temperature=lair.config.active.get('model.temperature'),
-            max_completion_tokens=lair.config.active.get('model.max_tokens'),
+            temperature=lair.config.get('model.temperature'),
+            max_completion_tokens=lair.config.get('model.max_tokens'),
         )
 
         return answer.choices[0].message.content.strip()

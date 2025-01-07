@@ -106,7 +106,7 @@ def filenames_to_data_url_messages(filenames):
             raise ValueError(f"Could not determine MIME type for file: {filename}")
 
         with open(filename, 'rb') as fd:
-            if lair.config.active.get('model.provide_attachment_filenames'):
+            if lair.config.get('model.provide_attachment_filenames'):
                 messages.append({"type": "text", "text": f"Attached File: {filename} ({mime_type})"})
 
             base64_str = base64.b64encode(fd.read()).decode('utf-8')
