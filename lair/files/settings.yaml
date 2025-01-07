@@ -12,6 +12,65 @@ chat.history_file: '~/.lair/history'
 # When enabled, pressing enter will move to the new line instead of submitting. To submit, us M-RET (escape enter.)
 chat.multiline_input: false
 
+# The address of the Comfy UI API to use
+comfy.url: http://127.0.0.1:8188
+# If using comfy over HTTPS, this allows for disabling certificate verification
+comfy.verify_ssl: true
+
+comfy.image.batch_size: 1
+comfy.image.cfg: 8.0
+comfy.image.denoise: 1.0
+comfy.image.model_name: v1-5-pruned-emaonly.safetensors
+comfy.image.negative_prompt: ''
+# When writing out files the output_file is used as is when there is a single output.  If there are multiple outputs the
+# basename becomes a prefix and a zero-padded counter is added. (For example output000000.png)
+comfy.image.output_file: 'output.png'
+comfy.image.output_height: 512
+comfy.image.output_width: 512
+comfy.image.prompt: ''
+comfy.image.sampler: 'euler'
+comfy.image.scheduler: 'normal'
+comfy.image.seed: __null_int
+comfy.image.steps: 20
+
+# ltxv_i2v: LTXV Image to Video
+#   Based on https://github.com/Lightricks/LTX-Video
+# If a prompt isn't provided via comfy.ltxv_i2v.prompt, then one is automatically generated. The Florence model takes an
+# image and generates a prompt for it. It's generated prompt is followed by the "extra" value, which probably should end
+# in a period.  That is then followed by the suffix. This style is taken from the LTXV Image to Video Comfy workflow.
+comfy.ltxv_i2v.auto_prompt_extra: ''
+comfy.ltxv_i2v.auto_prompt_suffix: ' The scene is captured in real-life footage.'
+comfy.ltxv_i2v.batch_size: 1
+comfy.ltxv_i2v.cfg: 3.0
+comfy.ltxv_i2v.clip_name: 't5xxl_fp16.safetensors'
+comfy.ltxv_i2v.denoise: 1.0
+comfy.ltxv_i2v.florence_model_name: 'microsoft/Florence-2-base'
+comfy.ltxv_i2v.frame_rate: 25
+comfy.ltxv_i2v.image_resize_height: 800
+comfy.ltxv_i2v.image_resize_width: 800
+comfy.ltxv_i2v.model_name: 'ltx-video-2b-v0.9.1.safetensors'
+comfy.ltxv_i2v.negative_prompt: 'worst quality, inconsistent motion, blurry, jittery, distorted, watermarks'
+# Number of frames to generate  (Must be N * 8 + 1)
+comfy.ltxv_i2v.num_frames: 105
+# When writing out files the output_file is used as is when there is a single output.  If there are multiple outputs the
+# basename becomes a prefix and a zero-padded counter is added. (For example output000000.mp4)
+comfy.ltxv_i2v.output_file: 'output.mp4'
+# Format to generate an output file in. This is from VHS Video Combine.
+# Examples: image/gif, image/webp, video/h264-mp4, video/webm
+comfy.ltxv_i2v.output_format: 'video/h264-mp4'
+# When true, VHS Video Combine exports the video followed by it in reverse to create a loop
+comfy.ltxv_i2v.pingpong: false
+# When a prompt is provided this exact prompt is used instead of the auto-generated prompt.
+# Auto prompt and florence settings are ignored when this is used.
+comfy.ltxv_i2v.prompt: null
+comfy.ltxv_i2v.sampler: 'euler_ancestral'
+comfy.ltxv_i2v.scheduler: 'normal'
+comfy.ltxv_i2v.seed: null
+comfy.ltxv_i2v.steps: 25
+comfy.ltxv_i2v.stg: 1.0
+comfy.ltxv_i2v.stg_block_indices: '14'
+comfy.ltxv_i2v.stg_rescale: 0.75
+
 # These are from the original lair. The open source lair currently has
 # no database and so these have no effect.
 # NOTE: These are only here as convenience for me, since I use both the old and new lair. -dhaber
