@@ -72,6 +72,10 @@ def get_log_level():
     return logging.getLevelName(logger.level)
 
 
+def is_debug_enabled():
+    return logger.getEffectiveLevel() <= logging.DEBUG
+
+
 def strip_escape_codes(content):
     return re.sub(r'\033\[\d+(;\d+)*m', '', content)
 

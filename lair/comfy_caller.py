@@ -141,10 +141,13 @@ class ComfyCaller():
         handler = self.workflows[workflow]
         kwargs = {**self.defaults[workflow], **kwargs}
 
-        # Use contextlib to try to prevent the noise output of comfy_script.
-        # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        if lair.util.is_debug_enabled():
             return asyncio.run(handler(*args, **kwargs))
+        else:
+            # With debug disabled, try to quiet things down.
+            # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                return asyncio.run(handler(*args, **kwargs))
 
     async def _workflow_image(self, *, model_name, prompt,
                               loras=None, negative_prompt='',
