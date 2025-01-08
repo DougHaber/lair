@@ -13,18 +13,18 @@
   - [Chat - Command Line Chat Interface](#chat---command-line-chat-interface)
     - [Commands](#commands)
     - [Shortcut Keys](#shortcut-keys)
-    - [Examples](#examples)
+    - [Chat Examples](#chat-examples)
       - [Attaching images](#attaching-images)
       - [One-off Chat](#one-off-chat)
     - [Model Settings](#model-settings)
     - [Session Management](#session-management)
   - [Comfy](#comfy)
     - [Workflows and Dependencies](#workflows-and-dependencies)
-    - [Examples](#examples-1)
+    - [Comfy Usage & Examples](#comfy-usage--examples)
       - [image - Image Generation](#image---image-generation)
       - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
   - [Util](#util)
-    - [Examples](#examples-2)
+    - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
       - [Providing Input Content](#providing-input-content)
       - [Attaching Images](#attaching-images)
@@ -155,7 +155,7 @@ In addition to all the standard GNU-readline style key combinations, the followi
 
 The verbose output options might be removed in the future. They were originally around langchain's verbose flag, but since langchain is no longer used by Lair, their may not be much or any impact from enabling it.
 
-#### Examples
+#### Chat Examples
 
 ##### Attaching images
 
@@ -310,7 +310,7 @@ The Comfy Server must have all required nodes installed. The [ComfyUI Manager](h
   </tbody>
 </table>
 
-#### Usage & Examples
+#### Comfy Usage & Examples
 
 The `comfy` command provides distinct sub-commands for each supported workflow, each with its own flags and configuration options.
 
@@ -322,7 +322,7 @@ The `comfy` module has two primary configuration options:
 
 Modes can be defined in the `~/.lair/config.yaml` file to store settings tailored to different use cases. Modes simplify workflows; for instance, `lair -M {mode} comfy ...` will apply the settings associated with the specified mode.
 
-All available flags can be listed by running `lair comfy {mode} --help`. Comprehensive settings are documented [here](lair/files/settings.yaml).
+All available flags can be listed by running `lair comfy {mode} --help`. Available settings are documented [here](lair/files/settings.yaml).
 
 Some flags are shared across workflows:
 - **`--repeat` / `-r`**: Runs the workflow a specified number of times. This differs from batch size; batches are processed simultaneously on the GPU, while repeats are executed sequentially. For image generation, the total number of images produced equals the batch size multiplied by the number of repeats.
@@ -375,7 +375,7 @@ lair -M sdxl comfy image -p 'A cyber-duck, flying through the matrix'
 
 ![Cyberduck](docs/images/cyberduck.jpg "Cyberduck example - downscaled")
 
-Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, the ones in the settings are ignored. Loras can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`.  If `weight` or `clip_weight` are not included, they default of `1.0` is used.
+Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, the ones in the settings are ignored. Loras can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`. If `weight` or `clip_weight` are not included, they default of `1.0` is used.
 
 On the command line `--lora` / `-l` may be provided multiple times. The LoRAs are used in the order provided.
 
@@ -396,7 +396,7 @@ To specify LoRAs within the settings, they should be written one LoRA definition
 
 ![Pixel Art Robot Dance Party](docs/images/pixel-robot-party.jpg "Robot Dance Party example - downscaled")
 
-The `--batch-size` / `-b` and `--repeat` / `-r` options can be used to generate multiple images. The batch size determines how many images are generated on the GPU at a time, and the repeats are independent calls to the workflow.  The total number of images is the batch size times the number of repeats. For example, the command below will generate 8 JPG images named `monster000000.jpg` through `monster000007.jpg`:
+The `--batch-size` / `-b` and `--repeat` / `-r` options can be used to generate multiple images. The batch size determines how many images are generated on the GPU at a time, and the repeats are independent calls to the workflow. The total number of images is the batch size times the number of repeats. For example, the command below will generate 8 JPG images named `monster000000.jpg` through `monster000007.jpg`:
 
 ```bash
 lair -M sdxl comfy image \
@@ -419,14 +419,54 @@ convert monster-grid-full.jpg -resize 640x monster-grid.jpg
 
 ##### ltxv-i2v - LTX Video Image to Video
 
+The `ltxv-i2v` workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow. It takes an image as input and then produces a video using LTX Video. The LTX Video model requires detailed prompts to work well. This workflow can automatically generate prompts with using Microsoft's Florence2 model.
 
+When using automatic prompts, the prompt consists of 3 parts. First, there is the automatic prompt generated by Florence2. After that, extra details could be added via `--auto-prompt-extra` / `-a`. Finally, there is a suffix, which can be set via `--auto-prompt-suffix` / `-A`. The default suffix is `The scene is captured in real-life footage.`. That might change in the future. The ComfyUI-LTXVideo prompt uses that as a default, but also recommends `The scene appears to be from a movie or TV show` and `The scene is computer-generated imagery` where appropriate.
 
+If a prompt is provided via `--prompt` / `-p` or the `comfy.ltxv_i2v.prompt` setting, then that prompt will be used as-is, and no automatic prompt generation will be performed.
+
+The most basic usage requires only an image to be provided.
+
+```bash
+lair comfy ltxv-i2v --image example.png
+```
+
+This will build a prompt automatically based on `example.png` and then generate an `output.mp4` file.
+
+This workflow has many parameters. Run `lair comfy ltxv-i2v --help` to see all available flags. Configuration options can be found [here](lair/files/settings.yaml), and modes can be created to automatically use different settings.
+
+It is recommended to use the workflow manually in ComfyUI to see the available settings. The workflow has various recommendations on what values to use. For example, the number of frames must be `N * 8 + 1`, such as 105 or 121.
+
+The seed for the Florence model is fixed by default. It could be made random by setting `comfy.ltxv_i2v.florence_seed` to null, but doing so makes every repeat calls for the same image repeat the inference through the Florence model. If a fixed value is used, the cached results are used, speeding up the workflow.
+
+The output formats can be set through `--output-format` / `-O` or `comfy.ltxv_i2v.output_format`. By default, `video/h264-mp4` is used, but any option available in the Comfy VHS Video Combine node should work. Some others include `image/gif`, `image/webp`, and `video/webm`. When changing the output format, the output file's extension should also be updated to match.
+
+This workflow combines really nicely with the `image` workflow. For example, using bash:
+
+```bash
+# Generate 8 monster JPGs
+# See the image documentation above for the example `sdxl` mode's configuration.
+lair -M sdxl comfy image \
+    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
+    --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
+	--repeat 8 \
+	--output-file 'monster.jpg'
+
+# For each JPG file, create a video file
+for filename in monster*.jpg; do
+    lair comfy ltxv-i2v -i "${filename}" -o "${filename%.jpg}.mp4"
+done
+```
+
+A similar technique was used to create this:
+
+[![YouTube Video](https://img.youtube.com/vi/XdiFj1qDIqk/0.jpg)](https://youtube.com/shorts/XdiFj1qDIqk)
 
 ### Util
 
 The Util command provides a simple interface for calling LLMs. It is intended for one shot tasks and for making LLMs easy to work with in the shell and scripts.
 
-#### Examples
+#### Util Examples
 
 ##### Generating Content
 
