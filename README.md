@@ -458,9 +458,7 @@ for filename in monster*.jpg; do
 done
 ```
 
-A similar technique was used to create this:
-
-[![YouTube Video](https://img.youtube.com/vi/XdiFj1qDIqk/0.jpg)](https://youtube.com/shorts/XdiFj1qDIqk)
+A similar technique was used to create [this video](https://youtube.com/shorts/XdiFj1qDIqk).
 
 ### Util
 
