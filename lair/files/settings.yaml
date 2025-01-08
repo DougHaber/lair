@@ -20,6 +20,7 @@ comfy.verify_ssl: true
 comfy.image.batch_size: 1
 comfy.image.cfg: 8.0
 comfy.image.denoise: 1.0
+comfy.image.loras: __null_str
 comfy.image.model_name: v1-5-pruned-emaonly.safetensors
 comfy.image.negative_prompt: ''
 # When writing out files the output_file is used as is when there is a single output.  If there are multiple outputs the

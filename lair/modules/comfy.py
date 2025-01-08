@@ -40,7 +40,7 @@ class Comfy():
         command_parser.add_argument('-H', '--output-height', type=int,
                                     help=f'Output file height (default: {defaults["output_height"]})')
         command_parser.add_argument('-l', '--lora', nargs='*', type=str, dest='loras',
-                                    help='Loras to use. Can be specified multiple times. Processed in order. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})')
+                                    help='Loras to use. Can be specified multiple times. These are processed in order. Command line usage overrides LoRAs in the settings. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})')
         command_parser.add_argument('-m', '--model-name', type=str,
                                     help=f'Name of the image diffusion model (default: {defaults["model_name"]})')
         command_parser.add_argument('-n', '--negative-prompt', type=str,

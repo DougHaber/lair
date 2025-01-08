@@ -89,7 +89,7 @@ class ComfyCaller():
     def _get_defaults_image(self):
         loras = lair.config.get('comfy.image.loras')
         if loras is not None:
-            loras = loras.split('\n')
+            loras = [lora for lora in loras.split('\n') if lora]
 
         return {
             'batch_size': lair.config.get('comfy.image.batch_size', 1),
