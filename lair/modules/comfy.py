@@ -99,7 +99,7 @@ class Comfy():
         command_parser.add_argument('-O', '--output-format', type=str,
                                     help=f'Output format to use (default: {defaults["output_format"]}')
         command_parser.add_argument('-p', '--prompt', type=str,
-                                    help=f'Prompt to use. When not provided, prompts are automatically generated and auto-prompt flags are used to extend.')
+                                    help='Prompt to use. When not provided, prompts are automatically generated and auto-prompt flags are used to extend.')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
         command_parser.add_argument('-s', '--sampler', type=str,
