@@ -42,7 +42,7 @@ class Util():
         parser.add_argument('-C', '--content-file', type=str,
                             help='Filename containing content use')
         parser.add_argument('-F', '--include-filenames', action='store_true', default=None,
-                            help='Provide filenames of attached files (via model.provide_attachment_filename, default=%s)' % lair.config.active.get('model.provide_attachment_filenames'))
+                            help='Provide filenames of attached files (via model.provide_attachment_filename, default=%s)' % lair.config.get('model.provide_attachment_filenames'))
         parser.add_argument('-i', '--instructions', type=str,
                             help='Instructions for the request')
         parser.add_argument('-I', '--instructions-file', type=str,
@@ -114,7 +114,7 @@ class Util():
 
     def run(self, arguments):
         chat_session = lair.sessions.get_session(
-            session_type=lair.config.active.get('session.type'),
+            session_type=lair.config.get('session.type'),
             system_prompt=arguments.instructions,
         )
 

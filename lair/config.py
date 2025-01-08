@@ -105,7 +105,14 @@ class Configuration():
 
         lair.events.fire('config.update')
 
-    def set(self, key, value: str, *, force=False, mode=None, no_event=False):
+    def get(self, *args, **kwargs):
+        mode = kwargs.get('mode', self.active_mode)
+        if 'mode' in kwargs:  # Delete the mode override so it isn't passed to the real get()
+            del kwargs['mode']
+
+        return self.modes[mode].get(*args, **kwargs)
+
+    def set(self, key, value, *, force=False, mode=None, no_event=False):
         """Only allow setting to the existing type."""
         mode = mode or self.active_mode
         if force is True:

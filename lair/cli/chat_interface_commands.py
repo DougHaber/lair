@@ -72,7 +72,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /debug takes no arguments")
         else:
-            if lair.util.get_log_level() == 'DEBUG':
+            if lair.util.is_debug_enabled():
                 logger.setLevel('INFO')
                 self.reporting.system_message('Debugging disabled')
             else:
@@ -143,7 +143,7 @@ class ChatInterfaceCommands():
             lair.config.change_mode(arguments[0])
             old_session = self.chat_session
             self.chat_session = lair.sessions.get_session(
-                lair.config.active.get('session.type'),
+                lair.config.get('session.type'),
                 history=old_session.history)
         else:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /mode [name?]")

@@ -37,7 +37,7 @@ class ChatHistory():
         self.history = []
 
     def _truncate(self):
-        max_length = lair.config.active.get('session.max_history_length')
+        max_length = lair.config.get('session.max_history_length')
         if max_length == 0:
             logger.warn("Invalid value for session.max_history_length. Must be greater than 0. Setting to 1")
             max_length = 1
