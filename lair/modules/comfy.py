@@ -44,13 +44,13 @@ class Comfy():
         command_parser.add_argument('-m', '--model-name', type=str,
                                     help=f'Name of the image diffusion model (default: {defaults["model_name"]})')
         command_parser.add_argument('-n', '--negative-prompt', type=str,
-                                    help=f'Negative prompt to use for image diffusion (default: {defaults["negative_prompt"]})')
+                                    help='Negative prompt to use for image diffusion')
         command_parser.add_argument('-N', '--steps', type=int,
                                     help=f'Number of sampling steps (default: {defaults["steps"]})')
         command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
                                     help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
         command_parser.add_argument('-p', '--prompt', type=str,
-                                    help=f'Prompt to use for image diffusion (default: {defaults["prompt"]})')
+                                    help='Prompt to use for image diffusion')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
         command_parser.add_argument('-s', '--sampler', type=str,
@@ -91,7 +91,7 @@ class Comfy():
         command_parser.add_argument('-m', '--model-name', type=str,
                                     help=f'Name of the image diffusion model (default: {defaults["model_name"]})')
         command_parser.add_argument('-n', '--negative-prompt', type=str,
-                                    help=f'Negative prompt to use for image diffusion (default: {defaults["negative_prompt"]})')
+                                    help='Negative prompt to use for image diffusion')
         command_parser.add_argument('-N', '--steps', type=int,
                                     help=f'Number of sampling steps (default: {defaults["steps"]})')
         command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
