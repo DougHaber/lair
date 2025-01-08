@@ -173,5 +173,8 @@ class Comfy():
 
         for i in range(0, arguments.repeat):
             output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+
+            if output is None or len(output) == 0:
+                raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
             self._save_output(output, arguments.output_file, i * len(output),
                               single_output=single_output)
