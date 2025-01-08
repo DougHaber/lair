@@ -102,7 +102,7 @@ def start():
         sys.exit("Received interrupt.  Exiting")
     except Exception as error:
         logger.error("An error has occurred: (%s)\n" % error)
-        if 'arguments' not in locals() or lair.util.get_log_level() == 'DEBUG':
+        if 'arguments' not in locals() or lair.util.is_debug_enabled():
             traceback.print_exc()
             sys.exit(1)
         else:

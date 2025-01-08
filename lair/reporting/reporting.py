@@ -117,7 +117,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
           - true - Always show
           - false - Never show
         '''
-        if show_exception or show_exception is None and lair.util.get_log_level() == 'DEBUG':
+        if show_exception or show_exception is None and lair.util.is_debug_enabled():
             self.exception()
 
         self.print_rich(self.plain('ERROR: ' + message),

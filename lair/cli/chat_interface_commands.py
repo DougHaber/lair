@@ -72,7 +72,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /debug takes no arguments")
         else:
-            if lair.util.get_log_level() == 'DEBUG':
+            if lair.util.is_debug_enabled():
                 logger.setLevel('INFO')
                 self.reporting.system_message('Debugging disabled')
             else:
