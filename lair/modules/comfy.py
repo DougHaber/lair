@@ -48,7 +48,7 @@ class Comfy():
         command_parser.add_argument('-N', '--steps', type=int,
                                     help=f'Number of sampling steps (default: {defaults["steps"]})')
         command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
-                                    help=f'File to write output to. When batch size is greater than 1, the basename becomes a prefix. (default: {output_file})')
+                                    help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
         command_parser.add_argument('-p', '--prompt', type=str,
                                     help=f'Prompt to use for image diffusion (default: {defaults["prompt"]})')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
@@ -70,6 +70,10 @@ class Comfy():
         output_file = lair.config.get('comfy.ltxv_i2v.output_file')
         comfy_url = lair.config.get('comfy.url')
 
+        command_parser.add_argument('-a', '--auto-prompt-extra', type=str,
+                                    help='Content to add after the generated prompt (When --prompt is provided, this is ignored)')
+        command_parser.add_argument('-A', '--auto-prompt-suffix', type=str,
+                                    help='Content to add to the end of the generated prompt (When --prompt is provided, this is ignored)')
         command_parser.add_argument('-b', '--batch-size', type=int,
                                     help='Batch size (default: 1)')
         command_parser.add_argument('-c', '--cfg', type=float,
@@ -91,9 +95,11 @@ class Comfy():
         command_parser.add_argument('-N', '--steps', type=int,
                                     help=f'Number of sampling steps (default: {defaults["steps"]})')
         command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
-                                    help=f'File to write output to. When batch size is greater than 1, the basename becomes a prefix. (default: {output_file})')
+                                    help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
         command_parser.add_argument('-O', '--output-format', type=str,
                                     help=f'Output format to use (default: {defaults["output_format"]}')
+        command_parser.add_argument('-p', '--prompt', type=str,
+                                    help=f'Prompt to use. When not provided, prompts are automatically generated and auto-prompt flags are used to extend.')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
         command_parser.add_argument('-s', '--sampler', type=str,
