@@ -303,10 +303,12 @@ The Comfy Server must have all required nodes installed. The [ComfyUI Manager](h
       <td>LTX Video Image to Video</td>
       <td><a href="https://github.com/Lightricks/ComfyUI-LTXVideo">ComfyUI-LTXVideo</a></td>
       <td>
-        <a href="https://github.com/Lightricks/ComfyUI-LTXVideo">ComfyUI-LTXVideo</a><br>
-        <a href="https://github.com/kosinkadink/ComfyUI-VideoHelperSuite">ComfyUI-VideoHelperSuite</a><br>
-        <a href="https://github.com/kijai/ComfyUI-Florence2">ComfyUI-Florence2</a><br>
-        <a href="https://github.com/Acly/comfyui-tooling-nodes">comfyui-tooling-nodes</a>
+        <ul>	
+          <li><a href="https://github.com/Lightricks/ComfyUI-LTXVideo">ComfyUI-LTXVideo</a><br></li>
+          <li><a href="https://github.com/kosinkadink/ComfyUI-VideoHelperSuite">ComfyUI-VideoHelperSuite</a><br></li>
+          <li><a href="https://github.com/kijai/ComfyUI-Florence2">ComfyUI-Florence2</a><br></li>
+          <li><a href="https://github.com/Acly/comfyui-tooling-nodes">comfyui-tooling-nodes</a></li>
+	</ul>
       </td>
     </tr>
   </tbody>
