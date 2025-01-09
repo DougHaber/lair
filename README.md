@@ -64,15 +64,17 @@ As this is a hobby project, there is no roadmap or guarantee that anything will 
     * A search tool should be added, allowing the LLM to use a search engine and read the results.
 * Support for external sub-command and module loading.
 
+As an experiment, a [GitHub project exists](https://github.com/users/DougHaber/projects/1) to track possible improvements. This might change in the future.
+
 ## Installation
 
 Lair is installed as a Python command, requiring Python 3.10 or greater to be installed. Any Python package management tool could install lair (such as pip, pipx, and uv.) For most users, pipx or uv are probably the best options.
 
 ```sh
-pipx install git+https://github.com/DougHaber/lair.git@0.1.0
+pipx install git+https://github.com/DougHaber/lair.git@0.2.0
 ```
 
-Replace `0.1.0` with the latest version. The `master` branch will contain the latest unreleased version. Official releases will be tagged using semantic versioning.
+Replace `0.2.0` with the latest version. The `master` branch will contain the latest unreleased version. Official releases will be tagged using semantic versioning.
 
 ## Configuration
 
