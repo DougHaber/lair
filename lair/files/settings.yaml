@@ -9,8 +9,28 @@ chat.enable_toolbar: true
 # The history file to use in the chat interface for readline history.
 # When set to an empty string, there is no history file
 chat.history_file: '~/.lair/history'
+# When displaying fields in the toolbar, use this style for enabled flags
+chat.flag_off_style: 'bg:#006f6f'
+# When displaying fields in the toolbar, use this style for disabled flags
+chat.flag_on_style: 'bg:#00f1f1 bold'
 # When enabled, pressing enter will move to the new line instead of submitting. To submit, us M-RET (escape enter.)
 chat.multiline_input: false
+# The prompt to use in the chat interface. This is a python f-string
+# Provided variables: flags, mode, model
+chat.prompt_template: '<style fg="#8f8f8f">{mode}</style>> '
+# Toolbar style when a notification is being shown
+chat.toolbar_flash_style: 'fg:#101080 bg:#f1f1f1'
+# The default toolbar style
+chat.toolbar_style: 'fg:#1f1f1f bg:#f1f1f1'
+# This toolbar template to use. This is a python f-string and should not have any newlines.
+# The YAML ">-" keeps it folded so that there are no newlines.
+# Provided variables: flags, mode, model
+chat.toolbar_template: >-
+  [{flags}]
+  <style bg="#6f6f6f">mode</style> <b>{mode}</b> 
+  <style bg="#6f6f6f">model</style> <b>{model}</b>
+# The Default toolbar text style
+chat.toolbar_text_style: 'fg:#1f1f1f bg:#f1f1f1'
 
 # The address of the Comfy UI API to use
 comfy.url: http://127.0.0.1:8188
@@ -98,28 +118,6 @@ database.user_environment_variable: 'DB_USER'
 # It currently might not do anything, and will likely be removed in the future.
 debug.verbose: false
 
-# When displaying fields in the toolbar, use this style for enabled flags
-chat.flag_off_style: 'bg:#006f6f'
-# When displaying fields in the toolbar, use this style for disabled flags
-chat.flag_on_style: 'bg:#00f1f1 bold'
-# The prompt to use in the chat interface. This is a python f-string
-# Provided variables: flags, mode, model
-chat.prompt_template: '<style fg="#8f8f8f">{mode}</style>> '
-# Toolbar style when a notification is being shown
-chat.toolbar_flash_style: 'fg:#101080 bg:#f1f1f1'
-# The default toolbar style
-chat.toolbar_style: 'fg:#1f1f1f bg:#f1f1f1'
-# This toolbar template to use. This is a python f-string and should not have any newlines.
-# The YAML ">-" keeps it folded so that there are no newlines.
-# Provided variables: flags, mode, model
-chat.toolbar_template: >-
-  [{flags}]
-  <style bg="#6f6f6f">mode</style> <b>{mode}</b> 
-  <style bg="#6f6f6f">model</style> <b>{model}</b>
-# The Default toolbar text style
-chat.toolbar_text_style: 'fg:#1f1f1f bg:#f1f1f1'
-# Whether or not output should word-wrap, or be written as-is
-
 # The max_completion_tokens to set in the API request, for endpoints that honor this
 model.max_tokens: __null_int
 # The name of the model to run, used by the API
@@ -158,4 +156,5 @@ style.system_message_heading: 'bold magenta'
 style.tool_message: 'dim green'
 style.tool_message_heading: 'bold green'
 style.user_error: 'dim red'
+# Whether or not output should word-wrap, or be written as-is
 style.word_wrap: true
