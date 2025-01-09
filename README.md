@@ -79,7 +79,7 @@ In Lair, configuration is a set of namespaced key value pairs. All pairs could b
 
 When lair is first run it will create `~/.lair/config.yaml`. Within this file, modes can be defined to which enable different settings. A mode is a named collection of settings. Modes can be used to jump between different configurations very quickly. The top level `default_mode` key allows specifying the default mode to use if none is specified.
 
-YAML injection can be used to make nodes inherit from each other. An experimental feature also exists where a key `_inherit` can contain a list of other modes to inherit from. They must be defined being referenced. While this feature is enabled, it might change in the future.
+YAML anchors and aliasing can be used to make nodes inherit from each other. An experimental feature also exists where a key `_inherit` can contain a list of other modes to inherit from. The modes to inherit from must be defined above the point they are referenced. While this feature is enabled, it should be considered experimental, and behaviors might change in the future.
 
 In the current release, the only supported `session.type` is `openai_chat`, which uses OpenAI's API or other APIs that provide compatibility, such as with ollama. Lair was originally using langchain and supported various other options which have been removed to simplify the code.
 
@@ -345,7 +345,7 @@ Assuming default configuration is used, that will attempt to use an SD1.5 model 
 
 ```bash
 lair comfy image \
-    --prompt 'A cyber-duck, flying through the matrix' \
+	--prompt 'A cyber-duck, flying through the matrix' \
 	--model juggernautXL_juggXIByRundiffusion.safetensors \
 	--output-height 1024 \
 	--output-width 1280 \
@@ -385,7 +385,7 @@ On the command line `--lora` / `-l` may be provided multiple times. The LoRAs ar
 
 ```bash
 lair -M juggxl comfy image \
-    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout, pixel art' \
+	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout, pixel art' \
 	--lora pixel-art-xl-v1.1.safetensors
 	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:1.1 \
 ```
@@ -404,8 +404,8 @@ The `--batch-size` / `-b` and `--repeat` / `-r` options can be used to generate 
 
 ```bash
 lair -M juggxl comfy image \
-    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
-    --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
+	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
+	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
 	--batch-size 4 \
 	--repeat 2 \
 	--output-file 'monsters.jpg'
@@ -451,8 +451,8 @@ This workflow combines really nicely with the `image` workflow. For example, usi
 # Generate 8 monster JPGs
 # See the image documentation above for the example `juggxl` mode's configuration.
 lair -M juggxl comfy image \
-    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
-    --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
+	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
+	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
 	--repeat 8 \
 	--output-file 'monster.jpg'
 
