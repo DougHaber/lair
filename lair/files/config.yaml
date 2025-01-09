@@ -10,3 +10,25 @@ openai_local:
   model.name: 'llama3.2:3b'
   openai.api_base: 'http://localhost:11434/v1'
   session.type: 'openai_chat'
+
+# Example modes with image diffusion settings. Un-comment these to enable them.
+# These examples assume Comfy has access to specific JuggernautXL models.
+# sdxl:
+#   _description: 'Image generation with SDXL'
+#   comfy.image.cfg: 4.5
+#   comfy.image.model_name: juggernautXL_juggXIByRundiffusion.safetensors
+#   comfy.image.output_height: 832
+#   comfy.image.output_width: 1216
+#   comfy.image.sampler: 'dpmpp_2m_sde'
+#   comfy.image.scheduler: 'karras'
+#   comfy.image.steps: 30
+
+# sdxl_lightning:
+#   _description: 'Image generation with SDXL Lightning'
+#   comfy.image.cfg: 1.8
+#   comfy.image.model_name: juggernautXL_juggXILightningByRD.safetensors
+#   comfy.image.output_height: 832
+#   comfy.image.output_width: 1216
+#   comfy.image.sampler: 'dpmpp_sde'
+#   comfy.image.scheduler: 'karras'
+#   comfy.image.steps: 6

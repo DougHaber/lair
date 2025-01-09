@@ -79,6 +79,8 @@ In Lair, configuration is a set of namespaced key value pairs. All pairs could b
 
 When lair is first run it will create `~/.lair/config.yaml`. Within this file, modes can be defined to which enable different settings. A mode is a named collection of settings. Modes can be used to jump between different configurations very quickly. The top level `default_mode` key allows specifying the default mode to use if none is specified.
 
+YAML injection can be used to make nodes inherit from each other. An experimental feature also exists where a key `_inherit` can contain a list of other modes to inherit from. They must be defined being referenced. While this feature is enabled, it might change in the future.
+
 In the current release, the only supported `session.type` is `openai_chat`, which uses OpenAI's API or other APIs that provide compatibility, such as with ollama. Lair was originally using langchain and supported various other options which have been removed to simplify the code.
 
 To use Lair with OpenAI, set the environment variable `OPENAI_API_KEY` with your key. The default environment variable to use can be modified with `openai.api_key_environment_variable`.
@@ -353,10 +355,10 @@ lair comfy image \
 	--steps 30
 ```
 
-If a collection of settings are likely to be used again, it might make sense to add them to `~/.lair/config.yaml` For example, the above settings (other than prompt) can be stored as a mode named `sdxl` by adding this:
+If a collection of settings are likely to be used again, it might make sense to add them to `~/.lair/config.yaml` For example, the above settings (other than prompt) can be stored as a mode named `juggxl` by adding this:
 
 ```yaml
-sdxl:
+juggxl:
   _description: SDXL Image Generation with JuggernautXL
   comfy.image.model_name: juggernautXL_juggXIByRundiffusion.safetensors
   comfy.image.output_height: 1280
@@ -367,20 +369,22 @@ sdxl:
   comfy.image.steps: 30
 ```
 
-When using the `sdxl` mode, the provided values are the new defaults. They can still be overridden, and the whole workflow with the defaults can be triggered easily, such as:
+When using the `juggxl` mode, the provided values are the new defaults. They can still be overridden, and the whole workflow with the defaults can be triggered easily, such as:
 
 ```bash
-lair -M sdxl comfy image -p 'A cyber-duck, flying through the matrix'
+lair -M juggxl comfy image -p 'A cyber-duck, flying through the matrix'
 ```
 
 ![Cyberduck](docs/images/cyberduck.jpg "Cyberduck example - downscaled")
+
+Some example modes for `sdxl` and `sdxl_lightning` are placed in the default `~/.lair/config.yaml` for convenience. To enable these, they must be un-commented. The examples reference specific models which must be available in Comfy or modified in order for them to work.
 
 Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, the ones in the settings are ignored. Loras can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`. If `weight` or `clip_weight` are not included, they default of `1.0` is used.
 
 On the command line `--lora` / `-l` may be provided multiple times. The LoRAs are used in the order provided.
 
 ```bash
-lair -M sdxl comfy image \
+lair -M juggxl comfy image \
     --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout, pixel art' \
 	--lora pixel-art-xl-v1.1.safetensors
 	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:1.1 \
@@ -399,7 +403,7 @@ To specify LoRAs within the settings, they should be written one LoRA definition
 The `--batch-size` / `-b` and `--repeat` / `-r` options can be used to generate multiple images. The batch size determines how many images are generated on the GPU at a time, and the repeats are independent calls to the workflow. The total number of images is the batch size times the number of repeats. For example, the command below will generate 8 JPG images named `monster000000.jpg` through `monster000007.jpg`:
 
 ```bash
-lair -M sdxl comfy image \
+lair -M juggxl comfy image \
     --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
     --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
 	--batch-size 4 \
@@ -445,8 +449,8 @@ This workflow combines really nicely with the `image` workflow. For example, usi
 
 ```bash
 # Generate 8 monster JPGs
-# See the image documentation above for the example `sdxl` mode's configuration.
-lair -M sdxl comfy image \
+# See the image documentation above for the example `juggxl` mode's configuration.
+lair -M juggxl comfy image \
     --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
     --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
 	--repeat 8 \

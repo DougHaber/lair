@@ -67,13 +67,17 @@ class Configuration():
         default_mode = None
 
         for mode, mode_config in config.items():
-            if mode == 'default_mode':
-                # Default mode settings -- Not a real mode
+            if mode == 'default_mode':  # Default mode definition -- Not a real mode
                 default_mode = config[mode]
             else:
-                if mode not in self.modes:
+                if mode not in self.modes:  # A newly defined mode starts with a copy of the defaults
                     self.modes[mode] = self.modes['_default'].copy()
 
+                # If there is an `_inherit` section, copy each mode's settings in order
+                for inherit_from_mode in mode_config.get('_inherit', []):
+                    self.update(self.modes[inherit_from_mode], mode=mode)
+
+                # Finally, give precedence to the mode's own settings
                 self.update(mode_config, mode=mode)
 
         if default_mode is None:
@@ -121,7 +125,10 @@ class Configuration():
                 lair.events.fire('config.update')
             return
 
-        if key not in self.modes['_default']:
+        if key == '_inherit':
+            self.modes[mode][key] = value
+            return
+        elif key not in self.modes['_default']:
             raise ConfigUnknownKeyException("Unknown Key: %s" % key)
 
         no_cast = False
@@ -140,7 +147,7 @@ class Configuration():
             no_cast = True
 
         try:
-            if not no_cast:
+            if not no_cast and value is not None:
                 value = current_type(value)
             self.modes[mode][key] = value
             if not no_event:
