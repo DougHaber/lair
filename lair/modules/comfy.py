@@ -1,4 +1,5 @@
 import os
+import sys
 
 import PIL
 
@@ -26,6 +27,7 @@ class Comfy():
 
         self._add_argparse_image(sub_parser)
         self._add_argparse_ltxv_i2v(sub_parser)
+        self._add_argparse_ltxv_prompt(sub_parser)
 
     def _add_argparse_image(self, sub_parser):
         command_parser = sub_parser.add_parser('image', help='Basic image creation workflow')
@@ -50,7 +52,9 @@ class Comfy():
         command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
                                     help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
         command_parser.add_argument('-p', '--prompt', type=str,
-                                    help='Prompt to use for image diffusion')
+                                    help='Prompt to use for image diffusion.')
+        command_parser.add_argument('-P', '--prompt-file', type=str,
+                                    help='File name to read a prompt from.')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
         command_parser.add_argument('-s', '--sampler', type=str,
@@ -71,9 +75,9 @@ class Comfy():
         comfy_url = lair.config.get('comfy.url')
 
         command_parser.add_argument('-a', '--auto-prompt-extra', type=str,
-                                    help='Content to add after the generated prompt (When --prompt is provided, this is ignored)')
+                                    help='Content to add after the generated prompt (When --prompt or --prompt-file is provided, this is ignored)')
         command_parser.add_argument('-A', '--auto-prompt-suffix', type=str,
-                                    help='Content to add to the end of the generated prompt (When --prompt is provided, this is ignored)')
+                                    help='Content to add to the end of the generated prompt (When --prompt or --prompt-file is provided, this is ignored)')
         command_parser.add_argument('-b', '--batch-size', type=int,
                                     help='Batch size (default: 1)')
         command_parser.add_argument('-c', '--cfg', type=float,
@@ -99,7 +103,9 @@ class Comfy():
         command_parser.add_argument('-O', '--output-format', type=str,
                                     help=f'Output format to use (default: {defaults["output_format"]}')
         command_parser.add_argument('-p', '--prompt', type=str,
-                                    help='Prompt to use. When not provided, prompts are automatically generated and auto-prompt flags are used to extend.')
+                                    help='Prompt to use. (auto-prompt is disabled when this is provided)')
+        command_parser.add_argument('-P', '--prompt-file', type=str,
+                                    help='File name to read a prompt from.  (auto-prompt is disabled when this is provided)')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
         command_parser.add_argument('-s', '--sampler', type=str,
@@ -110,6 +116,27 @@ class Comfy():
                                     help=f'URL for the Comfy UI API (default: {comfy_url})')
         command_parser.add_argument('-x', '--seed', type=int,
                                     help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})')
+
+    def _add_argparse_ltxv_prompt(self, sub_parser):
+        command_parser = sub_parser.add_parser('ltxv-prompt', help='LTX Video - Generate prompts from an image')
+        defaults = self.comfy.defaults['ltxv-prompt']
+        output_file = lair.config.get('comfy.ltxv_prompt.output_file')
+        comfy_url = lair.config.get('comfy.url')
+
+        command_parser.add_argument('-a', '--auto-prompt-extra', type=str,
+                                    help='Content to add after the generated prompt')
+        command_parser.add_argument('-A', '--auto-prompt-suffix', type=str,
+                                    help='Content to add to the end of the generated prompt')
+        command_parser.add_argument('-i', '--image', type=str, required=True,
+                                    help='Input image file to use (required)')
+        command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
+                                    help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
+        command_parser.add_argument('-r', '--repeat', default=1, type=int,
+                                    help='Number of times to repeat. (default: 1)')
+        command_parser.add_argument('-u', '--comfy-url', default=comfy_url,
+                                    help=f'URL for the Comfy UI API (default: {comfy_url})')
+        command_parser.add_argument('-x', '--seed', type=int, dest='florence_seed',
+                                    help=f'The seed to use with the Florence model (default: {defaults["florence_seed"] if defaults["florence_seed"] is not None else "random"})')
 
     def _save_output__save_to_disk(self, item, filename):
         """
@@ -142,10 +169,16 @@ class Comfy():
         output_files = []
 
         if single_output:  # Save single output with provided filename
+            if filename == '-':
+                sys.stdout.buffer.write(results[0] + b'\n')
+                return
+
             self._save_output__save_to_disk(results[0], filename)
             output_files.append(filename)
         else:
-            if not os.path.splitext(filename)[1]:
+            if filename == '-':
+                raise Exception("Writing to STDOUT is only supported for single-file output")
+            elif not os.path.splitext(filename)[1]:
                 raise ValueError("Filename must have an extension (e.g., 'output.png').")
 
             basename, extension = os.path.splitext(filename)
@@ -164,11 +197,15 @@ class Comfy():
 
         # Create a dictionary containing only the supported and defined arguments for the handler
         arguments_dict = vars(arguments)
+        # If a prompt-file is provided, set the prompt attribute from that
+        if arguments_dict.get('prompt_file') is not None:
+            arguments_dict['prompt'] = lair.util.slurp_file(arguments_dict.get('prompt_file'))
+            del arguments_dict['prompt_file']
         defaults = self.comfy.defaults[arguments.comfy_command]
         function_arguments = {key: value for key, value in arguments_dict.items() if key in defaults and arguments_dict[key] is not None}
 
         # True when there is only a single file output
-        batch_size = function_arguments.get('batch_size', defaults['batch_size'])
+        batch_size = function_arguments.get('batch_size', defaults.get('batch_size', 1))
         single_output = (arguments.repeat == 1 and batch_size == 1)
 
         for i in range(0, arguments.repeat):

@@ -78,12 +78,14 @@ class ComfyCaller():
         self.workflows = {
             'image': self._workflow_image,
             'ltxv-i2v': self._workflow_ltxv_i2v,
+            'ltxv-prompt': self._workflow_ltxv_prompt,
         }
 
     def _init_defaults(self):
         self.defaults = {
             'image': self._get_defaults_image(),
             'ltxv-i2v': self._get_defaults_ltxv_i2v(),
+            'ltxv-prompt': self._get_defaults_ltxv_prompt(),
         }
 
     def _get_defaults_image(self):
@@ -282,3 +284,41 @@ class ComfyCaller():
             videos.append(self.view(video['filename']))
 
         return videos
+
+    def _get_defaults_ltxv_prompt(self):
+        return {
+            'auto_prompt_extra': lair.config.get('comfy.ltxv_prompt.auto_prompt_extra', ''),
+            'auto_prompt_suffix': lair.config.get('comfy.ltxv_prompt.auto_prompt_suffix', ' The scene is captured in real-life footage.'),
+            'florence_model_name': lair.config.get('comfy.ltxv_prompt.florence_model_name', 'microsoft/Florence-2-base'),
+            'florence_seed': lair.config.get('comfy.ltxv_prompt.florence_seed', None),
+            'image': None,
+            'image_resize_height': lair.config.get('comfy.ltxv_prompt.image_resize_height', 800),
+            'image_resize_width': lair.config.get('comfy.ltxv_prompt.image_resize_width', 800),
+        }
+
+    async def _workflow_ltxv_prompt(self, image, *, florence_model_name='microsoft/Florence-2-base', auto_prompt_extra='',
+                                    auto_prompt_suffix='', florence_seed=None, image_resize_height=800, image_resize_width=800):
+        if image is None:
+            raise ValueError("ltxv-prompt: Image must not be None")
+        if florence_seed is None:
+            florence_seed = random.randint(0, 2**31 - 1)
+
+        with Workflow():
+            image, _ = ETNLoadImageBase64(self.image_to_base64(image))
+            image2, width, height = ImageResizeKJ(image, image_resize_height, image_resize_width, 'bilinear',
+                                                  True, 32, 0, 0, None, 'disabled')
+            florence2_model = DownloadAndLoadFlorence2Model(florence_model_name, 'fp16', 'sdpa', None)
+            _, _, prompt, _ = Florence2Run(image, florence2_model, '', 'more_detailed_caption', True, False, 256,
+                                           3, True, '', florence_seed)
+            prompt = StringReplaceMtb(prompt, 'image', 'video')
+            prompt = StringReplaceMtb(prompt, 'photo', 'video')
+            prompt = StringReplaceMtb(prompt, 'painting', 'video')
+            prompt = StringReplaceMtb(prompt, 'illustration', 'video')
+            prompt = StringFunctionPysssss('append', 'no', prompt, auto_prompt_extra, auto_prompt_suffix)
+
+        prompts = []
+        for prompt in prompt.wait()._output['text']:
+            # Encoding is used so that the save file bytes() support can write the output
+            prompts.append(prompt.encode())
+
+        return prompts

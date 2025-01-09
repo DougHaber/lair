@@ -98,6 +98,14 @@ comfy.ltxv_i2v.stg: 1.0
 comfy.ltxv_i2v.stg_block_indices: '14'
 comfy.ltxv_i2v.stg_rescale: 0.75
 
+comfy.ltxv_prompt.auto_prompt_extra: ''
+comfy.ltxv_prompt.auto_prompt_suffix: ' The scene is captured in real-life footage.'
+comfy.ltxv_prompt.florence_model_name: 'microsoft/Florence-2-base'
+comfy.ltxv_prompt.florence_seed: null
+comfy.ltxv_prompt.image_resize_height: 800
+comfy.ltxv_prompt.image_resize_width: 800
+comfy.ltxv_prompt.output_file: 'output.txt'
+
 # These are from the original lair. The open source lair currently has
 # no database and so these have no effect.
 # NOTE: These are only here as convenience for me, since I use both the old and new lair. -dhaber
