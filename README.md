@@ -23,6 +23,7 @@
     - [Comfy Usage & Examples](#comfy-usage--examples)
       - [image - Image Generation](#image---image-generation)
       - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
+      - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
   - [Util](#util)
     - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
