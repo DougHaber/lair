@@ -4,9 +4,15 @@
 
 _description: Default settings
 
+# Attaching files within messages has a customizable syntax which can be configured with a regular expression.  The
+# default provided here uses doubled angle brackets. For example, `<<~/myfile>>`.  Modifying this regular expression can
+# change the syntax. It is important for the syntax used to not risk colliding with input, which can be tricky for
+# messages involving source code or templating. The syntax also should not have false matches. The regex must have one
+# capture group to work properly.
+chat.attachment_syntax_regex: '<<([^>]+)>>'
 # When enabled, attachments found in chat messages are automatically sent to the LLM.
 # In cases where the syntax is creating false positives, this provides an easy way to turn it off.
-chat.enable_attachments: true
+chat.attachments_enabled: true
 # Show the bottom toolbar in the chat interface
 chat.enable_toolbar: true
 # The history file to use in the chat interface for readline history.

@@ -161,14 +161,16 @@ The verbose output options might be removed in the future. They were originally 
 
 ##### Attaching images
 
-Images can be attached by enclosing file names within angle brackets, such as `<foo.png>`. Wildcards (globbing) and `~` for the home directory are also supported, e.g., `<~/images/*.png>`. Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior and some models only work with a single image at a time.
+Images can be attached by enclosing file names within doubled angle brackets, such as `<<foo.png>>`. Wildcards (globbing) and `~` for the home directory are also supported, e.g., `<<~/images/*.png>>`. Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior and some models only work with a single image at a time.
 
-Support for attaching images could be disabled via `chat.enable_attachments`. This is useful when using non-vision models, or when sending a message that uses syntax that collides with the file attachment syntax.
+Support for attaching images could be disabled via `chat.attachments_enabled`. This is useful when using non-vision models, or when sending a message that uses syntax that collides with the file attachment syntax. This could be set via configuration or within the chat interface. For example: `/set chat.attachments_enabled false`.
+
+The double bracket syntax is customizable via `chat.attachment_syntax_regex`. The [settings.yaml](lair/files/settings.yaml) file contains notes on how to safely modify it.
 
 In the following example, an image of two alpacas at a birthday party is provided:
 
 ```
-crocodile> In just a few words, describe what these alpacas are up to. <~/alpaca.png>
+crocodile> In just a few words, describe what these alpacas are up to. <<~/alpaca.png>>
 Alpaca birthday party with cupcakes.
 ```
 
@@ -179,7 +181,7 @@ By default, filenames are not provided, but that behavior can be changed via `mo
 crocodile> /set model.provide_attachment_filenames true
 
 # Include all files matching ~/test/*.png
-crocodile> Provide an accurate oneliner description for each of the provided images. Max 60 characters. output format: {filename}: {description} <~/test/*.png>
+crocodile> Provide an accurate oneliner description for each of the provided images. Max 60 characters. output format: {filename}: {description} <<~/test/*.png>>
 Let's take a look at the images. Here are the descriptions:
 
 burrito.png: A colorful, cartoon-style burrito with cheese and vegetables.
