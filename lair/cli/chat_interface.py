@@ -138,12 +138,13 @@ class ChatInterface(ChatInterfaceCommands):
 
     def _handle_request_chat(self, request):
         """Handle chat with the current chain."""
-        attachments = re.findall(r'<([^>]+)>', request)
-        if attachments:
-            request = [
-                {'type': 'text', 'text': re.sub(r'<([^>]+)>', '', request)},
-                *lair.util.filenames_to_data_url_messages(attachments),
-            ]
+        if lair.config.get('chat.enable_attachments'):
+            attachments = re.findall(r'<([^>]+)>', request)
+            if attachments:
+                request = [
+                    {'type': 'text', 'text': re.sub(r'<([^>]+)>', '', request)},
+                    *lair.util.filenames_to_data_url_messages(attachments),
+                ]
 
         response = self.chat_session.chat(request)
         self.reporting.llm_output(response)

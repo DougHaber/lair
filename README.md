@@ -163,6 +163,8 @@ The verbose output options might be removed in the future. They were originally 
 
 Images can be attached by enclosing file names within angle brackets, such as `<foo.png>`. Wildcards (globbing) and `~` for the home directory are also supported, e.g., `<~/images/*.png>`. Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior and some models only work with a single image at a time.
 
+Support for attaching images could be disabled via `chat.enable_attachments`. This is useful when using non-vision models, or when sending a message that uses syntax that collides with the file attachment syntax.
+
 In the following example, an image of two alpacas at a birthday party is provided:
 
 ```
