@@ -47,13 +47,6 @@ class ComfyCaller():
         # If the mode changes, update all defaults
         lair.events.subscribe('config.change_mode', lambda d: self._init_defaults())
 
-    def set_url(self, url):
-        if self.url is not None:
-            raise Exception("ComfyCaller(): Modifying a Comfy URL is not supported.")
-        else:
-            self.url = url
-            self._import_comfy_script()
-
     def _import_comfy_script(self):
         # The imports actually connect to the server. If the defaults are being requested, that is problematic
         # since that happens before the server URL is provided. To work around that, importing is deferred
@@ -87,6 +80,48 @@ class ComfyCaller():
             'ltxv-i2v': self._get_defaults_ltxv_i2v(),
             'ltxv-prompt': self._get_defaults_ltxv_prompt(),
         }
+
+    def _parse_lora_argument(self, lora):
+        parts = lora.split(':', maxsplit=3)
+
+        lora_model = parts.pop(0)
+        weight = 1.0
+        clip_weight = 1.0
+
+        # If there are more values, override the defaults for their components
+        if parts:
+            weight = float(parts.pop(0))
+        if parts:
+            clip_weight = float(parts.pop(0))
+
+        return lora_model, weight, clip_weight
+
+    def _image_to_base64(self, image):
+        # Convert an image to base64 based on the type
+        if isinstance(image, str):  # If the image is a str, then it is a filename
+            with open(image, 'rb') as image_file:
+                return base64.b64encode(image_file.read()).decode('utf-8')
+        else:
+            raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
+
+    def run_workflow(self, workflow, *args, **kwargs):
+        handler = self.workflows[workflow]
+        kwargs = {**self.defaults[workflow], **kwargs}
+
+        if lair.util.is_debug_enabled():
+            return asyncio.run(handler(*args, **kwargs))
+        else:
+            # With debug disabled, try to quiet things down.
+            # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                return asyncio.run(handler(*args, **kwargs))
+
+    def set_url(self, url):
+        if self.url is not None:
+            raise Exception("ComfyCaller(): Modifying a Comfy URL is not supported.")
+        else:
+            self.url = url
+            self._import_comfy_script()
 
     def _get_defaults_image(self):
         loras = lair.config.get('comfy.image.loras')
@@ -123,33 +158,6 @@ class ComfyCaller():
             raise Exception(f'/api/view returned unexpected status code: {response.status_code}')
         else:
             return response.content
-
-    def _parse_lora_argument(self, lora):
-        parts = lora.split(':', maxsplit=3)
-
-        lora_model = parts.pop(0)
-        weight = 1.0
-        clip_weight = 1.0
-
-        # If there are more values, override the defaults for their components
-        if parts:
-            weight = float(parts.pop(0))
-        if parts:
-            clip_weight = float(parts.pop(0))
-
-        return lora_model, weight, clip_weight
-
-    def run_workflow(self, workflow, *args, **kwargs):
-        handler = self.workflows[workflow]
-        kwargs = {**self.defaults[workflow], **kwargs}
-
-        if lair.util.is_debug_enabled():
-            return asyncio.run(handler(*args, **kwargs))
-        else:
-            # With debug disabled, try to quiet things down.
-            # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
-            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                return asyncio.run(handler(*args, **kwargs))
 
     async def _workflow_image(self, *, model_name, prompt,
                               loras=None, negative_prompt='',
@@ -213,14 +221,6 @@ class ComfyCaller():
             'stg_rescale': lair.config.get('comfy.ltxv_i2v.stg_rescale', 0.75),
         }
 
-    def image_to_base64(self, image):
-        # Convert an image to base64 based on the type
-        if isinstance(image, str):  # If the image is a str, then it is a filename
-            with open(image, 'rb') as image_file:
-                return base64.b64encode(image_file.read()).decode('utf-8')
-        else:
-            raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
-
     async def _workflow_ltxv_i2v(self, image, *, model_name='ltx-video-2b-v0.9.1.safetensors',
                                  clip_name='t5xxl_fp16.safetensors', stg_block_indices='14', image_resize_height=800,
                                  image_resize_width=800, num_frames=105, frame_rate=25, batch_size=1,
@@ -240,7 +240,7 @@ class ComfyCaller():
             noise = RandomNoise(seed)
             model, vae = LTXVLoader(model_name, 'bfloat16')
             model = LTXVApplySTG(model, 'attention', stg_block_indices)
-            image, _ = ETNLoadImageBase64(self.image_to_base64(image))
+            image, _ = ETNLoadImageBase64(self._image_to_base64(image))
             image2, width, height = ImageResizeKJ(image, image_resize_height, image_resize_width, 'bilinear',
                                                   True, 32, 0, 0, None, 'disabled')
             model, latent, sigma_shift = LTXVModelConfigurator(model, vae, 'Custom', width, height, num_frames,
@@ -304,7 +304,7 @@ class ComfyCaller():
             florence_seed = random.randint(0, 2**31 - 1)
 
         with Workflow():
-            image, _ = ETNLoadImageBase64(self.image_to_base64(image))
+            image, _ = ETNLoadImageBase64(self._image_to_base64(image))
             image2, width, height = ImageResizeKJ(image, image_resize_height, image_resize_width, 'bilinear',
                                                   True, 32, 0, 0, None, 'disabled')
             florence2_model = DownloadAndLoadFlorence2Model(florence_model_name, 'fp16', 'sdpa', None)
