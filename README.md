@@ -1,4 +1,19 @@
+<div align="center">
+	
 # Lair
+
+CLI Tools for Working With Generative AI
+
+[Installation](#installation) |
+[Configuration](#configuration) |
+[Features](#features)
+
+Modules: [Chat](#chat---command-line-chat-interface) |
+[Comfy](#comfy) |
+[Util](#util)
+
+
+</div>
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
