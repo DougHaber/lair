@@ -62,6 +62,17 @@ class ChatInterfaceCommands():
             },
         }
 
+    def register_command(self, command, callback, description):
+        # Other modules can subscribe to chat.init() and then call
+        # this function to register their own sub-commands.
+        if command in self.commands:
+            raise Exception(f"Failed to register chat command '{command}': Already registered")
+
+        self.commands[command] = {
+            'callback': callback,
+            'description': description,
+        }
+
     def command_clear(self, command, arguments):
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /clear takes no arguments")

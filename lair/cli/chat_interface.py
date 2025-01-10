@@ -37,6 +37,7 @@ class ChatInterface(ChatInterfaceCommands):
         self._init_prompt_session()
 
         lair.events.subscribe('config.update', lambda d: self._on_config_update())
+        lair.events.fire('chat.init', self)
 
     def _on_config_update(self):
         self._init_history()
