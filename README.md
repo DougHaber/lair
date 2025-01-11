@@ -1,5 +1,5 @@
 <div align="center">
-	
+
 # Lair
 
 CLI Tools for Working With Generative AI
@@ -11,7 +11,6 @@ CLI Tools for Working With Generative AI
 Modules: [Chat](#chat---command-line-chat-interface) |
 [Comfy](#comfy) |
 [Util](#util)
-
 
 </div>
 
@@ -414,15 +413,15 @@ lair -M juggxl comfy image -p 'A cyber-duck, flying through the matrix'
 
 Some example modes for `sdxl` and `sdxl_lightning` are placed in the default `~/.lair/config.yaml` for convenience. To enable these, they must be un-commented. The examples reference specific models which must be available in Comfy or modified in order for them to work.
 
-Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, the ones in the settings are ignored. Loras can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`. If `weight` or `clip_weight` are not included, they default of `1.0` is used.
+Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, the ones in the settings are ignored. Loras can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`. If `weight` or `clip_weight` are not included, the default of `1.0` is used.
 
 On the command line `--lora` / `-l` may be provided multiple times. The LoRAs are used in the order provided.
 
 ```bash
 lair -M juggxl comfy image \
 	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout, pixel art' \
-	--lora pixel-art-xl-v1.1.safetensors
-	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:1.1 \
+	--lora pixel-art-xl-v1.1.safetensors \
+	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:1.1
 ```
 
 To specify LoRAs within the settings, they should be written one LoRA definition per line in the YAML. For example, the above defintions would be:
