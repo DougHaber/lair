@@ -2,7 +2,6 @@ import re
 
 import lair
 
-import prompt_toolkit.completion
 from prompt_toolkit.completion import Completer
 from prompt_toolkit.completion import Completion
 
@@ -13,6 +12,7 @@ class ChatInterfaceCompleter(Completer):
         self.chat_interface = chat_interface
         self.completion_handlers = {  # prefix -> handler
             '/mode ': lambda *args, **kwargs: self.get_completions__mode(*args, **kwargs),
+            '/model ': lambda *args, **kwargs: self.get_completions__model(*args, **kwargs),
             '/set ': lambda *args, **kwargs: self.get_completions__set(*args, **kwargs),
         }
 
@@ -27,6 +27,21 @@ class ChatInterfaceCompleter(Completer):
             if mode.startswith(components[1]) and components[1] != mode:
                 yield Completion(f'/mode {mode}',
                                  display=mode,
+                                 start_position=-len(text))
+
+    def get_completions__model(self, text):
+        if self.chat_interface._models is None:
+            return
+
+        components = re.split(r'\s+', text)
+        if len(components) > 2:
+            return
+
+        for model in sorted(self.chat_interface._models, key=lambda m: m['id']):
+            model_id = model['id']
+            if model_id.startswith(components[1]) and components[1] != model_id:
+                yield Completion(f'/model {model_id}',
+                                 display=model_id,
                                  start_position=-len(text))
 
     def get_completions__set(self, text):

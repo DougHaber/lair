@@ -145,7 +145,8 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /list-models takes no arguments")
         else:
-            self.reporting.table_from_dicts_system(self.chat_session.list_models())
+            models = sorted(self.chat_session.list_models(), key=lambda m: m['id'])
+            self.reporting.table_from_dicts_system(models)
 
     def command_load(self, command, arguments):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])

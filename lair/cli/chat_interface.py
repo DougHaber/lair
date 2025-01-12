@@ -26,6 +26,7 @@ class ChatInterface(ChatInterfaceCommands):
             lair.config.get('session.type'))
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
+        self._models = None  # Cached list of models for the session
 
         self.flash_message = None
         self.flash_message_expiration = 0
@@ -33,8 +34,7 @@ class ChatInterface(ChatInterfaceCommands):
 
         self.history = None
         self.prompt_session = None
-        self._init_history()
-        self._init_prompt_session()
+        self._on_config_update()  # Trigger the initial state updates
 
         lair.events.subscribe('config.update', lambda d: self._on_config_update())
         lair.events.fire('chat.init', self)
@@ -42,6 +42,7 @@ class ChatInterface(ChatInterfaceCommands):
     def _on_config_update(self):
         self._init_history()
         self._init_prompt_session()
+        self._models = self.chat_session.list_models(ignore_errors=True)
 
     def _init_history(self):
         history_file = lair.config.get('chat.history_file')

@@ -118,14 +118,51 @@ class OpenAIChatSession():
         else:
             raise Exception(f"Session state uses unknown version: {state['version']}")
 
-    def list_models(self):
-        models = []
-        for model in self.openai.models.list():
-            models.append({
-                'id': model.id,
-                'created': datetime.datetime.fromtimestamp(model.created, tz=zoneinfo.ZoneInfo("UTC")),
-                'object': model.object,
-                'owned_by': model.owned_by,
-            })
+    def list_models(self, *, ignore_errors=False):
+        """
+        Retrieve a list of available models and their metadata.
 
-        return models
+        This method fetches a list of models using the OpenAI API and returns a
+        formatted list of dictionaries containing metadata about each model, such as
+        its ID, creation date, object type, and ownership.
+
+        Parameters:
+        -----------
+        ignore_errors : bool, optional (default=False)
+            If set to True, any exceptions encountered during the retrieval of models
+            will be logged at the debug level, and the method will return `None` instead
+            of raising the exception. If set to False, exceptions will be propagated.
+
+        Returns:
+        --------
+        list[dict] | None
+            A list of dictionaries, each representing a model with the following keys:
+            - 'id' (str): The model's unique identifier.
+            - 'created' (datetime.datetime): The model's creation timestamp in UTC.
+            - 'object' (str): The type of object (e.g., "model").
+            - 'owned_by' (str): The identifier of the entity that owns the model.
+
+            Returns `None` if an exception occurs and `ignore_errors` is True.
+
+        Raises:
+        -------
+        Exception
+            If an error occurs during model retrieval and `ignore_errors` is False.
+        """
+        try:
+            models = []
+            for model in self.openai.models.list():
+                models.append({
+                    'id': model.id,
+                    'created': datetime.datetime.fromtimestamp(model.created, tz=zoneinfo.ZoneInfo("UTC")),
+                    'object': model.object,
+                    'owned_by': model.owned_by,
+                })
+
+            return models
+        except Exception as error:
+            if ignore_errors:
+                logger.debug(f"Failed to retrieve models: {error}")
+                return
+            else:
+                raise
