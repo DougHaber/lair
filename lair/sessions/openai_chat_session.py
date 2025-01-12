@@ -1,5 +1,7 @@
-import os
+import datetime
 import json
+import os
+import zoneinfo
 
 import lair
 import lair.reporting
@@ -115,3 +117,15 @@ class OpenAIChatSession():
             self._load__v0_1(state)
         else:
             raise Exception(f"Session state uses unknown version: {state['version']}")
+
+    def list_models(self):
+        models = []
+        for model in self.openai.models.list():
+            models.append({
+                'id': model.id,
+                'created': datetime.datetime.fromtimestamp(model.created, tz=zoneinfo.ZoneInfo("UTC")),
+                'object': model.object,
+                'owned_by': model.owned_by,
+            })
+
+        return models

@@ -100,6 +100,10 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         self.print_rich(table)
 
+    def table_from_dicts_system(self, *args, **kwargs):
+        kwargs['style'] = lair.config.get('style.system_message')
+        self.table_from_dicts(*args, **kwargs)
+
     def table_system(self, *args, **kwargs):
         kwargs['style'] = lair.config.get('style.system_message')
         self.table(*args, **kwargs)

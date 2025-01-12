@@ -32,6 +32,10 @@ class ChatInterfaceCommands():
                 'callback': lambda c, a: self.command_last_response(c, a),
                 'description': 'Display the most recently seen response'
             },
+            '/list-models': {
+                'callback': lambda c, a: self.command_list_models(c, a),
+                'description': 'Display a list of available models for the current session'
+            },
             '/load': {
                 'callback': lambda c, a: self.command_load(c, a),
                 'description': 'Load a session from a file  (usage: /load [filename?], default filename is chat_session.json)',
@@ -136,6 +140,12 @@ class ChatInterfaceCommands():
                 self.reporting.llm_output(self.chat_session.last_response)
             else:
                 logger.warn("No last response found")
+
+    def command_list_models(self, command, arguments):
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: /list-models takes no arguments")
+        else:
+            self.reporting.table_from_dicts_system(self.chat_session.list_models())
 
     def command_load(self, command, arguments):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
