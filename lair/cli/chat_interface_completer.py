@@ -80,7 +80,7 @@ class ChatInterfaceCompleter(Completer):
                 yield from handler(text)
                 return
 
-        for command in self.chat_interface.commands.keys():
+        for command in sorted(self.chat_interface.commands.keys()):
             if command.startswith(text):
                 yield Completion(command,
                                  start_position=-len(text))
