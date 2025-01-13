@@ -147,11 +147,13 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 | Command          | Description                                                                                               |
 |------------------|-----------------------------------------------------------------------------------------------------------|
 | /clear           | Clear the conversation history                                                                            |
+| /comfy           | Call ComfyUI workflows                                                                                    |
 | /debug           | Toggle debugging                                                                                          |
 | /help            | Show available commands and shortcuts                                                                     |
 | /history         | Show current conversation                                                                                 |
 | /last-prompt     | Display the most recently used prompt                                                                     |
 | /last-response   | Display the most recently seen response                                                                   |
+| /list-models     | Display a list of available models for the current session                                                |
 | /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
 | /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                           |
 | /model           | Show or set a model  (usage: `/model [name?]`)                                                            |
@@ -292,6 +294,31 @@ USER: In 3 words or less, how do I do that?
 Session files include the full active configuration. If any sensitive values are stored in the settings, they will also be in the session files.
 
 Loaded sessions will restore all the activate settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
+
+#### Calling Comfy Workflows
+
+The `/comfy` command makes it possible to run ComfyUI workflows from the chat interface. This is a wrapper over the command line interface of the comfy sub-command and uses their options. For detailed help, see [the Comfy sub-command documentation.](#comfy)
+
+To use this command provide the same exact arguments that would provided after running `lair comfy`.  For example:
+
+```
+sdxl> /comfy image -p 'a duck in space' -o space-duck.png
+```
+
+With a vision model, this could then be read back
+
+```
+sdxl> /model llava:34b
+sdxl> What's happening in this image? <<space-duck.png>>
+In the image you provided, there is a realistic-looking animated duck depicted as if it were floating in space. The
+background features planets and stars, which suggests that the setting is an outer space environment. This kind of
+imagery might be used for humorous effect or as part of a creative concept, such as blending animal life with science
+fiction elements.
+```
+
+The `/mode` command can be used with custom-defined modes to quickly jump between different models and their settings. The `--help` flags, such as `/comfy image --help` display the defaults for the current mode.
+
+There are a couple known issues with this command. The output can be noisy due to issues with ComfyScript writing output with no options to turn it off. If debugging is enabled, all ComfyScript output is shown, otherwise it is partially muted. Some output is still displayed when threads write output after workflows complete. On exit, sometimes the ComfyScript threads throw errors. This can cause extra output, but doesn't cause any actual harm.
 
 ### Comfy
 
