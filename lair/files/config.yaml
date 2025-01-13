@@ -15,6 +15,7 @@ openai_local:
 # These examples assume Comfy has access to specific JuggernautXL models.
 # sdxl:
 #   _description: 'Image generation with SDXL'
+#   _inherit: ['openai_local']
 #   comfy.image.cfg: 4.5
 #   comfy.image.model_name: juggernautXL_juggXIByRundiffusion.safetensors
 #   comfy.image.output_height: 832
@@ -23,12 +24,12 @@ openai_local:
 #   comfy.image.scheduler: 'karras'
 #   comfy.image.steps: 30
 
+# With the next one, it automatically inherits sdxl, which already inherits from openai_local.
+# Only the keys that need modification need to be provided.
 # sdxl_lightning:
 #   _description: 'Image generation with SDXL Lightning'
+#   _inherit: ['sdxl']
 #   comfy.image.cfg: 1.8
 #   comfy.image.model_name: juggernautXL_juggXILightningByRD.safetensors
-#   comfy.image.output_height: 832
-#   comfy.image.output_width: 1216
 #   comfy.image.sampler: 'dpmpp_sde'
-#   comfy.image.scheduler: 'karras'
 #   comfy.image.steps: 6

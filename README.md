@@ -305,7 +305,7 @@ To use this command provide the same exact arguments that would provided after r
 sdxl> /comfy image -p 'a duck in space' -o space-duck.png
 ```
 
-With a vision model, this could then be read back
+With a vision model, this could then be read back.
 
 ```
 sdxl> /model llava:34b
