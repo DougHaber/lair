@@ -1,4 +1,6 @@
+import argparse
 import os
+import shlex
 import sys
 
 import PIL
@@ -7,6 +9,11 @@ import lair
 import lair.cli
 import lair.comfy_caller
 from lair.logging import logger  # noqa
+from lair.util.argparse import (
+    ArgumentParserExitException,
+    ArgumentParserHelpException,
+    ErrorRaisingArgumentParser,
+)
 
 
 def _module_info():
@@ -28,6 +35,8 @@ class Comfy():
         self._add_argparse_image(sub_parser)
         self._add_argparse_ltxv_i2v(sub_parser)
         self._add_argparse_ltxv_prompt(sub_parser)
+
+        lair.events.subscribe('chat.init', lambda d: self._on_chat_init(d))
 
     def _add_argparse_image(self, sub_parser):
         command_parser = sub_parser.add_parser('image', help='Basic image creation workflow')
@@ -137,6 +146,42 @@ class Comfy():
                                     help=f'URL for the Comfy UI API (default: {comfy_url})')
         command_parser.add_argument('-x', '--seed', type=int, dest='florence_seed',
                                     help=f'The seed to use with the Florence model (default: {defaults["florence_seed"] if defaults["florence_seed"] is not None else "random"})')
+
+    def _get_chat_command_parser(self):
+        '''Create a parser that can be used for parsing for chat commands without exiting on errors'''
+        new_parser = ErrorRaisingArgumentParser(prog='/comfy')
+        sub_parser = new_parser.add_subparsers(dest='comfy_command', required=True)
+
+        self._add_argparse_image(sub_parser)
+        self._add_argparse_ltxv_i2v(sub_parser)
+        self._add_argparse_ltxv_prompt(sub_parser)
+
+        return new_parser
+
+    def _on_chat_init(self, chat_interface):
+        def comfy_command(command, arguments):
+            try:
+                chat_command_parser = self._get_chat_command_parser()
+                new_arguments = shlex.split(' '.join(arguments))
+                try:
+                    params = chat_command_parser.parse_args(new_arguments)
+                except ArgumentParserHelpException as error:  # Display help with styles
+                    chat_interface.reporting.error(str(error), show_exception=False)
+                    return
+                except ArgumentParserExitException as error:  # Ignore exits
+                    return
+            except argparse.ArgumentError as error:
+                message = str(error)
+                if message == 'the following arguments are required: comfy_command':
+                    # If /comfy --help is run, display the full help with styles
+                    chat_interface.reporting.error(chat_command_parser.format_help(), show_exception=False)
+                    return
+                logger.error(message)
+                return
+
+            self.run(params)
+
+        chat_interface.register_command('/comfy', comfy_command, 'Call ComfyUI workflows')
 
     def _save_output__save_to_disk(self, item, filename):
         """

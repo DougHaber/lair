@@ -117,7 +117,11 @@ class ComfyCaller():
                 return asyncio.run(handler(*args, **kwargs))
 
     def set_url(self, url):
-        if self.url is not None:
+        if url == self.url:  # If setting the same value, no change is needed
+            return
+        elif self.url is not None:
+            # This should be supported, but we'll need to look into the ComfyScript repo
+            # to figure out how
             raise Exception("ComfyCaller(): Modifying a Comfy URL is not supported.")
         else:
             self.url = url
