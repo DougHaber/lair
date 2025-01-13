@@ -32,6 +32,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [One-off Chat](#one-off-chat)
     - [Model Settings](#model-settings)
     - [Session Management](#session-management)
+    - [Calling Comfy Workflows](#calling-comfy-workflows)
   - [Comfy](#comfy)
     - [Workflows and Dependencies](#workflows-and-dependencies)
     - [Comfy Usage & Examples](#comfy-usage--examples)
