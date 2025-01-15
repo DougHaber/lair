@@ -266,11 +266,11 @@ The `<answer>` style is helpful with responses where the LLM has been asked to w
 
 To demonstrate this, first we'll create a response with multiple code blocks. Markdown rendering is disabled for clarity in the response below:
 
-```
+~~~
 crocodile> Please write hello world in Go, Rust, and Python. Only provide the language name followed by a codeblock for each. No explanation of comments are needed. Keep it brief.
 
 Go
-&#96;&#96;&#96;go
+```go
 package main
 
 import "fmt"
@@ -278,20 +278,20 @@ import "fmt"
 func main() {
     fmt.Println("Hello, World!")
 }
-&#96;&#96;&#96;
+```
 
 Rust
-&#96;&#96;&#96;rust
+```rust
 fn main() {
     println!("Hello, World!");
 }
-&#96;&#96;&#96;
+```
 
 Python
-&#96;&#96;&#96;python
+```python
 print("Hello, World!")
-&#96;&#96;&#96;
 ```
+~~~
 
 Now the `/embedded-response` command can be used to pull out a specific code block. The syntax is `/embedded-response [position?] [filename?]`. Position indices start at 0 and 0 is the default.
 
