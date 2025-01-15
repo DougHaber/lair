@@ -147,23 +147,24 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 
 #### Commands
 
-| Command          | Description                                                                                               |
-|------------------|-----------------------------------------------------------------------------------------------------------|
-| /clear           | Clear the conversation history                                                                            |
-| /comfy           | Call ComfyUI workflows                                                                                    |
-| /debug           | Toggle debugging                                                                                          |
-| /help            | Show available commands and shortcuts                                                                     |
-| /history         | Show current conversation                                                                                 |
-| /last-prompt     | Display the most recently used prompt                                                                     |
-| /last-response   | Display the most recently seen response                                                                   |
-| /list-models     | Display a list of available models for the current session                                                |
-| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
-| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                           |
-| /model           | Show or set a model  (usage: `/model [name?]`)                                                            |
-| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                               |
-| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                       |
-| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`) |
-| /set             | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)  |
+| Command            | Description                                                                                               |
+|--------------------|-----------------------------------------------------------------------------------------------------------|
+| /clear             | Clear the conversation history                                                                            |
+| /comfy             | Call ComfyUI workflows                                                                                    |
+| /debug             | Toggle debugging                                                                                          |
+| /embedded-response | Display or save an embedded response  (usage: `/embedded-response [position?] [filename?]`)               |
+| /help              | Show available commands and shortcuts                                                                     |
+| /history           | Show current conversation                                                                                 |
+| /last-prompt       | Display the most recently used prompt                                                                     |
+| /last-response     | Display the most recently seen response                                                                   |
+| /list-models       | Display a list of available models for the current session                                                |
+| /load              | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
+| /mode              | Show or select a mode  (usage: `/mode [name?]`)                                                           |
+| /model             | Show or set a model  (usage: `/model [name?]`)                                                            |
+| /prompt            | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                               |
+| /reload-settings   | Reload settings from disk  (resets everything, except current mode)                                       |
+| /save              | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`) |
+| /set               | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)  |
 
 #### Shortcut Keys
 
