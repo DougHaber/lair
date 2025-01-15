@@ -91,7 +91,7 @@ Lair is installed as a Python command, requiring Python 3.10 or greater to be in
 pipx install git+https://github.com/DougHaber/lair.git@0.2.0
 ```
 
-Replace `0.2.0` with the latest version. The `master` branch will contain the latest unreleased version. Official releases will be tagged using semantic versioning.
+Replace `0.2.0` with the latest version. The `master` branch will contain the latest unreleased version, which may be unstable. Official releases will be tagged using semantic versioning.
 
 ## Configuration
 
@@ -124,7 +124,7 @@ The following flags are supported when using the `lair` command. They must be pr
   --version                Display the current version and exit
 ```
 
-The `--mode` / `-M` flag allows changing the mode (and with it any configuration at startup.)
+The `--mode` / `-M` flag allows changing the mode (and with it, any configuration at startup.)
 
 Individual settings may be overridden with the `--set` / `-s` flag. For example `lair -s 'style.error=bold red' -s ui.multline_input=true chat`.
 
@@ -134,7 +134,7 @@ The `--model` / `-m` flag is a shorthand for setting `model.name`.
 
 The `chat` command provides a rich command-line interface for interacting with large language models.
 
-Much of the interface is customizable through overriding `display.*` settings. See [here](lair/files/settings.yaml) for a full reference for those settings.
+Much of the interface is customizable through overriding `chat.*` & `style.*` settings. See [here](lair/files/settings.yaml) for a full reference for those settings.
 
 The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled show with capital letters and brighter colors. The current flags are:
 
@@ -178,19 +178,19 @@ In addition to all the standard GNU-readline style key combinations, the followi
 | ESC-V        | Toggle verbose output  (currently unused) |
 | ESC-W        | Toggle word wrapping                      |
 
-The verbose output options might be removed in the future. They were originally around langchain's verbose flag, but since langchain is no longer used by Lair, their may not be much or any impact from enabling it.
+The verbose output options might be removed in the future. They were originally around langchain's verbose flag, but since langchain is no longer used by Lair, there may not be much or any impact from enabling it.
 
 #### Markdown Rendering
 
 By default, responses from LLMs are rendered as markdown. The markdown rendering includes features such as tables and code blocks with syntax highlighting.
 
-For most general chat usage, the markdown rendering is a good feature, but it does have some downsides. When rendering as markdown, some content could be lost. For example, `<tags>` will not render and some strings will be encoded. For example, a response of `&lt;` will show as `<`.  Responses within codeblocks are always rendered literally.
+For most general chat usage, the markdown rendering is a good feature, but it does have some downsides. When rendering as markdown, some content could be lost. For example, `<tags>` will not render and some strings will be encoded. For example, a response of `&lt;` will show as `<`. Responses within codeblocks are always rendered literally.
 
 The `style.render_markdown` setting can be used to turn this behavior on or off, or set it up differently for specific modes. In the chat interface the ESC-M key combination also can be used to quickly toggle markdown.
 
 The `/last-response` and `/history` commands use the current markdown rendering settings. For example, if a response is rendered one way, and the other is preferred, press ESC-M to toggle markdown rendering, and then `/last-response` can be used to show the message again.
 
-First, with markdown rendering enabled, the literal &lt; is HTML encoded as <
+First, with markdown rendering enabled, the literal `&lt;` is HTML encoded as `<`
 
 ```
 crocodile> Print respond with the exact message: &lt;
@@ -208,9 +208,9 @@ crocodile> /last-response
 
 ##### Attaching images
 
-Images can be attached by enclosing file names within doubled angle brackets, such as `<<foo.png>>`. Wildcards (globbing) and `~` for the home directory are also supported, e.g., `<<~/images/*.png>>`. Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior and some models only work with a single image at a time.
+Images can be attached by enclosing file names within doubled angle brackets, such as `<<foo.png>>`. Globbing (wildcards and shell-style sets and pattern matching) and `~` for the home directory are also supported, e.g., `<<~/images/*.png>>`. Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior and some models only work with a single image at a time.
 
-Support for attaching images could be disabled via `chat.attachments_enabled`. This is useful when using non-vision models, or when sending a message that uses syntax that collides with the file attachment syntax. This could be set via configuration or within the chat interface. For example: `/set chat.attachments_enabled false`.
+Support for attaching images could be disabled via `chat.attachments_enabled`. When disabled, the syntax is ignored, and the message is sent to the API as-is. This is useful when using non-vision models, or when sending a message that uses syntax that collides with the file attachment syntax. This could be set via configuration or within the chat interface. For example: `/set chat.attachments_enabled false`.
 
 The double bracket syntax is customizable via `chat.attachment_syntax_regex`. The [settings.yaml](lair/files/settings.yaml) file contains notes on how to safely modify it.
 
@@ -220,6 +220,8 @@ In the following example, an image of two alpacas at a birthday party is provide
 crocodile> In just a few words, describe what these alpacas are up to. <<~/alpaca.png>>
 Alpaca birthday party with cupcakes.
 ```
+
+The string `<<~/alpaca.png>>` is automatically removed from the message, so it doesn't matter where it appears within it.
 
 By default, filenames are not provided, but that behavior can be changed via `model.provide_attachment_filenames`.
 
@@ -243,8 +245,7 @@ These descriptions are really bad. This was using `llama3.2-vision:11b`, which g
 
 ##### One-off Chat
 
-Lower `session.max_history_length` to `1`, provides only the prompt and the current message with no history. This can be useful in cases where a conversation history is not desirable, or where one-off requests are being sent.
-
+By lowering `session.max_history_length` to `1`, only the system prompt and the current message are provided, with no history. This can be useful in cases where a conversation history is not desirable, or where one-off requests are being sent.
 
 ```
 crocodile> /prompt Respond with a snappy one-liner joke about the provided topic
@@ -294,7 +295,7 @@ print("Hello, World!")
 ```
 ~~~
 
-Now the `/embedded-response` command can be used to pull out a specific code block. The syntax is `/embedded-response [position?] [filename?]`. Position indices start at 0 and 0 is the default.
+Now the `/embedded-response` command can be used to pull out a specific code block. The syntax is `/embedded-response [position?] [filename?]`. Position indexes start at 0 and 0 is the default.
 
 ```
 crocodile> /embedded-response
@@ -310,14 +311,14 @@ func main() {
 Any embedding can be selected to return via its index.
 
 ```
-crocodile> /embedded-response  2
+crocodile> /embedded-response 2
 print("Hello, World!")
 ```
 
 Negative indexes also work. For example `-2` references the second to last embedding.
 
 ```
-crocodile> /embedded-response  -2
+crocodile> /embedded-response -2
 fn main() {
     println!("Hello, World!");
 }
@@ -326,7 +327,7 @@ fn main() {
 A second argument can specify a filename as a destination for writing out the embeddings.
 
 ```
-crocodile> /embedded-response  0 ~/hello.go
+crocodile> /embedded-response 0 ~/hello.go
 Response saved  (76 bytes)
 ```
 
@@ -402,7 +403,7 @@ Loaded sessions will restore all the activate settings. If this is undesirable, 
 
 The `/comfy` command makes it possible to run ComfyUI workflows from the chat interface. This is a wrapper over the command line interface of the comfy sub-command and uses their options. For detailed help, see [the Comfy sub-command documentation.](#comfy)
 
-To use this command provide the same exact arguments that would provided after running `lair comfy`.  For example:
+To use this command, provide the same exact arguments that would provided after running `lair comfy`. For example:
 
 ```
 sdxl> /comfy image -p 'a duck in space' -o space-duck.png
@@ -425,13 +426,13 @@ There are a couple known issues with this command. The output can be noisy due t
 
 ### Comfy
 
-The Comfy command makes it possible to use a [ComfyUI](https://github.com/comfyanonymous/ComfyUI) server to run workflows. Currently, image diffusion and image to video workflows are supported. Underneath, this command uses [ComfyScript](https://github.com/Chaoses-Ib/ComfyScript) to provide a nice Python interface over Comfy.
+The Comfy command makes it possible to use a [ComfyUI](https://github.com/comfyanonymous/ComfyUI) server to run workflows. Currently, image diffusion and image to video workflows are supported. Underneath, this command uses [ComfyScript](https://github.com/Chaoses-Ib/ComfyScript) to provide a nice Python interface over ComfyUI.
 
 ComfyScript does have some issues where it's output is difficult to control.When using the `comfy` command, there may be extra output generated by ComfyScript which Lair is unable to hide. When ComfyScript encounters errors it catches them internally, and it isn't clear how the caller could view these errors. This means Lair will often be unable to display details of what caused errors. Running with `--debug` will sometimes show ComfyScript's internally printed errors.
 
 #### Workflows and Dependencies
 
-The Comfy Server must have all required nodes installed. The [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager) provides an easy way to set things up. Be aware that installing nodes can introduce security issues. Running Comfy in an isolated fashion or with containers could help lower risks.
+The ComfyUI Server must have all required nodes installed to use any given workflow. The [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager) provides an easy way to set things up. Be aware that installing nodes can introduce security issues. Running ComfyUI in an isolated fashion or with containers could help lower risks.
 
 <table>
   <thead>
@@ -480,11 +481,11 @@ The Comfy Server must have all required nodes installed. The [ComfyUI Manager](h
 
 The `comfy` command provides distinct sub-commands for each supported workflow, each with its own flags and configuration options.
 
-Flags offer a quick way to set common options but do not encompass all available configuration settings. They serve as shortcuts to simplify usage. Configuration options can be set either via the configuration file or directly from the command line. For example, a sampler can be specified using `lair -s 'comfy.image.sampler=euler_ancestral' comfy image ...` or `lair comfy image --sampler euler_ancestral ...`. Flags take precedence over configuration settings.
+Flags offer a quick way to set common options but do not encompass all available configuration settings. They serve as shortcuts to simplify usage of the most common settings. Configuration options can be set either via the configuration file or directly from the command line. For example, a sampler can be specified using `lair -s 'comfy.image.sampler=euler_ancestral' comfy image ...` or `lair comfy image --sampler euler_ancestral ...`. Flags take precedence over configuration settings.
 
 The `comfy` module has two primary configuration options:
-- **`comfy.url`**: Specifies the address of the Comfy server. By default, this is set to Comfy's standard local configuration, so most users running it locally won't need to modify this.
-- **`comfy.verify_ssl`**: Determines whether SSL certificates are verified. This is enabled by default (`true`). When disabled, it allows communication with Comfy servers over HTTPS, even with invalid certificates.
+- **`comfy.url`**: Specifies the address of the ComfyUI server. By default, this is set to ComfyUI's standard local configuration, so most users running it locally won't need to modify this.
+- **`comfy.verify_ssl`**: Determines whether SSL certificates are verified. This is enabled by default (`true`). When disabled, it allows communication with ComfyUI servers over HTTPS, even with invalid certificates.
 
 Modes can be defined in the `~/.lair/config.yaml` file to store settings tailored to different use cases. Modes simplify workflows; for instance, `lair -M {mode} comfy ...` will apply the settings associated with the specified mode.
 
@@ -493,9 +494,9 @@ All available flags can be listed by running `lair comfy {mode} --help`. Availab
 Some flags are shared across workflows:
 - **`--repeat` / `-r`**: Runs the workflow a specified number of times. This differs from batch size; batches are processed simultaneously on the GPU, while repeats are executed sequentially. For image generation, the total number of images produced equals the batch size multiplied by the number of repeats.
 - **`--output-file` / `-o`**: Specifies the filename for the output. For image workflows, the default might be `output.png`, but this can be overridden by configuration or this flag. If a single image is generated, the exact filename is used. For multiple images, the base name becomes a prefix followed by a zero-padded counter (e.g., `output000000.png`, `output000001.png`). When only a single file is being used the special filename `-` will cause the output to go to STDOUT. This isn't recommended currently, because ComfyScript writes to STDOUT as well, which could cause the file to have extra output in it.
-- **`--comfy-url` / `-u`**: Specifies the address of the Comfy server. By default, this is `http://localhost:8188`.
+- **`--comfy-url` / `-u`**: Specifies the address of the ComfyUI server. By default, this is `http://localhost:8188`.
 
-Many values in Comfy workflows are passed to nodes. The ComfyUI web interface is the easiest way to determine valid values. If invalid values are provided, an error will occur. Note that ComfyScript may not always handle exceptions cleanly, which can prevent detailed error messages from reaching the main thread. Running with the `--debug` flag enables additional ComfyScript output, often providing helpful information for troubleshooting.
+When setting the inputs for a workflow, it is important to know what values are valid. Many settings are directly providing inputs for nodes. The ComfyUI web interface is the easiest way to determine valid values. If invalid values are provided, an error will occur. Note that ComfyScript may not always handle exceptions cleanly, which can prevent detailed error messages from reaching the main thread. Running with the `--debug` flag enables additional ComfyScript output, often providing helpful information for troubleshooting.
 
 ##### image - Image Generation
 
@@ -505,7 +506,7 @@ To generate a single image:
 lair comfy image --prompt 'A cyberpduck, flying through the matrix'
 ```
 
-Assuming default configuration is used, that will attempt to use an SD1.5 model and write output to `output.png`. Often times providing more settings is useful.
+Assuming default configuration is used, that will attempt to use a Stable Diffusion 1.5 model and write output to `output.png`. Often times more settings are needed.
 
 ```bash
 lair comfy image \
@@ -541,9 +542,9 @@ lair -M juggxl comfy image -p 'A cyber-duck, flying through the matrix'
 
 ![Cyberduck](docs/images/cyberduck.jpg "Cyberduck example - downscaled")
 
-Some example modes for `sdxl` and `sdxl_lightning` are placed in the default `~/.lair/config.yaml` for convenience. To enable these, they must be un-commented. The examples reference specific models which must be available in Comfy or modified in order for them to work.
+Some example modes for `sdxl` and `sdxl_lightning` are placed in the default `~/.lair/config.yaml` for convenience. To enable these, they must be un-commented. The examples reference specific models which must be available in ComfyUI or modified in order for them to work.
 
-Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, the ones in the settings are ignored. Loras can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`. If `weight` or `clip_weight` are not included, the default of `1.0` is used.
+Any number of LoRAs may be specified in either the configuration or from the command line. If LoRAs are provided on the command line, any specified in the settings are overridden and ignored. LoRAs can be written either as `{name}`, `{name}:{weight}`, or `{name}:{weight}:{clip_weight}`. If `weight` or `clip_weight` are not included, the default of `1.0` is used.
 
 On the command line `--lora` / `-l` may be provided multiple times. The LoRAs are used in the order provided.
 
@@ -587,9 +588,9 @@ convert monster-grid-full.jpg -resize 640x monster-grid.jpg
 
 ##### ltxv-i2v - LTX Video Image to Video
 
-The `ltxv-i2v` workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow. It takes an image as input and then produces a video using LTX Video. The LTX Video model requires detailed prompts to work well. This workflow can automatically generate prompts with using Microsoft's Florence2 model.
+The `ltxv-i2v` workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow. It takes an image as input and then produces a video using LTX Video. The LTX Video model requires detailed prompts to work well. This workflow can automatically generate prompts using Microsoft's Florence2 model.
 
-When using automatic prompts, the prompt consists of 3 parts. First, there is the automatic prompt generated by Florence2. After that, extra details could be added via `--auto-prompt-extra` / `-a`. Finally, there is a suffix, which can be set via `--auto-prompt-suffix` / `-A`. The default suffix is `The scene is captured in real-life footage.`. That might change in the future. The ComfyUI-LTXVideo prompt uses that as a default, but also recommends `The scene appears to be from a movie or TV show` and `The scene is computer-generated imagery` where appropriate.
+When automatic prompts are used, the prompt consists of 3 parts. First, there is the automatic prompt generated by Florence2. After that, extra details could be added via `--auto-prompt-extra` / `-a`. Finally, there is a suffix, which can be set via `--auto-prompt-suffix` / `-A`. The default suffix is `The scene is captured in real-life footage.`. That might change in the future. The ComfyUI-LTXVideo prompt uses that as a default, but also recommends `The scene appears to be from a movie or TV show` and `The scene is computer-generated imagery` where appropriate.
 
 If a prompt is provided via `--prompt` / `-p`, `--prompt-file` / `-P`, or the `comfy.ltxv_i2v.prompt` setting, then that prompt will be used as-is, and no automatic prompt generation will be performed.
 
@@ -603,9 +604,9 @@ This will build a prompt automatically based on `example.png` and then generate 
 
 This workflow has many parameters. Run `lair comfy ltxv-i2v --help` to see all available flags. Configuration options can be found [here](lair/files/settings.yaml), and modes can be created to automatically use different settings.
 
-It is recommended to use the workflow manually in ComfyUI to see the available settings. The workflow has various recommendations on what values to use. For example, the number of frames must be `N * 8 + 1`, such as 105 or 121.
+It is helpful to load the [workflow](https://github.com/Lightricks/ComfyUI-LTXVideo) manually into ComfyUI to see the available settings. The workflow itself has a number of "Notes" nodes with recommendations and rules on what values to use. For example, the number of frames must be `N * 8 + 1`, such as 105 or 121.
 
-The seed for the Florence model is fixed by default. It could be made random by setting `comfy.ltxv_i2v.florence_seed` to null, but doing so makes every repeat calls for the same image repeat the inference through the Florence model. If a fixed value is used, the cached results are used, speeding up the workflow.
+The seed for the Florence model is fixed by default. It could be made random by setting `comfy.ltxv_i2v.florence_seed` to null, but doing so disables caching. When random, every run of the workflow will generate a new prompt. When the seed is fixed, the cached results are used allowing it to skip the extra inference and speed up the workflow.
 
 The output formats can be set through `--output-format` / `-O` or `comfy.ltxv_i2v.output_format`. By default, `video/h264-mp4` is used, but any option available in the Comfy VHS Video Combine node should work. Some others include `image/gif`, `image/webp`, and `video/webm`. When changing the output format, the output file's extension should also be updated to match.
 
@@ -634,7 +635,7 @@ This workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks
 
 The LTXV model requires very detailed prompts to work well. While the official workflow uses Florence2 for prompt generation, the prompts it generates are often in need of further refinement. Using `ltxv-prompt` makes it possible to generate a prompt, edit it by hand, and then use that for future runs.
 
-By default, `ltxv-prompt` will write to an output file such as `output.txt`. It is possible to specify the filename of `-` to write to STDOUT, buthis currently isn't recommended. ComfyScript's threads write to STDOUT as well, and until that is fixed or fully silenced extra output might be mixed in.
+By default, `ltxv-prompt` will write to an output file such as `output.txt`. It is possible to specify the filename of `-` to write to STDOUT, but this currently isn't recommended. ComfyScript's threads write to STDOUT as well, and until that is fixed or fully silenced extra output might be mixed in.
 
 ```bash
 # For this example, lets generate an image of a duck in a space suit
@@ -681,7 +682,8 @@ Grace,Blue,890 Fir Rd,10987,(555)777-6666
 Hannah,Pink,109 Hemlock St,98760,(555)222-1111
 ```
 
-This could also be used to write simple programs. This can be extremely helpful for one off tasks such as converting a Cloudfront logfile to a JSON format. Here is a simpler example of making a tool to show the times in different timezones:
+This feature can also be used to write simple programs, making it especially useful for one-off tasks like converting a CloudFront logfile to JSON format. For example, to create a tool to display the current time in different time zones:
+
 
 ```bash
 $ lair util -i 'Write a python script that outputs the current time in UTC, California, New York, London, and Tokyo' > times.py
@@ -741,7 +743,7 @@ All traffic is routed through gateway 10.0.1.1 on interface wlo1, except for loc
 
 ##### Attaching Images
 
-The `--attach-file` / `-a` flag allows for attaching one or more image files. Multiple images could be provided via either globbing or providing the repeat `--attach-file` arguments. Globbing and homedir expansion (`~`) is performed automatically. Globs might need to be protected to prevent the shell from expanding them.
+The `--attach-file` / `-a` flag allows for attaching one or more image files. Multiple images could be provided via either globbing or by repeating `--attach-file` argument. Globbing and homedir expansion (`~`) is performed automatically. Globs might need to be protected to prevent the shell from expanding them.
 
 Here is a simple example, providing an image and asking for a summary.
 
@@ -752,7 +754,7 @@ $ lair -m llama3.2-vision:11b util \
 A microscopic view of an electron microscope.
 ```
 
-Multiple images can be provided at once with globs, such as `--atach-file \*.png`. By default, the model is not provided the filenames. In the example below, the `--include-filenames` / `-F` flag is used to enable sending the filenames with each image.
+Multiple images can be provided at once with globs, such as `--atach-file \*.png`. By default, the model is not passed the filenames. In the example below, the `--include-filenames` / `-F` flag is used to enable sending the filenames with each image.
 
 ```bash
 $ lair -m llama3.2-vision:11b util \
@@ -765,7 +767,7 @@ fractal_thanksgiving.png: A fractal image of a turkey on Thanksgiving.
 stained_glass.png: A stained glass window depicting a floral pattern.
 ```
 
-Unfortunately, models may get confused when provided multiple images. That should improve in the future, but for now, a safer (and slower) alternative might be to run the command once per image. This also makes the prior example possible without providing the filenames, which definitely impacted the previous response. For example:
+Unfortunately, models may get confused when provided multiple images. That should improve in the future, but for now, a safer (and slower) alternative might be to run the command once per image. This also makes the prior example possible without providing the filenames, which definitely biased the previous responses. For example:
 
 ```bash
 $ for file in *.png; do
