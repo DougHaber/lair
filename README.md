@@ -184,10 +184,9 @@ By default, responses from LLMs are rendered as markdown. The markdown rendering
 
 For most general chat usage, the markdown rendering is a good feature, but it does have some downsides. When rendering as markdown, some content could be lost. For example, `<tags>` will not render and some strings will be encoded. For example, a response of `&lt;` will show as `<`.  Responses within codeblocks are always rendered literally.
 
-The `style.render_markdown` setting can be used to turn this behavior on or off, or set it up differently for specific modes. In the chat interface the ESC-M key combination also can be used to quickly toggle markdown. The `/last-response` and `/history` commands use the current settings.
+The `style.render_markdown` setting can be used to turn this behavior on or off, or set it up differently for specific modes. In the chat interface the ESC-M key combination also can be used to quickly toggle markdown.
 
-
-For example, if a response is rendered one way, and the other is preferred, press ESC-M to toggle markdown rendering, and then `/last-response` can be used to show the message again.
+The `/last-response` and `/history` commands use the current markdown rendering settings. For example, if a response is rendered one way, and the other is preferred, press ESC-M to toggle markdown rendering, and then `/last-response` can be used to show the message again.
 
 First, with markdown rendering enabled, the literal &lt; is HTML encoded as <
 
