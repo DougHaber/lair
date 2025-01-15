@@ -52,9 +52,9 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 
 ## Overview
 
-Lair is a set of utilities and tools for working with generative AI. This repository contains an open source version of Lair. The open source version currently provides some general purpose functionality, such as a command line chat interface and a one-off utility command.
+Lair is a collection of utilities and tools for working with generative AI. This repository contains an open-source version of Lair, which currently provides general-purpose functionality, including a command-line chat interface and a one-off utility command.
 
-The full lair repository has various other features such as an agent framework, tools for evolutionary programming with LLMs, and a tool for creating non-temporal videos from image diffusion models. Some hints of other features might still exist in the code, but a lot of modules were not included. If there is interest, over time I might add some of the other functionality into the open source version.
+The full Lair repository includes additional features, such as an agent framework, tools for evolutionary programming with LLMs, and a utility for creating non-temporal videos from image diffusion models. While some remnants of these features may still be present in the code, many modules are not included in the open-source version. Additional functionality from the full version may be added to the open-source repository in the future.
 
 ## Features
 
@@ -85,27 +85,27 @@ As an experiment, a [GitHub project exists](https://github.com/users/DougHaber/p
 
 ## Installation
 
-Lair is installed as a Python command, requiring Python 3.10 or greater to be installed. Any Python package management tool could install lair (such as pip, pipx, and uv.) For most users, pipx or uv are probably the best options.
+Lair is installed as a Python command and requires Python 3.10 or later. Any Python package management tool can be used to install Lair, such as `pip`, `pipx`, or `uv`. For most users, `pipx` or `uv` are likely the best options.
 
 ```sh
 pipx install git+https://github.com/DougHaber/lair.git@0.2.0
 ```
 
-Replace `0.2.0` with the latest version. The `master` branch will contain the latest unreleased version, which may be unstable. Official releases will be tagged using semantic versioning.
+Replace `0.2.0` with the latest version. The `master` branch contains the latest unreleased version, which may be unstable. Official releases are tagged using semantic versioning.
 
 ## Configuration
 
-In Lair, configuration is a set of namespaced key value pairs. All pairs could be found [here](lair/files/settings.yaml). Types are enforced and attempting to set a key to a different type of value will result in an error.
+In Lair, configuration is a set of namespaced key-value pairs. All pairs can be found [here](lair/files/settings.yaml). Types are enforced, and attempting to set a key to a value of a different type will result in an error.
 
-When lair is first run it will create `~/.lair/config.yaml`. Within this file, modes can be defined to which enable different settings. A mode is a named collection of settings. Modes can be used to jump between different configurations very quickly. The top level `default_mode` key allows specifying the default mode to use if none is specified.
+When Lair is first run, it creates `~/.lair/config.yaml`. Within this file, modes can be defined to customize settings. A mode is a named collection of settings, allowing users to quickly switch between different configurations. The top-level `default_mode` key specifies the mode to use if none is specified.
 
-YAML anchors and aliasing can be used to make nodes inherit from each other. An experimental feature also exists where a key `_inherit` can contain a list of other modes to inherit from. The modes to inherit from must be defined above the point they are referenced. While this feature is enabled, it should be considered experimental, and behaviors might change in the future.
+YAML anchors and aliasing can be used to make modes inherit from each other. An experimental feature also allows a key `_inherit` to contain a list of other modes to inherit from. The modes to inherit from must be defined above the point they are referenced. While this feature is available, it should be considered experimental, and its behavior might change in the future.
 
-In the current release, the only supported `session.type` is `openai_chat`, which uses OpenAI's API or other APIs that provide compatibility, such as with ollama. Lair was originally using langchain and supported various other options which have been removed to simplify the code.
+In the current release, the only supported `session.type` is `openai_chat`, which uses OpenAI's API or other APIs that provide compatibility, such as Ollama. Lair originally used LangChain and supported various other options, but these have been removed to simplify the code.
 
 To use Lair with OpenAI, set the environment variable `OPENAI_API_KEY` with your key. The default environment variable to use can be modified with `openai.api_key_environment_variable`.
 
-To use with other OpenAI-compatible APIs, such as ollama, set the configuration variable `openai.api_base`. For example, to use an ollama endpoint: `openai.api_base: http://localhost:11434/v1`.
+To use Lair with other OpenAI-compatible APIs, such as Ollama, set the configuration variable `openai.api_base`. For example, to use an Ollama endpoint `openai.api_base: http://localhost:11434/v1`.
 
 ## Usage
 
@@ -182,22 +182,22 @@ The verbose output options might be removed in the future. They were originally 
 
 #### Markdown Rendering
 
-By default, responses from LLMs are rendered as markdown. The markdown rendering includes features such as tables and code blocks with syntax highlighting.
+By default, responses from LLMs are rendered as Markdown. The Markdown rendering includes features such as tables and code blocks with syntax highlighting.
 
-For most general chat usage, the markdown rendering is a good feature, but it does have some downsides. When rendering as markdown, some content could be lost. For example, `<tags>` will not render and some strings will be encoded. For example, a response of `&lt;` will show as `<`. Responses within codeblocks are always rendered literally.
+For most general chat usage, Markdown rendering is beneficial, but it does have some downsides. When rendering as Markdown, some content may be lost. For example, `<tags>` will not render, and some strings may be encoded. For instance, a response of `&lt;` will display as `<`. However, responses within code blocks are always rendered literally.
 
-The `style.render_markdown` setting can be used to turn this behavior on or off, or set it up differently for specific modes. In the chat interface the ESC-M key combination also can be used to quickly toggle markdown.
+The `style.render_markdown` setting can be used to toggle this behavior on or off, or configure it differently for specific modes. In the chat interface, the `ESC-M` key combination can also be used to quickly toggle Markdown rendering.
 
-The `/last-response` and `/history` commands use the current markdown rendering settings. For example, if a response is rendered one way, and the other is preferred, press ESC-M to toggle markdown rendering, and then `/last-response` can be used to show the message again.
+The `/last-response` and `/history` commands respect the current Markdown rendering settings. For example, if a response is rendered in one style and another style is preferred, pressing `ESC-M` will toggle the Markdown rendering. The `/last-response` command can then be used to redisplay the message with the updated rendering.
 
-First, with markdown rendering enabled, the literal `&lt;` is HTML encoded as `<`
+For instance, with Markdown rendering enabled, the literal `&lt;` is HTML encoded as `<`:
 
 ```
 crocodile> Print respond with the exact message: &lt;
 <
 ```
 
-Pressing ESC-M and trying again shows the literal response with no markdown rendering
+Pressing `ESC-M` and trying again shows the literal response without Markdown rendering:
 
 ```
 crocodile> /last-response
@@ -208,11 +208,11 @@ crocodile> /last-response
 
 ##### Attaching images
 
-Images can be attached by enclosing file names within doubled angle brackets, such as `<<foo.png>>`. Globbing (wildcards and shell-style sets and pattern matching) and `~` for the home directory are also supported, e.g., `<<~/images/*.png>>`. Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior and some models only work with a single image at a time.
+Images can be attached by enclosing file names within double angle brackets, such as `<<foo.png>>`. Globbing (wildcards and shell-style sets and pattern matching) and `~` for the home directory are also supported (e.g., `<<~/images/*.png>>`). Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior, and some models only work with a single image at a time.
 
-Support for attaching images could be disabled via `chat.attachments_enabled`. When disabled, the syntax is ignored, and the message is sent to the API as-is. This is useful when using non-vision models, or when sending a message that uses syntax that collides with the file attachment syntax. This could be set via configuration or within the chat interface. For example: `/set chat.attachments_enabled false`.
+Support for attaching images can be disabled via `chat.attachments_enabled`. When disabled, the syntax is ignored, and the message is sent to the API as-is. This is useful when working with non-vision models or when sending a message that uses syntax conflicting with the file attachment syntax. This can be configured or toggled in the chat interface using a command such as: `/set chat.attachments_enabled false`.
 
-The double bracket syntax is customizable via `chat.attachment_syntax_regex`. The [settings.yaml](lair/files/settings.yaml) file contains notes on how to safely modify it.
+The double bracket syntax is customizable via `chat.attachment_syntax_regex`. The [settings.yaml](lair/files/settings.yaml) file contains notes on how to safely modify this setting.
 
 In the following example, an image of two alpacas at a birthday party is provided:
 
@@ -221,31 +221,31 @@ crocodile> In just a few words, describe what these alpacas are up to. <<~/alpac
 Alpaca birthday party with cupcakes.
 ```
 
-The string `<<~/alpaca.png>>` is automatically removed from the message, so it doesn't matter where it appears within it.
+The string `<<~/alpaca.png>>` is automatically removed from the message, so its position within the message does not affect processing.
 
-By default, filenames are not provided, but that behavior can be changed via `model.provide_attachment_filenames`.
+By default, filenames are not provided in the output, but this behavior can be changed via `model.provide_attachment_filenames`.
 
 ```
 # Enable providing filenames
 crocodile> /set model.provide_attachment_filenames true
 
 # Include all files matching ~/test/*.png
-crocodile> Provide an accurate oneliner description for each of the provided images. Max 60 characters. output format: {filename}: {description} <<~/test/*.png>>
+crocodile> Provide an accurate one-liner description for each of the provided images. Max 60 characters. Output format: {filename}: {description} <<~/test/*.png>>
 Let's take a look at the images. Here are the descriptions:
 
 burrito.png: A colorful, cartoon-style burrito with cheese and vegetables.
 comic.png: A cartoon character with a speech bubble saying "Boom!" in yellow text over a blue background.
 electron_microscopy.png: An abstract image of a cell membrane with molecules and membranes visible under an electron microscope.
 fantasy_art.png: A fantastical drawing of a dragon breathing fire, surrounded by clouds and lightning bolts.
-fractal_thanksgiving.png: An artwork of a turkey's feathers made from mathematical fractals for Thanksgiving celebration.
-stained_glass.png: A geometric stained glass window with shapes in red, blue green and yellow that resembles stained leadlight art.
+fractal_thanksgiving.png: An artwork of a turkey's feathers made from mathematical fractals for a Thanksgiving celebration.
+stained_glass.png: A geometric stained glass window with shapes in red, blue, green, and yellow that resembles stained leadlight art.
 ```
 
-These descriptions are really bad. This was using `llama3.2-vision:11b`, which gets confused by multiple images. Providing the filenames also is influencing the answers. For this particular request, it would be better to provide one file per request and not include filenames. See the "Attaching Files" section of the "Util" examples below for a different approach.
+These descriptions are suboptimal. This example used `llama3.2-vision:11b`, which tends to struggle with multiple images. Providing the filenames also influenced the responses. For this specific request, it would be better to process one file per request and exclude filenames. See the "Attaching Files" section of the "Util" examples below for a different approach.
 
 ##### One-off Chat
 
-By lowering `session.max_history_length` to `1`, only the system prompt and the current message are provided, with no history. This can be useful in cases where a conversation history is not desirable, or where one-off requests are being sent.
+By lowering `session.max_history_length` to `1`, only the system prompt and the current message are provided, with no conversation history. This can be useful in scenarios where maintaining a conversation history is not desirable or when sending one-off requests.
 
 ```
 crocodile> /prompt Respond with a snappy one-liner joke about the provided topic
@@ -259,14 +259,13 @@ Why did Java go to the doctor? Because it had a class problem!
 ```
 
 ##### Retrieving Embedded Responses
+The `/embedded-response` command provides a quick way to retrieve specific sections of a response.
 
-The `/embedded-response` command provides a quick way to retrieve section of the response.
+Which sections are retrieved is configurable via the setting `chat.embedded_syntax_regex`. By default, responses between `<answer></answer>` tags and within Markdown code blocks are retrieved. Any number of styles can be defined within the regex, but only the result of the first non-empty capture for each match is used.
 
-Which sections are retrieved is configurable with the setting `chat.embedded_syntax_regex`. By default, responses between `<answer></answer>` tags and within markdown code blocks are retrieved. Any number of styles to capture can be defined within the regex, but only the result of the first non-empty capture for each match is used.
+The `<answer>` style is useful for responses where the LLM has been instructed to work through a process and write its final answer within tags. This is particularly helpful for chain-of-thought-style requests.
 
-The `<answer>` style is helpful with responses where the LLM has been asked to work through a process and write it's final answer within tags. This could be used with chain-of-thought style requests.
-
-To demonstrate this, first we'll create a response with multiple code blocks. Markdown rendering is disabled for clarity in the response below:
+To demonstrate this, we'll first create a response with multiple code blocks. Markdown rendering is disabled for clarity in the response below:
 
 ~~~
 crocodile> Please write hello world in Go, Rust, and Python. Only provide the language name followed by a codeblock for each. No explanation of comments are needed. Keep it brief.
@@ -378,7 +377,7 @@ crocodile> /save ~/meaning_of_life.session
 Session written to /home/doug/meaning_of_life.session
 ```
 
-The session that can be loaded with the `/load` command:
+The saved session can then be loaded with the `/load` command:
 
 ```
 $ lair chat
@@ -397,7 +396,7 @@ USER: In 3 words or less, how do I do that?
 
 Session files include the full active configuration. If any sensitive values are stored in the settings, they will also be in the session files.
 
-Loaded sessions will restore all the activate settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
+Loaded sessions will restore all the active settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
 
 #### Calling Comfy Workflows
 
@@ -479,24 +478,24 @@ The ComfyUI Server must have all required nodes installed to use any given workf
 
 #### Comfy Usage & Examples
 
-The `comfy` command provides distinct sub-commands for each supported workflow, each with its own flags and configuration options.
+The `comfy` command provides distinct subcommands for each supported workflow, each with its own flags and configuration options.
 
-Flags offer a quick way to set common options but do not encompass all available configuration settings. They serve as shortcuts to simplify usage of the most common settings. Configuration options can be set either via the configuration file or directly from the command line. For example, a sampler can be specified using `lair -s 'comfy.image.sampler=euler_ancestral' comfy image ...` or `lair comfy image --sampler euler_ancestral ...`. Flags take precedence over configuration settings.
+Flags offer a quick way to set common options but do not cover all available configuration settings. They act as shortcuts to simplify usage of the most frequently used settings. Configuration options can be set either through the configuration file or directly from the command line. For example, a sampler can be specified using `lair -s 'comfy.image.sampler=euler_ancestral' comfy image ...` or `lair comfy image --sampler euler_ancestral ...`. Flags take precedence over configuration settings.
 
 The `comfy` module has two primary configuration options:
 - **`comfy.url`**: Specifies the address of the ComfyUI server. By default, this is set to ComfyUI's standard local configuration, so most users running it locally won't need to modify this.
-- **`comfy.verify_ssl`**: Determines whether SSL certificates are verified. This is enabled by default (`true`). When disabled, it allows communication with ComfyUI servers over HTTPS, even with invalid certificates.
+- **`comfy.verify_ssl`**: Determines whether SSL certificates are verified. This is enabled by default (`true`). When disabled, it allows communication with ComfyUI servers over HTTPS, even if the certificates are invalid.
 
-Modes can be defined in the `~/.lair/config.yaml` file to store settings tailored to different use cases. Modes simplify workflows; for instance, `lair -M {mode} comfy ...` will apply the settings associated with the specified mode.
+Modes can be defined in the `~/.lair/config.yaml` file to store settings tailored to different use cases. Modes simplify workflows; for instance, `lair -M {mode} comfy ...` applies the settings associated with the specified mode.
 
 All available flags can be listed by running `lair comfy {mode} --help`. Available settings are documented [here](lair/files/settings.yaml).
 
 Some flags are shared across workflows:
 - **`--repeat` / `-r`**: Runs the workflow a specified number of times. This differs from batch size; batches are processed simultaneously on the GPU, while repeats are executed sequentially. For image generation, the total number of images produced equals the batch size multiplied by the number of repeats.
-- **`--output-file` / `-o`**: Specifies the filename for the output. For image workflows, the default might be `output.png`, but this can be overridden by configuration or this flag. If a single image is generated, the exact filename is used. For multiple images, the base name becomes a prefix followed by a zero-padded counter (e.g., `output000000.png`, `output000001.png`). When only a single file is being used the special filename `-` will cause the output to go to STDOUT. This isn't recommended currently, because ComfyScript writes to STDOUT as well, which could cause the file to have extra output in it.
+- **`--output-file` / `-o`**: Specifies the filename for the output. For image workflows, the default might be `output.png`, but this can be overridden by configuration or this flag. If a single image is generated, the exact filename is used. For multiple images, the base name becomes a prefix followed by a zero-padded counter (e.g., `output000000.png`, `output000001.png`). When only a single file is being used, the special filename `-` sends the output to STDOUT. However, this is not currently recommended because ComfyScript also writes to STDOUT, which could cause extra output in the same stream.
 - **`--comfy-url` / `-u`**: Specifies the address of the ComfyUI server. By default, this is `http://localhost:8188`.
 
-When setting the inputs for a workflow, it is important to know what values are valid. Many settings are directly providing inputs for nodes. The ComfyUI web interface is the easiest way to determine valid values. If invalid values are provided, an error will occur. Note that ComfyScript may not always handle exceptions cleanly, which can prevent detailed error messages from reaching the main thread. Running with the `--debug` flag enables additional ComfyScript output, often providing helpful information for troubleshooting.
+When setting inputs for a workflow, it is important to use valid values. Many settings directly provide inputs for nodes. The ComfyUI web interface is the easiest way to determine valid values. If invalid values are provided, an error will occur. Note that ComfyScript may not always handle exceptions cleanly, which can prevent detailed error messages from reaching the main thread. Running with the `--debug` flag enables additional ComfyScript output, often providing helpful information for troubleshooting.
 
 ##### image - Image Generation
 
