@@ -306,7 +306,7 @@ func main() {
 }
 ```
 
-Any given code embedding can be returned via its index.
+Any embedding can be selected to return via its index.
 
 ```
 crocodile> /embedded-response  2
@@ -322,7 +322,7 @@ fn main() {
 }
 ```
 
-If there are two arguments provided, the second argument is used as a filename to save the embedding to.
+A second argument can specify a filename as a destination for writing out the embeddings.
 
 ```
 crocodile> /embedded-response  0 ~/hello.go
