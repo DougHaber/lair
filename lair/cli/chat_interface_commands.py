@@ -16,6 +16,10 @@ class ChatInterfaceCommands():
                 'callback': lambda c, a: self.command_debug(c, a),
                 'description': 'Toggle debugging'
             },
+            '/embedded-response': {
+                'callback': lambda c, a: self.command_embedded_response(c, a),
+                'description': 'Display or save an embedded response  (usage: /embedded-response [position?] [filename?], default position is 0, default output is STDOUT)'
+            },
             '/help': {
                 'callback': lambda c, a: self.command_help(c, a),
                 'description': 'Show available commands and shortcuts'
@@ -93,6 +97,32 @@ class ChatInterfaceCommands():
             else:
                 logger.setLevel('DEBUG')
                 self.reporting.system_message('Debugging enabled')
+
+    def command_embedded_response(self, command, arguments):
+        if len(arguments) > 2:
+            self.reporting.user_error("ERROR: usage: /embedded-response [position?] [filename?]")
+        else:
+            position = arguments[0] if len(arguments) >= 1 else 0
+            filename = arguments[1] if len(arguments) >= 2 else None
+
+            if not isinstance(lair.util.safe_int(position), int):
+                logger.error("Position must be an integer")
+                return
+            else:
+                position = int(position)
+
+            if self.chat_session.last_response:
+                response = self._get_embedded_response(self.chat_session.last_response, position)
+                if response:
+                    if filename is not None:
+                        lair.util.save_file(filename, response + '\n')
+                        self.reporting.system_message(f'Response saved  ({len(response)} bytes)')
+                    else:
+                        print(response)
+                else:
+                    logger.error("Matching embedding not found")
+            else:
+                logger.error("No last-response found to extract response from")
 
     def command_help(self, command, arguments):
         if len(arguments) != 0:

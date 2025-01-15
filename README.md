@@ -31,6 +31,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Chat Examples](#chat-examples)
       - [Attaching images](#attaching-images)
       - [One-off Chat](#one-off-chat)
+      - [Retrieving Embedded Responses](#retrieving-embedded-responses)
     - [Model Settings](#model-settings)
     - [Session Management](#session-management)
     - [Calling Comfy Workflows](#calling-comfy-workflows)
@@ -254,6 +255,80 @@ Why did Go to the beach? Because it heard the function was strong!
 crocodile> Java programming language
 Why did Java go to the doctor? Because it had a class problem!
 ```
+
+##### Retrieving Embedded Responses
+
+The `/embedded-response` command provides a quick way to retrieve section of the response.
+
+Which sections are retrieved is configurable with the setting `chat.embedded_syntax_regex`. By default, responses between `<answer></answer>` tags and within markdown code blocks are retrieved. Any number of styles to capture can be defined within the regex, but only the result of the first non-empty capture for each match is used.
+
+The `<answer>` style is helpful with responses where the LLM has been asked to work through a process and write it's final answer within tags. This could be used with chain-of-thought style requests.
+
+To demonstrate this, first we'll create a response with multiple code blocks. Markdown rendering is disabled for clarity in the response below:
+
+```
+crocodile> Please write hello world in Go, Rust, and Python. Only provide the language name followed by a codeblock for each. No explanation of comments are needed. Keep it brief.
+
+Go
+&#96;&#96;&#96;go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}
+&#96;&#96;&#96;
+
+Rust
+&#96;&#96;&#96;rust
+fn main() {
+    println!("Hello, World!");
+}
+&#96;&#96;&#96;
+
+Python
+&#96;&#96;&#96;python
+print("Hello, World!")
+&#96;&#96;&#96;
+```
+
+Now the `/embedded-response` command can be used to pull out a specific code block. The syntax is `/embedded-response [position?] [filename?]`. Position indices start at 0 and 0 is the default.
+
+```
+crocodile> /embedded-response
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}
+```
+
+Any given code embedding can be returned via its index.
+
+```
+crocodile> /embedded-response  2
+print("Hello, World!")
+```
+
+Negative indexes also work. For example `-2` references the second to last embedding.
+
+```
+crocodile> /embedded-response  -2
+fn main() {
+    println!("Hello, World!");
+}
+```
+
+If there are two arguments provided, the second argument is used as a filename to save the embedding to.
+
+```
+crocodile> /embedded-response  0 ~/hello.go
+Response saved  (76 bytes)
+```
+
 #### Model Settings
 
 ```
@@ -278,6 +353,7 @@ Why did the duck go to the doctor? Because it had a quack-attack!
 crocodile> ducks
 Why did the duck go to art school? To learn how to draw its life!
 ```
+
 #### Session Management
 
 The `/save` and `/load` commands can be used for session management.

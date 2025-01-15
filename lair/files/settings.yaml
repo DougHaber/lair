@@ -13,6 +13,10 @@ chat.attachment_syntax_regex: '<<([^>]+)>>'
 # When enabled, attachments found in chat messages are automatically sent to the LLM.
 # In cases where the syntax is creating false positives, this provides an easy way to turn it off.
 chat.attachments_enabled: true
+# The embedded syntax is used for retrieving sections from within an LLM generated response.  The regex can have
+# multiple captures, but only the first capture with a non-empty response is used for each match. This default regex
+# takes either the string found within <answer></answer> tags or a code block.
+chat.embedded_syntax_regex: "<answer>\\((.*?)\\)</answer>|```[a-zA-Z0-9_]+\\s*([\\s\\S]*?)```"
 # Show the bottom toolbar in the chat interface
 chat.enable_toolbar: true
 # The history file to use in the chat interface for readline history.

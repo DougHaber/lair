@@ -180,6 +180,22 @@ class ChatInterface(ChatInterfaceCommands):
         self.flash_message = message
         self.flash_message_expiration = time.time() + duration
 
+    def _get_embedded_response(self, message, position):
+        regex = lair.config.get('chat.embedded_syntax_regex')
+        matches = re.findall(regex, message, re.DOTALL)
+
+        if abs(position) > len(matches) - 1:
+            return None
+
+        for section in matches[position]:
+            if section.endswith('\n'):  # Chomp the extra newline off of strings
+                section = section[:-1]
+
+            if section:  # Return the first non-empty capture
+                return section
+
+        return None
+
     def _template_keys(self):
         return {
             'flags': self._generate_toolbar_template_flags(),

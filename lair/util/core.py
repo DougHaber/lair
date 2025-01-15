@@ -29,10 +29,15 @@ def safe_int(number):
 
 
 def slurp_file(filename):
-    with open(filename, 'r') as fd:
+    with open(os.path.expanduser(filename), 'r') as fd:
         document = fd.read()
 
     return document
+
+
+def save_file(filename, contents):
+    with open(os.path.expanduser(filename), 'w') as fd:
+        fd.write(contents)
 
 
 def parse_yaml_text(text):
