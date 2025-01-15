@@ -422,7 +422,7 @@ fiction elements.
 
 The `/mode` command can be used with custom-defined modes to quickly jump between different models and their settings. The `--help` flags, such as `/comfy image --help` display the defaults for the current mode.
 
-There are a couple known issues with this command. The output can be noisy due to issues with ComfyScript writing output with no options to turn it off. If debugging is enabled, all ComfyScript output is shown, otherwise it is partially muted. Some output is still displayed when threads write output after workflows complete. On exit, sometimes the ComfyScript threads throw errors. This can cause extra output, but doesn't cause any actual harm.
+There are a couple known issues with this command. The output can be noisy due to issues with ComfyScript writing output with no options to turn it off. If debugging is enabled, all ComfyScript output is shown, otherwise it is partially muted. Some output is still displayed when threads writes output after workflows complete. On exit, sometimes the ComfyScript threads throw errors. This can cause extra output, but doesn't cause any actual harm.
 
 ### Comfy
 
