@@ -27,6 +27,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
   - [Chat - Command Line Chat Interface](#chat---command-line-chat-interface)
     - [Commands](#commands)
     - [Shortcut Keys](#shortcut-keys)
+    - [Markdown Rendering](#markdown-rendering)
     - [Chat Examples](#chat-examples)
       - [Attaching images](#attaching-images)
       - [One-off Chat](#one-off-chat)
@@ -176,6 +177,31 @@ In addition to all the standard GNU-readline style key combinations, the followi
 | ESC-W        | Toggle word wrapping                      |
 
 The verbose output options might be removed in the future. They were originally around langchain's verbose flag, but since langchain is no longer used by Lair, their may not be much or any impact from enabling it.
+
+#### Markdown Rendering
+
+By default, responses from LLMs are rendered as markdown. The markdown rendering includes features such as tables and code blocks with syntax highlighting.
+
+For most general chat usage, the markdown rendering is a good feature, but it does have some downsides. When rendering as markdown, some content could be lost. For example, `<tags>` will not render and some strings will be encoded. For example, a response of `&lt;` will show as `<`.  Responses within codeblocks are always rendered literally.
+
+The `style.render_markdown` setting can be used to turn this behavior on or off, or set it up differently for specific modes. In the chat interface the ESC-M key combination also can be used to quickly toggle markdown. The `/last-response` and `/history` commands use the current settings.
+
+
+For example, if a response is rendered one way, and the other is preferred, press ESC-M to toggle markdown rendering, and then `/last-response` can be used to show the message again.
+
+First, with markdown rendering enabled, the literal &lt; is HTML encoded as <
+
+```
+crocodile> Print respond with the exact message: &lt;
+<
+```
+
+Pressing ESC-M and trying again shows the literal response with no markdown rendering
+
+```
+crocodile> /last-response
+&lt;
+```
 
 #### Chat Examples
 
