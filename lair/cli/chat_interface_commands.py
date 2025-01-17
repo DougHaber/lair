@@ -34,7 +34,7 @@ class ChatInterfaceCommands():
             },
             '/last-response': {
                 'callback': lambda c, a: self.command_last_response(c, a),
-                'description': 'Display the most recently seen response'
+                'description': 'Display or save the most recently seen response  (usage: /last-response [filename?])'
             },
             '/list-models': {
                 'callback': lambda c, a: self.command_list_models(c, a),
@@ -116,7 +116,7 @@ class ChatInterfaceCommands():
                 if response:
                     if filename is not None:
                         lair.util.save_file(filename, response + '\n')
-                        self.reporting.system_message(f'Response saved  ({len(response)} bytes)')
+                        self.reporting.system_message(f'Section saved  ({len(response)} bytes)')
                     else:
                         print(response)
                 else:
@@ -163,11 +163,17 @@ class ChatInterfaceCommands():
                 logger.warn("No last prompt found")
 
     def command_last_response(self, command, arguments):
-        if len(arguments) != 0:
-            self.reporting.user_error("ERROR: /last-response takes no arguments")
+        if len(arguments) > 1:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage: /last-response [filename?]")
         else:
-            if self.chat_session.last_response:
-                self.reporting.llm_output(self.chat_session.last_response)
+            last_response = self.chat_session.last_response
+            if last_response:
+                filename = arguments[0] if len(arguments) == 1 else None
+                if filename is not None:
+                    lair.util.save_file(filename, last_response + '\n')
+                    self.reporting.system_message(f'Last response saved  ({len(last_response)} bytes)')
+                else:
+                    self.reporting.llm_output(last_response)
             else:
                 logger.warn("No last response found")
 
