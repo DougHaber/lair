@@ -16,9 +16,9 @@ class ChatInterfaceCommands():
                 'callback': lambda c, a: self.command_debug(c, a),
                 'description': 'Toggle debugging'
             },
-            '/embedded-response': {
-                'callback': lambda c, a: self.command_embedded_response(c, a),
-                'description': 'Display or save an embedded response  (usage: /embedded-response [position?] [filename?], default position is 0, default output is STDOUT)'
+            '/extract': {
+                'callback': lambda c, a: self.command_extract(c, a),
+                'description': 'Display or save an embedded response  (usage: `/extract [position?] [filename?]`)'
             },
             '/help': {
                 'callback': lambda c, a: self.command_help(c, a),
@@ -98,9 +98,9 @@ class ChatInterfaceCommands():
                 logger.setLevel('DEBUG')
                 self.reporting.system_message('Debugging enabled')
 
-    def command_embedded_response(self, command, arguments):
+    def command_extract(self, command, arguments):
         if len(arguments) > 2:
-            self.reporting.user_error("ERROR: usage: /embedded-response [position?] [filename?]")
+            self.reporting.user_error("ERROR: usage: /extract [position?] [filename?]")
         else:
             position = arguments[0] if len(arguments) >= 1 else 0
             filename = arguments[1] if len(arguments) >= 2 else None
@@ -120,9 +120,9 @@ class ChatInterfaceCommands():
                     else:
                         print(response)
                 else:
-                    logger.error("Matching embedding not found")
+                    logger.error("Extract failed: No matching section found")
             else:
-                logger.error("No last-response found to extract response from")
+                logger.error("Extract failed: Last response is not set")
 
     def command_help(self, command, arguments):
         if len(arguments) != 0:

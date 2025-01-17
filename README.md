@@ -31,7 +31,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Chat Examples](#chat-examples)
       - [Attaching images](#attaching-images)
       - [One-off Chat](#one-off-chat)
-      - [Retrieving Embedded Responses](#retrieving-embedded-responses)
+      - [Extracting Embedded Responses](#extracting-embedded-responses)
     - [Model Settings](#model-settings)
     - [Session Management](#session-management)
     - [Calling Comfy Workflows](#calling-comfy-workflows)
@@ -147,24 +147,24 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 
 #### Commands
 
-| Command            | Description                                                                                               |
-|--------------------|-----------------------------------------------------------------------------------------------------------|
-| /clear             | Clear the conversation history                                                                            |
-| /comfy             | Call ComfyUI workflows                                                                                    |
-| /debug             | Toggle debugging                                                                                          |
-| /embedded-response | Display or save an embedded response  (usage: `/embedded-response [position?] [filename?]`)               |
-| /help              | Show available commands and shortcuts                                                                     |
-| /history           | Show current conversation                                                                                 |
-| /last-prompt       | Display or save the most recently used prompt  (usage: /last-prompt [filename?])                          |
-| /last-response     | Display or save the most recently seen response  (usage: /last-response [filename?])                      |
-| /list-models       | Display a list of available models for the current session                                                |
-| /load              | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
-| /mode              | Show or select a mode  (usage: `/mode [name?]`)                                                           |
-| /model             | Show or set a model  (usage: `/model [name?]`)                                                            |
-| /prompt            | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                               |
-| /reload-settings   | Reload settings from disk  (resets everything, except current mode)                                       |
-| /save              | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`) |
-| /set               | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)  |
+| Command          | Description                                                                                               |
+|------------------|-----------------------------------------------------------------------------------------------------------|
+| /clear           | Clear the conversation history                                                                            |
+| /comfy           | Call ComfyUI workflows                                                                                    |
+| /debug           | Toggle debugging                                                                                          |
+| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                         |
+| /help            | Show available commands and shortcuts                                                                     |
+| /history         | Show current conversation                                                                                 |
+| /last-prompt     | Display or save the most recently used prompt  (usage: /last-prompt [filename?])                          |
+| /last-response   | Display or save the most recently seen response  (usage: /last-response [filename?])                      |
+| /list-models     | Display a list of available models for the current session                                                |
+| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
+| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                           |
+| /model           | Show or set a model  (usage: `/model [name?]`)                                                            |
+| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                               |
+| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                       |
+| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`) |
+| /set             | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)  |
 
 #### Shortcut Keys
 
@@ -258,10 +258,9 @@ crocodile> Java programming language
 Why did Java go to the doctor? Because it had a class problem!
 ```
 
-##### Retrieving Embedded Responses
-The `/embedded-response` command provides a quick way to retrieve specific sections of a response.
+##### Extracting Embedded Responses
 
-Which sections are retrieved is configurable via the setting `chat.embedded_syntax_regex`. By default, responses between `<answer></answer>` tags and within Markdown code blocks are retrieved. Any number of styles can be defined within the regex, but only the result of the first non-empty capture for each match is used.
+The `/extract` command provides a quick way to retrieve specific sections of a response. By default, sections are defined as content within Markdown code blocks or between `<answer></answer>` tags. The definition of a section is configurable via the setting `chat.embedded_syntax_regex`. Any number of styles can be defined within the regex, but only the result of the first non-empty capture for each match is used.
 
 The `<answer>` style is useful for responses where the LLM has been instructed to work through a process and write its final answer within tags. This is particularly helpful for chain-of-thought-style requests.
 
@@ -294,10 +293,10 @@ print("Hello, World!")
 ```
 ~~~
 
-Now the `/embedded-response` command can be used to pull out a specific code block. The syntax is `/embedded-response [position?] [filename?]`. Position indexes start at 0 and 0 is the default.
+Now the `/extract` command can be used to pull out a specific code block. The syntax is `/extract [position?] [filename?]`. Position indexes start at 0 and 0 is the default.
 
 ```
-crocodile> /embedded-response
+crocodile> /extract
 package main
 
 import "fmt"
@@ -307,26 +306,26 @@ func main() {
 }
 ```
 
-Any embedding can be selected to return via its index.
+Any section can be selected to return via its index.
 
 ```
-crocodile> /embedded-response 2
+crocodile> /extract 2
 print("Hello, World!")
 ```
 
-Negative indexes also work. For example `-2` references the second to last embedding.
+Negative indexes also work. For example `-2` references the second to last section.
 
 ```
-crocodile> /embedded-response -2
+crocodile> /extract -2
 fn main() {
     println!("Hello, World!");
 }
 ```
 
-A second argument can specify a filename as a destination for writing out the embeddings.
+A second argument can specify a filename as a destination for writing out the section.
 
 ```
-crocodile> /embedded-response 0 ~/hello.go
+crocodile> /extract 0 ~/hello.go
 Response saved  (76 bytes)
 ```
 
