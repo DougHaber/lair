@@ -187,6 +187,7 @@ class ChatInterfaceCommands():
             self.reporting.user_error("ERROR: /list-models takes no arguments")
         else:
             models = sorted(self.chat_session.list_models(), key=lambda m: m['id'])
+            self._models = models  # Update the cached list of models with the latest results
             self.reporting.table_from_dicts_system(models)
 
     def command_load(self, command, arguments):
