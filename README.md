@@ -155,8 +155,8 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 | /embedded-response | Display or save an embedded response  (usage: `/embedded-response [position?] [filename?]`)               |
 | /help              | Show available commands and shortcuts                                                                     |
 | /history           | Show current conversation                                                                                 |
-| /last-prompt       | Display the most recently used prompt                                                                     |
-| /last-response     | Display the most recently seen response                                                                   |
+| /last-prompt       | Display or save the most recently used prompt  (usage: /last-prompt [filename?])                          |
+| /last-response     | Display or save the most recently seen response  (usage: /last-response [filename?])                      |
 | /list-models       | Display a list of available models for the current session                                                |
 | /load              | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
 | /mode              | Show or select a mode  (usage: `/mode [name?]`)                                                           |

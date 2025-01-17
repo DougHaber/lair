@@ -153,12 +153,17 @@ class ChatInterfaceCommands():
                     self.reporting.message(message)
 
     def command_last_prompt(self, command, arguments):
-        if len(arguments) != 0:
-            self.reporting.user_error("ERROR: /last-prompt takes no arguments")
+        if len(arguments) > 1:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage: /last-prompt [filename?]")
         else:
             last_prompt = self.chat_session.last_prompt
             if last_prompt:
-                self.reporting.print_rich(self.reporting.plain(last_prompt))
+                filename = arguments[0] if len(arguments) == 1 else None
+                if filename is not None:
+                    lair.util.save_file(filename, last_prompt + '\n')
+                    self.reporting.system_message(f'Last prompt saved  ({len(last_prompt)} bytes)')
+                else:
+                    self.reporting.print_rich(self.reporting.plain(last_prompt))
             else:
                 logger.warn("No last prompt found")
 
