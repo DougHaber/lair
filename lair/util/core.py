@@ -12,6 +12,7 @@ import re
 import lair
 from lair.logging import logger
 
+import pdfplumber
 import yaml
 
 
@@ -128,15 +129,44 @@ def _get_attachments_content__image_file(filename):
 
     return parts
 
-def _get_attachments_content__text_file(filename):
-    messages = []
 
+def read_pdf(filename, *, enforce_limits=False):
+    limit = lair.config.get('misc.text_attachment_max_size')
+
+    with pdfplumber.open(filename) as pdf_reader:
+        contents = ""
+        for page in pdf_reader.pages:
+            contents += page.extract_text(x_tolerance=2, y_tolerance=2)
+            if enforce_limits and len(contents) > limit:
+                if not lair.config.get('misc.text_attachment_truncate'):
+                    raise Exception(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+                else:
+                    logger.warn(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+                    contents = contents[0:limit]
+                    break
+
+    return contents
+
+
+def _get_attachments_content__pdf_file(filename):
+    contents = read_pdf(filename)
+
+    if lair.config.get('model.provide_attachment_filenames'):
+        header = f'User provided file: filename={filename}\n---\n'
+    else:
+        header = 'User provided file:\n---\n'
+
+    return lair.util.get_message('user', header + contents)
+
+
+def _get_attachments_content__text_file(filename):
     limit = lair.config.get('misc.text_attachment_max_size')
     do_truncate = False
     if os.path.getsize(filename) > limit:
         if not lair.config.get('misc.text_attachment_truncate'):
-            raise Exception("Attachment is greater than limit set by misc.text_attachment_max_size: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+            raise Exception(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
         else:
+            logger.warn(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
             do_truncate = True
 
     try:
@@ -150,9 +180,8 @@ def _get_attachments_content__text_file(filename):
     else:
         header = 'User provided file:\n---\n'
 
-    messages.append(lair.util.get_message('user', header + contents))
+    return lair.util.get_message('user', header + contents)
 
-    return messages
 
 def get_attachments_content(filenames):
     """
@@ -173,8 +202,8 @@ def get_attachments_content(filenames):
         if extension in {'gif', 'jpg', 'jpeg', 'png', 'webp'}:
             content_parts.extend(_get_attachments_content__image_file(filename))
         elif extension == 'pdf':
-            raise Exception("PDF attachment not supported")
+            messages.append(_get_attachments_content__pdf_file(filename))
         else:
-            messages.extend(_get_attachments_content__text_file(filename))
+            messages.append(_get_attachments_content__text_file(filename))
 
     return content_parts, messages
