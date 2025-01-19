@@ -139,8 +139,11 @@ def _get_attachments_content__text_file(filename):
         else:
             do_truncate = True
 
-    with open(filename, 'r') as fd:
-        contents = fd.read(limit if do_truncate else None)
+    try:
+        with open(filename, 'r') as fd:
+            contents = fd.read(limit if do_truncate else None)
+    except UnicodeDecodeError as error:
+        raise Exception(f"File attachment is not text: file={filename}, error={error}")
 
     if lair.config.get('model.provide_attachment_filenames'):
         header = f'User provided file: filename={filename}\n---\n'
