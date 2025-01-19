@@ -199,7 +199,7 @@ def get_attachments_content(filenames):
     for filename in expand_filename_list(filenames):
         extension = pathlib.Path(filename).suffix[1:]
 
-        if extension in {'gif', 'jpg', 'jpeg', 'png', 'webp'}:
+        if extension.lower() in {'gif', 'jpg', 'jpeg', 'png', 'webp'}:
             content_parts.extend(_get_attachments_content__image_file(filename))
         elif extension == 'pdf':
             messages.append(_get_attachments_content__pdf_file(filename))
