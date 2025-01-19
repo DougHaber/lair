@@ -143,10 +143,16 @@ class ChatInterface(ChatInterfaceCommands):
         if lair.config.get('chat.attachments_enabled'):
             attachment_regex = lair.config.get('chat.attachment_syntax_regex')
             attachments = re.findall(attachment_regex, request)
-            if attachments:
+            content_parts, messages = lair.util.get_attachments_content(attachments)
+            self.chat_session.history.add_messages(messages)
+
+            # Remove the attachments from the user's message
+            request = re.sub(attachment_regex, '', request)
+
+            if len(content_parts) > 0:
                 request = [
-                    {'type': 'text', 'text': re.sub(attachment_regex, '', request)},
-                    *lair.util.filenames_to_data_url_messages(attachments),
+                    {'type': 'text', 'text': request},
+                    *content_parts,
                 ]
 
         response = self.chat_session.chat(request)

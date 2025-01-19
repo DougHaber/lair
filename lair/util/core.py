@@ -5,6 +5,7 @@ import importlib.resources
 import json
 import logging
 import mimetypes
+import pathlib
 import os
 import re
 
@@ -107,23 +108,70 @@ def expand_filename_list(filenames, *, fail_on_not_found=True, sort_results=True
     return sorted(new_filenames) if sort_results else new_filenames
 
 
-def filenames_to_data_url_messages(filenames):
+def _get_attachments_content__image_file(filename):
+    mime_type = mimetypes.guess_type(filename)[0]  # Extract the MIME type
+    if not mime_type or not mime_type.startswith('image/'):
+        raise ValueError(f"File has image extension, but non-image mime type: {filename}  (mime={mime_type})")
+
+    parts = []
+    with open(filename, 'rb') as fd:
+        if lair.config.get('model.provide_attachment_filenames'):
+            parts.append({"type": "text", "text": f"Attached File: {filename} ({mime_type})"})
+
+        base64_str = base64.b64encode(fd.read()).decode('utf-8')
+        parts.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{mime_type};base64,{base64_str}",
+            }
+        })
+
+    return parts
+
+def _get_attachments_content__text_file(filename):
     messages = []
-    for filename in expand_filename_list(filenames):
-        mime_type = mimetypes.guess_type(filename)[0]  # Extract the MIME type
-        if not mime_type:
-            raise ValueError(f"Could not determine MIME type for file: {filename}")
 
-        with open(filename, 'rb') as fd:
-            if lair.config.get('model.provide_attachment_filenames'):
-                messages.append({"type": "text", "text": f"Attached File: {filename} ({mime_type})"})
+    limit = lair.config.get('misc.text_attachment_max_size')
+    do_truncate = False
+    if os.path.getsize(filename) > limit:
+        if not lair.config.get('misc.text_attachment_truncate'):
+            raise Exception("Attachment is greater than limit set by misc.text_attachment_max_size: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+        else:
+            do_truncate = True
 
-            base64_str = base64.b64encode(fd.read()).decode('utf-8')
-            messages.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:{mime_type};base64,{base64_str}",
-                }
-            })
+    with open(filename, 'r') as fd:
+        contents = fd.read(limit if do_truncate else None)
+
+    if lair.config.get('model.provide_attachment_filenames'):
+        header = f'User provided file: filename={filename}\n---\n'
+    else:
+        header = 'User provided file:\n---\n'
+
+    messages.append(lair.util.get_message('user', header + contents))
 
     return messages
+
+def get_attachments_content(filenames):
+    """
+    Take a list of filenames and return the content
+    Parameters:
+        filenames: A list of filenames to generate attachments for. Globs and homedir
+            expansion are supported.
+
+    Returns:
+        content_parts = list of OpenAI API style `content` messages
+        messages = list of strings of chat messages for each text section.
+    """
+    content_parts = []
+    messages = []
+    for filename in expand_filename_list(filenames):
+        extension = pathlib.Path(filename).suffix[1:]
+
+        if extension in {'gif', 'jpg', 'jpeg', 'png', 'webp'}:
+            content_parts.extend(_get_attachments_content__image_file(filename))
+        elif extension == 'pdf':
+            raise Exception("PDF attachment not supported")
+        else:
+            messages.extend(_get_attachments_content__text_file(filename))
+
+    return content_parts, messages
