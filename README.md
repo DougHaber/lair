@@ -779,7 +779,7 @@ PDF files are converted to text without any images. Any number of files can prov
 
 ```sh
 $ lair -m llama3.2:3b-ctx0 util \
-    -a ~/files/tos.pdf \
+	-a ~/files/tos.pdf \
 	-i 'List out anything worrisome or unusual from the provided terms of service'
 * The inactivity disconnect policy after 15 minutes of inactivity.
 * Automated processes are not allowed to maintain constant connections (section 3a).
