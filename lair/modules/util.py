@@ -50,14 +50,12 @@ class Util():
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
 
-    def call_llm(self, chat_session, *, instructions, user_message):
+    def call_llm(self, chat_session, *, instructions, user_messages):
         messages = [
             lair.util.get_message('system', Util.system_prompt),
             lair.util.get_message('user', instructions),
+            *user_messages,
         ]
-
-        if user_message:
-            messages.append(user_message)
 
         response = chat_session.invoke(messages)
 
@@ -81,7 +79,7 @@ class Util():
             logger.error("Either --instructions or --instructions-file must be proved")
             sys.exit(1)
 
-    def _get_user_message(self, arguments):
+    def _get_user_messages(self, arguments):
         # Read the user "content" message
         message = None
         if arguments.pipe:
@@ -94,23 +92,28 @@ class Util():
         if message:  # These extra instructions helps a lot in some models
             message = "CONTENT is found below. Everything above is instructions and rules:\n" + message
 
-        # Return the appropriate format, depending on whether we have content messages, attachments ,both, or neither
-        if not (message or arguments.attachments):
-            return None
-        elif message and not arguments.attachments:
-            return lair.util.get_message('user', message)
-        else:
-            content_parts = []
+        messages = []
+        attachment_content_parts, attachment_messages = lair.util.get_attachments_content(arguments.attachments)
+        messages.extend(attachment_messages)
 
-            if message:
-                content_parts.append({"type": "text", "text": message})
+        # Add the regular message as a standard message, or image sections if there are images
+        if message:
+            if len(attachment_content_parts) < 0:
+                messages.append(lair.util.get_message('user', message))
+            else:
+                content_parts = []
 
-            content_parts.extend(lair.util.filenames_to_data_url_messages(arguments.attachments))
+                if message:
+                    content_parts.append({"type": "text", "text": message})
 
-            return {
-                'role': 'user',
-                'content': content_parts,
-            }
+                content_parts.extend(attachment_content_parts)
+
+                messages.append({
+                    'role': 'user',
+                    'content': content_parts,
+                })
+
+        return messages
 
     def run(self, arguments):
         chat_session = lair.sessions.get_session(
@@ -122,11 +125,11 @@ class Util():
             lair.config.set('model.provide_attachment_filenames', arguments.include_filenames)
 
         instructions = self._get_instructions(arguments)
-        user_message = self._get_user_message(arguments)
+        user_messages = self._get_user_messages(arguments)
 
         response = self.call_llm(chat_session,
                                  instructions=instructions,
-                                 user_message=user_message)
+                                 user_messages=user_messages)
         response = self.clean_response(response)
 
         print(response)

@@ -21,6 +21,10 @@ class ChatHistory():
         })
         self._truncate()
 
+    def add_messages(self, messages):
+        for message in messages:
+            self.add_message(message['role'], message['content'])
+
     def get_messages(self, *, extra_messages=None):
         if extra_messages is None:
             return self.history

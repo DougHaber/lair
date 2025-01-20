@@ -139,6 +139,15 @@ database.user_environment_variable: 'DB_USER'
 # It currently might not do anything, and will likely be removed in the future.
 debug.verbose: false
 
+# Maximum size for text attachments in bytes (including PDF that are converted to text)
+# This will either truncate or fail depending on misc.text_attachment_truncate
+misc.text_attachment_max_size: 10000000
+# When a text attachment (including pdf) exceeeds misc.text_attachment_max_size, if this is
+# true, then the contents are truncated and a warning is printed. If it is false the operation
+# fails.
+misc.text_attachment_truncate: true
+
+
 # The max_completion_tokens to set in the API request, for endpoints that honor this
 model.max_tokens: __null_int
 # The name of the model to run, used by the API
