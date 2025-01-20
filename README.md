@@ -531,7 +531,7 @@ When setting inputs for a workflow, it is important to use valid values. Many se
 To generate a single image:
 
 ```bash
-lair comfy image --prompt 'A cyberpduck, flying through the matrix'
+lair comfy image --prompt 'A cyberduck, flying through the matrix'
 ```
 
 Assuming default configuration is used, that will attempt to use a Stable Diffusion 1.5 model and write output to `output.png`. Often times more settings are needed.
