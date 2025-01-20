@@ -36,13 +36,13 @@ class Util():
 
     def __init__(self, parser):
         parser.add_argument('-a', '--attach-file', type=str, dest='attachments', action='append',
-                            help='Specify one or more image files to attach to the request. Multiple files can be provided by separating them with spaces. Ensure the model you are interacting with supports file attachments. Globs are supported.')
+                            help='Specify one or more image files to attach to the request. Multiple files may be provided by repeating the argument. Ensure the model you are interacting with supports file attachments. Globs are supported.')
         parser.add_argument('-c', '--content', type=str,
                             help='Content to use'),
         parser.add_argument('-C', '--content-file', type=str,
                             help='Filename containing content use')
         parser.add_argument('-F', '--include-filenames', action='store_true', default=None,
-                            help='Provide filenames of attached files (via model.provide_attachment_filename, default=%s)' % lair.config.get('model.provide_attachment_filenames'))
+                            help='Provide filenames of attached files (via misc.provide_attachment_filenames, default=%s)' % lair.config.get('misc.provide_attachment_filenames'))
         parser.add_argument('-i', '--instructions', type=str,
                             help='Instructions for the request')
         parser.add_argument('-I', '--instructions-file', type=str,
@@ -122,7 +122,7 @@ class Util():
         )
 
         if arguments.include_filenames is not None:
-            lair.config.set('model.provide_attachment_filenames', arguments.include_filenames)
+            lair.config.set('misc.provide_attachment_filenames', arguments.include_filenames)
 
         instructions = self._get_instructions(arguments)
         user_messages = self._get_user_messages(arguments)

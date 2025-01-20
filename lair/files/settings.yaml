@@ -139,6 +139,8 @@ database.user_environment_variable: 'DB_USER'
 # It currently might not do anything, and will likely be removed in the future.
 debug.verbose: false
 
+# When enabled and attachments are used, the filenames are provided to the model.
+misc.provide_attachment_filenames: false
 # Maximum size for text attachments in bytes (including PDF that are converted to text)
 # This will either truncate or fail depending on misc.text_attachment_truncate
 misc.text_attachment_max_size: 10000000
@@ -154,8 +156,6 @@ model.max_tokens: __null_int
 model.name: ''
 # The temperature to set in the API request
 model.temperature: __null_float
-# When enabled and attachments are used, the filenames are provided to the model.
-model.provide_attachment_filenames: false
 
 # The base URL to use when talking to OpenAI compatible APIs.  Set as null
 # for the default official OpenAI URL. For ollama, use something like http://localhost:11434/v1

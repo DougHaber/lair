@@ -116,7 +116,7 @@ def _get_attachments_content__image_file(filename):
 
     parts = []
     with open(filename, 'rb') as fd:
-        if lair.config.get('model.provide_attachment_filenames'):
+        if lair.config.get('misc.provide_attachment_filenames'):
             parts.append({"type": "text", "text": f"Attached File: {filename} ({mime_type})"})
 
         base64_str = base64.b64encode(fd.read()).decode('utf-8')
@@ -151,7 +151,7 @@ def read_pdf(filename, *, enforce_limits=False):
 def _get_attachments_content__pdf_file(filename):
     contents = read_pdf(filename)
 
-    if lair.config.get('model.provide_attachment_filenames'):
+    if lair.config.get('misc.provide_attachment_filenames'):
         header = f'User provided file: filename={filename}\n---\n'
     else:
         header = 'User provided file:\n---\n'
@@ -175,7 +175,7 @@ def _get_attachments_content__text_file(filename):
     except UnicodeDecodeError as error:
         raise Exception(f"File attachment is not text: file={filename}, error={error}")
 
-    if lair.config.get('model.provide_attachment_filenames'):
+    if lair.config.get('misc.provide_attachment_filenames'):
         header = f'User provided file: filename={filename}\n---\n'
     else:
         header = 'User provided file:\n---\n'
