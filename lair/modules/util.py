@@ -54,10 +54,8 @@ class Util():
         messages = [
             lair.util.get_message('system', Util.system_prompt),
             lair.util.get_message('user', instructions),
+            *user_messages,
         ]
-
-        if len(user_messages) > 0:
-            messages.extend(user_messages)
 
         response = chat_session.invoke(messages)
 
@@ -99,20 +97,21 @@ class Util():
         messages.extend(attachment_messages)
 
         # Add the regular message as a standard message, or image sections if there are images
-        if message and len(attachment_content_parts) < 0:
-            messages.append(lair.util.get_message('user', message))
-        else:
-            content_parts = []
+        if message:
+            if len(attachment_content_parts) < 0:
+                messages.append(lair.util.get_message('user', message))
+            else:
+                content_parts = []
 
-            if message:
-                content_parts.append({"type": "text", "text": message})
+                if message:
+                    content_parts.append({"type": "text", "text": message})
 
-            content_parts.extend(attachment_content_parts)
+                content_parts.extend(attachment_content_parts)
 
-            messages.append({
-                'role': 'user',
-                'content': content_parts,
-            })
+                messages.append({
+                    'role': 'user',
+                    'content': content_parts,
+                })
 
         return messages
 
