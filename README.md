@@ -29,7 +29,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Shortcut Keys](#shortcut-keys)
     - [Markdown Rendering](#markdown-rendering)
     - [Chat Examples](#chat-examples)
-      - [Attaching images](#attaching-images)
+      - [Attaching Files](#attaching-files)
       - [One-off Chat](#one-off-chat)
       - [Extracting Embedded Responses](#extracting-embedded-responses)
     - [Model Settings](#model-settings)
@@ -45,7 +45,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
       - [Providing Input Content](#providing-input-content)
-      - [Attaching Images](#attaching-images)
+      - [Attaching Files](#attaching-files-1)
 
 <!-- markdown-toc end -->
 
@@ -61,7 +61,7 @@ The full Lair repository includes additional features, such as an agent framewor
 * **chat**: Command line chat interface
   * Rich interface w/ auto-complete, commands, shortcuts, etc
   * File based session management
-  * Support for image file attachments
+  * Support for image, PDF, and text attachments
   * Markdown rendering & syntax highlighting
 
 * **comfy**: Run workflows on ComfyUI
@@ -70,7 +70,7 @@ The full Lair repository includes additional features, such as an agent framewor
 
 * **util**: Unix-style utility for scripting or one-off LLM usage
   * Simple I/O for sending content via file or pipes to LLMs
-  * Support for image file attachments
+  * Support for image, PDF, and text attachments
 
 ## Future
 
@@ -206,11 +206,23 @@ crocodile> /last-response
 
 #### Chat Examples
 
-##### Attaching images
+##### Attaching Files
 
-Images can be attached by enclosing file names within double angle brackets, such as `<<foo.png>>`. Globbing (wildcards and shell-style sets and pattern matching) and `~` for the home directory are also supported (e.g., `<<~/images/*.png>>`). Note that attaching images to models that do not support visual inputs may lead to unpredictable behavior, and some models only work with a single image at a time.
+Files can be attached by enclosing file names within double angle brackets, such as `<<foo.png>>`. Globbing (wildcards and shell-style sets and pattern matching) and `~` for the home directory are also supported (e.g., `<<~/images/*.png>>`).
 
-Support for attaching images can be disabled via `chat.attachments_enabled`. When disabled, the syntax is ignored, and the message is sent to the API as-is. This is useful when working with non-vision models or when sending a message that uses syntax conflicting with the file attachment syntax. This can be configured or toggled in the chat interface using a command such as: `/set chat.attachments_enabled false`.
+Supported file types:
+
+| Type       | Extensions                     | Notes                       |
+|------------|--------------------------------|-----------------------------|
+| Image      | .gif, .jpeg, .jpg, .png, .webp | Requires a vision model     |
+| PDF        | .pdf                           | Converts to text, no images |
+| Text Files | * (must not contain binary)    |                             |
+
+Images only work with models that support visual inputs. Providing images to other models might have unpredictable behavior. Some models only can handle a single image per request.
+
+PDFs are converted to text. Some formatting may be lost, and no images are provided to the model.
+
+Support for attaching files can be disabled via `chat.attachments_enabled`. When disabled, the syntax is ignored, and the message is sent to the API as-is. This can be configured or toggled in the chat interface using a command such as: `/set chat.attachments_enabled false`.
 
 The double bracket syntax is customizable via `chat.attachment_syntax_regex`. The [settings.yaml](lair/files/settings.yaml) file contains notes on how to safely modify this setting.
 
@@ -223,7 +235,25 @@ Alpaca birthday party with cupcakes.
 
 The string `<<~/alpaca.png>>` is automatically removed from the message, so its position within the message does not affect processing.
 
-By default, filenames are not provided in the output, but this behavior can be changed via `model.provide_attachment_filenames`.
+Text files and PDFs can be included the same way:
+
+```
+crocodile> Write a limerick about each of the provided short stories. It must be in proper limerick style and format. <<~/books/*.txt>>
+Cool Air by H.P. Lovecraft: There once was a scientist so fine, Investigated strange colds in his time. He sought answers with care, In air that chilled with despair, And found horrors that blurred his mind.
+
+The Eyes Have It by Philip K. Dick: In cities they hid their faces so bright, Yet their eyes betrayed their true sight. A subtle, sly guise, That pierced mortal eyes, Exposing souls in the dark of night.
+```
+
+Here is an example using a PDF:
+
+```
+crocodile> Using the provided 10-Q for Tesla, please write a summary in the form of a haiku. Respond with only a nicely formatted haiku following strict haiku rules and style. <<tsla-20240930-10-q.pdf>>
+Electric dreams ahead
+Production ramps, profits rise
+Autonomous roads
+```
+
+By default, filenames are not provided to the LLM, but this behavior can be changed via `model.provide_attachment_filenames`.
 
 ```
 # Enable providing filenames
@@ -739,11 +769,24 @@ $ netstat -nr | lair util -p -i 'Please summarize this routing table in plain en
 All traffic is routed through gateway 10.0.1.1 on interface wlo1, except for local network 172.17.0.0/16 which uses docker0 and local network 10.0.1.0/24 which also uses wlo1.
 ```
 
-##### Attaching Images
+##### Attaching Files
 
-The `--attach-file` / `-a` flag allows for attaching one or more image files. Multiple images could be provided via either globbing or by repeating `--attach-file` argument. Globbing and homedir expansion (`~`) is performed automatically. Globs might need to be protected to prevent the shell from expanding them.
+The `--attach-file` / `-a` flag allows for attaching one or more files. Multiple files could be provided via either globbing or by repeating `--attach-file` argument. Globbing and homedir expansion (`~`) is performed automatically. Globs might need to be protected to prevent the shell from expanding them.
 
-Here is a simple example, providing an image and asking for a summary.
+Attachments can be image files, text files, or PDFs. For more details, see the [documentation](#attaching-files) for attaching files within the chat interface.
+
+PDF files are converted to text without any images. Any number of files can provided, within the context length limits for the model.
+
+```sh
+$ lair -m llama3.2:3b-ctx0 util \
+    -a ~/files/tos.pdf \
+	-i 'List out anything worrisome or unusual from the provided terms of service'
+* The inactivity disconnect policy after 15 minutes of inactivity.
+* Automated processes are not allowed to maintain constant connections (section 3a).
+* ISP has the right to audit connections to enforce terms (section 13b).
+```
+
+Image files only work properly with vision models. Here is a simple example, providing an image and asking for a summary.
 
 ```bash
 $ lair -m llama3.2-vision:11b util \
