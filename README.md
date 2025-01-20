@@ -538,14 +538,14 @@ Assuming default configuration is used, that will attempt to use a Stable Diffus
 
 ```bash
 lair comfy image \
-	--prompt 'A cyber-duck, flying through the matrix' \
-	--model juggernautXL_juggXIByRundiffusion.safetensors \
-	--output-height 1024 \
-	--output-width 1280 \
-	--sampler euler_ancestral \
-	--scheduler sgm_uniform \
-	--cfg 4 \
-	--steps 30
+    --prompt 'A cyber-duck, flying through the matrix' \
+    --model juggernautXL_juggXIByRundiffusion.safetensors \
+    --output-height 1024 \
+    --output-width 1280 \
+    --sampler euler_ancestral \
+    --scheduler sgm_uniform \
+    --cfg 4 \
+    --steps 30
 ```
 
 If a collection of settings are likely to be used again, it might make sense to add them to `~/.lair/config.yaml` For example, the above settings (other than prompt) can be stored as a mode named `juggxl` by adding this:
@@ -578,9 +578,9 @@ On the command line `--lora` / `-l` may be provided multiple times. The LoRAs ar
 
 ```bash
 lair -M juggxl comfy image \
-	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout, pixel art' \
-	--lora pixel-art-xl-v1.1.safetensors \
-	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:1.1
+    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout, pixel art' \
+    --lora pixel-art-xl-v1.1.safetensors \
+    --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:1.1
 ```
 
 To specify LoRAs within the settings, they should be written one LoRA definition per line in the YAML. For example, the above defintions would be:
@@ -597,11 +597,11 @@ The `--batch-size` / `-b` and `--repeat` / `-r` options can be used to generate 
 
 ```bash
 lair -M juggxl comfy image \
-	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
-	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
-	--batch-size 4 \
-	--repeat 2 \
-	--output-file 'monsters.jpg'
+    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
+    --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
+    --batch-size 4 \
+    --repeat 2 \
+    --output-file 'monsters.jpg'
 ```
 
 When scripting, combining with ImageMagick can be very powerful for automating edits of the images. For example, after running the above command:
@@ -644,10 +644,10 @@ This workflow combines really nicely with the `image` workflow. For example, usi
 # Generate 8 monster JPGs
 # See the image documentation above for the example `juggxl` mode's configuration.
 lair -M juggxl comfy image \
-	--prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
-	--lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
-	--repeat 8 \
-	--output-file 'monster.jpg'
+    --prompt 'cute monsters at a dance party, detailed scene, detailed room, detailed background, paper cutout' \
+    --lora Neon_Cyberpunk_Papercut_2_SDXL.safetensors:0.6 \
+    --repeat 8 \
+    --output-file 'monster.jpg'
 
 # For each JPG file, create a video file
 for filename in monster*.jpg; do
@@ -681,8 +681,8 @@ The `output.txt` can now be modified by hand and then used for video generation:
 
 ```bash
 lair comfy ltxv-i2v \
-	--prompt-file output.txt \
-	--image output.png
+    --prompt-file output.txt \
+    --image output.png
 ```
 
 ### Util
@@ -779,8 +779,8 @@ PDF files are converted to text without any images. Any number of files can prov
 
 ```sh
 $ lair -m llama3.2:3b-ctx0 util \
-	-a ~/files/tos.pdf \
-	-i 'List out anything worrisome or unusual from the provided terms of service'
+    -a ~/files/tos.pdf \
+    -i 'List out anything worrisome or unusual from the provided terms of service'
 * The inactivity disconnect policy after 15 minutes of inactivity.
 * Automated processes are not allowed to maintain constant connections (section 3a).
 * ISP has the right to audit connections to enforce terms (section 13b).
