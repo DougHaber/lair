@@ -142,27 +142,24 @@ class OpenAIChatSession():
         its ID, creation date, object type, and ownership.
 
         Parameters:
-        -----------
-        ignore_errors : bool, optional (default=False)
-            If set to True, any exceptions encountered during the retrieval of models
-            will be logged at the debug level, and the method will return `None` instead
-            of raising the exception. If set to False, exceptions will be propagated.
+            ignore_errors (bool, optional):
+                If True, any exceptions encountered during the retrieval of models
+                will be logged at the debug level, and the method will return `None`
+                instead of raising the exception. If False, exceptions will be propagated.
 
         Returns:
-        --------
-        list[dict] | None
-            A list of dictionaries, each representing a model with the following keys:
-            - 'id' (str): The model's unique identifier.
-            - 'created' (datetime.datetime): The model's creation timestamp in UTC.
-            - 'object' (str): The type of object (e.g., "model").
-            - 'owned_by' (str): The identifier of the entity that owns the model.
+            list[dict] | None:
+                A list of dictionaries, each representing a model with the following keys:
+                - 'id' (str): The model's unique identifier.
+                - 'created' (datetime.datetime): The model's creation timestamp in UTC.
+                - 'object' (str): The type of object (e.g., "model").
+                - 'owned_by' (str): The identifier of the entity that owns the model.
 
-            Returns `None` if an exception occurs and `ignore_errors` is True.
+                Returns `None` if an exception occurs and `ignore_errors` is True.
 
         Raises:
-        -------
-        Exception
-            If an error occurs during model retrieval and `ignore_errors` is False.
+            Exception:
+                If an error occurs during model retrieval and `ignore_errors` is False.
         """
         try:
             models = []
