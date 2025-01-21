@@ -165,7 +165,10 @@ openai.api_key_environment_variable: 'OPENAI_API_KEY'
 openai.max_retries: 2,
 openai.timeout: 65,
 
-# How many entries to store in the history file.
+# How many entries to store in the history file.  Entries can be
+# messages from the assistant, user, or attached files.  There is no
+# guarantee that the cut-off doesn't split a message, such as
+# providing a file attachment without the query about it.
 session.max_history_length: __null_int
 # The type of session to use
 # Currently, open openai_chat is supported.

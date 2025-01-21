@@ -54,10 +54,16 @@ class BaseChatSession(abc.ABC):
         if message:
             self.history.add_message('user', message)
 
-        answer = self.invoke()
+        try:
+            answer = self.invoke()
+        except Exception:
+            self.history.rollback()
+            raise
+
         self.last_response = answer
 
         self.history.add_message('assistant', answer)
+        self.history.commit()
 
         return answer
 
