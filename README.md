@@ -76,7 +76,6 @@ The full Lair repository includes additional features, such as an agent framewor
 
 As this is a hobby project, there is no roadmap or guarantee that anything will be addressed, but these are the next big features and fixes I'd like to see added in:
 
-* Support for attaching other formats, such as PDF and TXT files.
 * Support for tools in chat. This existed in an older unreleased version of lair, but a refactor removed langchain, and with it tools support.
     * A search tool should be added, allowing the LLM to use a search engine and read the results.
 * Support for external sub-command and module loading.
