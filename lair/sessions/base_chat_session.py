@@ -56,7 +56,7 @@ class BaseChatSession(abc.ABC):
 
         try:
             answer = self.invoke()
-        except Exception:
+        except (Exception, KeyboardInterrupt):
             self.history.rollback()
             raise
 
