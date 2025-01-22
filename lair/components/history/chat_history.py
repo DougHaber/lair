@@ -84,6 +84,7 @@ class ChatHistory():
         Remove any non-finalized items in the history, such as after a chat attempt fails
         """
         if self.finalized_index is None:
+            logger.debug(f"Rolling back history (finalized_index=null, removing={len(self._history)})")
             self.clear()
         else:
             logger.debug(f"Rolling back history (finalized_index={self.finalized_index}, removing={len(self._history) - self.finalized_index})")
