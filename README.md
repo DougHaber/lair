@@ -90,10 +90,10 @@ As an experiment, a [GitHub project exists](https://github.com/users/DougHaber/p
 Lair is installed as a Python command and requires Python 3.10 or later. Any Python package management tool can be used to install Lair, such as `pip`, `pipx`, or `uv`. For most users, `pipx` or `uv` are likely the best options.
 
 ```sh
-pipx install git+https://github.com/DougHaber/lair.git@0.3.0
+pipx install git+https://github.com/DougHaber/lair.git@0.4.0
 ```
 
-Replace `0.3.0` with the latest version. The `master` branch contains the latest unreleased version, which may be unstable. Official releases are tagged using semantic versioning.
+Replace `0.4.0` with the latest version. The `master` branch contains the latest unreleased version, which may be unstable. Official releases are tagged using semantic versioning.
 
 ## Configuration
 
