@@ -266,6 +266,8 @@ Production ramps, profits rise
 Autonomous roads
 ```
 
+With text and PDF files, the LLM must support large context windows. For users working with Ollama, the default is set low to 2048 tokens, and anything beyond that is truncated causing bad responses. To fix this, adjust the `num_ctx` parameter within Ollama.
+
 By default, filenames are not provided to the LLM, but this behavior can be changed via `model.provide_attachment_filenames`.
 
 ```
