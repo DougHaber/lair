@@ -180,12 +180,24 @@ style.human_output: ''
 style.human_output_heading: 'bold white'
 style.llm_output: 'dim cyan'
 style.llm_output_heading: 'bold cyan'
+# When style.thoughts.enabled is true, this controls the style for thoughts
+style.llm_output_thought: 'dim blue'
 # When showing responses, this determines if they are rendered as markdown or shown as text
 style.render_markdown: true
 # When displaying errors, this determines whether rich tracebacks or standard ones should be shown
 style.render_rich_tracebacks: false
 style.system_message: 'dim magenta'
 style.system_message_heading: 'bold magenta'
+
+# When enabled, messages containing <thought>, <think>, or <thinking> tags are displayed
+# with extra processing or styles
+style.thoughts.enabled: true
+# When true the thought tags themselves are removed from the output. The thoughts remain and are
+# styled by style.llm_output_thought, but the tags are hidden.
+style.thoughts.hide_tags: true
+# When true, only content outside of thought tags is displayed
+style.thoughts.hide_thoughts: false
+
 style.tool_message: 'dim green'
 style.tool_message_heading: 'bold green'
 style.user_error: 'dim red'

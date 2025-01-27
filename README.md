@@ -28,6 +28,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Commands](#commands)
     - [Shortcut Keys](#shortcut-keys)
     - [Markdown Rendering](#markdown-rendering)
+    - [Reasoning Models](#reasoning-models)
     - [Chat Examples](#chat-examples)
       - [Attaching Files](#attaching-files)
       - [One-off Chat](#one-off-chat)
@@ -202,6 +203,17 @@ Pressing `ESC-M` and trying again shows the literal response without Markdown re
 crocodile> /last-response
 &lt;
 ```
+
+#### Reasoning Models
+
+Reasoning models include "thoughts" in their output. These thoughts may be enclosed in XML-style tags such as `<thought>`, `<think>`, or `<thinking>`. Lair provides customization options to control the appearance and behavior of these tagged responses.
+
+* `style.thoughts.enabled`: Enables or disables fancy rendering of thoughts. When `false`, thoughts are displayed as regular message text. (default: `true`)
+* `style.thoughts.hide_tags`: Hides the thought tags themselves while displaying the inner content. (default: `true`)
+* `style.thoughts.hide_thoughts`: Hides all text enclosed within thought tags, displaying only the remaining output. (default: `false`)
+* `style.llm_output_thought`: Specifies the style for rendering thoughts (e.g., color or formatting). (default: `dim blue`)
+
+![Reasoning Example](docs/images/reasoning.jpg "Reasoning example")
 
 #### Chat Examples
 

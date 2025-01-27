@@ -152,14 +152,35 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             self.print_rich(self.plain(message),
                             style=lair.config.get('style.system_message'))
 
+    def _llm_output__with_thoughts(self, message):
+        sections = re.split(r'(<(?:thought|think|thinking)>.*?</(?:thought|think|thinking)>)', message, flags=re.DOTALL)
+        pattern = re.compile(r'<(thought|think|thinking)>.*?</\1>', re.DOTALL)
+
+        for section in sections:
+            if pattern.search(section.strip()):  # Search for a thought-like tag
+                if lair.config.get('style.thoughts.hide_thoughts'):
+                    continue
+                elif lair.config.get('style.thoughts.hide_tags'):
+                    section = re.sub(r'(<(/?)(thought|think|thinking)>)', r'', section)
+                else:  # Protect the tags from markdown rendering
+                    section = re.sub(r'(<(/?)(thought|think|thinking)>)', r'\\\1', section)
+                self.print_rich(rich.markdown.Markdown(section),
+                                style=lair.config.get('style.llm_output_thought'))
+            elif section.strip():  # Ignore completely empty sections
+                self.print_rich(rich.markdown.Markdown(section),
+                                style=lair.config.get('style.llm_output'))
+
     def llm_output(self, message, show_heading=False):
         if show_heading:
             self.print_rich('AI',
                             style=lair.config.get('style.llm_output_heading'))
 
         if lair.config.get('style.render_markdown'):
-            self.print_rich(rich.markdown.Markdown(message),
-                            style=lair.config.get('style.llm_output'))
+            if lair.config.get('style.thoughts.enabled'):
+                self._llm_output__with_thoughts(message)
+            else:
+                self.print_rich(rich.markdown.Markdown(message),
+                                style=lair.config.get('style.llm_output'))
         else:
             self.print_rich(self.plain(message),
                             style=lair.config.get('style.llm_output'))
