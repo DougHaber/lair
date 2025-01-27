@@ -64,6 +64,8 @@ The full Lair repository includes additional features, such as an agent framewor
   * File based session management
   * Support for image, PDF, and text attachments
   * Markdown rendering & syntax highlighting
+  * Customizable styling for reasoning model output
+  * Support for extracting content from responses such as code block sections
 
 * **comfy**: Run workflows on ComfyUI
   * Image diffusion & LTX Video image-to-video support
