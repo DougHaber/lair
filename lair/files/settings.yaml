@@ -70,6 +70,7 @@ comfy.image.steps: 20
 comfy.hunyuan_video.batch_size: 1
 comfy.hunyuan_video.clip_name_1: 'clip_l.safetensors'
 comfy.hunyuan_video.clip_name_2: 'llava_llama3_fp8_scaled.safetensors'
+comfy.hunyuan_video.denoise: 1.0
 comfy.hunyuan_video.height: 480
 comfy.hunyuan_video.frame_rate: 24
 comfy.hunyuan_video.guidance_scale: 6.0
