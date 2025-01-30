@@ -212,7 +212,7 @@ class Comfy():
                 except ArgumentParserHelpException as error:  # Display help with styles
                     chat_interface.reporting.error(str(error), show_exception=False)
                     return
-                except ArgumentParserExitException as error:  # Ignore exits
+                except ArgumentParserExitException:  # Ignore exits
                     return
             except argparse.ArgumentError as error:
                 message = str(error)
