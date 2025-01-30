@@ -491,7 +491,7 @@ The ComfyUI Server must have all required nodes installed to use any given workf
     <tr>
       <td>hunyuan-video-t2v</td>
       <td>Hunyuan Video Text to Video</td>
-      <td><a href="https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/">ComfyUI's recommended workflow</a></td>
+      <td><a href="https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/">ComfyUI's example workflow</a></td>
       <td></td>
     </tr>
     <tr>
@@ -716,7 +716,7 @@ Many command line options are supported. Run `lair comfy hunyuan-video-t2v --hel
 
 This workflow defaults to using tiled decoding. For most users, tiled decoding is necessary to reduce the VRAM requirements, but it may also impact performance and quality. If enough VRAM is available, it is usually best to disable tiled decoding. For smaller tasks, such as image generation, it often makes sense to disable it.  Tiled decoding behavior can be changed via the config `comfy.hunyuan_video.tiled_decode.enabled` flag, and the decoding parameters can all be found under `comfy.hunyuan_video.tiled_decode.*`.
 
-Generating a video can be done by providing a prompt.
+To generate a video, at a minimum it usually is necessary to provide a prompt:
 
 ```sh
 # Generate a video
@@ -724,9 +724,9 @@ $ lair comfy hunyuan-video-t2v \
     -p 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.'
 ```
 
-The above command will generate an `output.webp` file by default.
+The above command will generate an `output.webp` file by default. The `--output-file` / `-o` flag can be used to specify an alternate filename as well as the `comfy.hunyuan_video.output_file` configuration option. When generating multiple files, such as with the `--repeat` / `-r` or `--batch-size` / `-b` options, the base name becomes a prefix followed by a zero-padded counter (e.g., `output000000.webp`, `output000001.webp`).
 
-This workflow currently only generates `webp` files as output. This is a limitation from ComfyUI's workflow and more options may be added in the future. Many tools don't natively support decoding `webp` files. Here are a couple examples of how to convert to better supported formats.
+This workflow currently only supports generating `webp` files as output. This is a limitation from ComfyUI's workflow and more options may be added in the future. Many tools don't natively support decoding `webp` files. Here are a couple examples of how to convert to better supported formats.
 
 ```sh
 # Use ImageMagick to create an animated GIF
