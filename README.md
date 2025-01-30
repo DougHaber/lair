@@ -747,7 +747,7 @@ $ lair comfy hunyuan-video-t2v \
     --num-frames 1
 ```
 
-The number of frames must be `N * 4 + 1`, such as 73, 77, 78. This requirement ensures smooth interpolation and alignment within the model's architecture, as frame counts outside this pattern may cause unexpected behavior or poor quality results.
+The number of frames must be `N * 4 + 1`, such as 73, 77, 81. This requirement ensures smooth interpolation and alignment within the model's architecture, as frame counts outside this pattern may cause unexpected behavior or poor quality results.
 
 LoRAs are supported, and multiple LoRAs could be provided. For usage examples, see the [Image Generation](#image---image-generation) section, as the behavior is identical.  The config key `comfy.hunyuan_video.loras` can be used to create modes with LoRAs or LoRA chains.
 
