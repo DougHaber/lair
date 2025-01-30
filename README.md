@@ -707,13 +707,48 @@ lair comfy ltxv-i2v \
 
 #### hunyuan-video-t2v - Hunyuan Video Text to Video
 
-Hunyuan Video is supported natively by ComfyUI, so no third party nodes are required. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
+The Hunyuan Video model is supported natively in ComfyUI, meaning no additional third-party nodes are needed for setup or usage. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
 
-Configuration can be found underneath `comfy.hunyuan_video.*`. All available options can be found [here](lair/files/settings.yaml).
+Configuration can be found underneath `comfy.hunyuan_video.*`. All available options are documented [here](lair/files/settings.yaml).
 
+Many command line options are supported. Run `lair comfy hunyuan-video-t2v --help` for the full list.
 
+This workflow defaults to using tiled decoding. For most users, tiled decoding is necessary to reduce the VRAM requirements, but it may also impact performance and quality. If enough VRAM is available, it is usually best to disable tiled decoding. For smaller tasks, such as image generation, it often makes sense to disable it.  Tiled decoding behavior can be changed via the config `comfy.hunyuan_video.tiled_decode.enabled` flag, and the decoding parameters can all be found under `comfy.hunyuan_video.tiled_decode.*`.
 
+Generating a video can be done by providing a prompt.
 
+```sh
+# Generate a video
+$ lair comfy hunyuan-video-t2v \
+    -p 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.'
+```
+
+The above command will generate an `output.webp` file by default.
+
+This workflow currently only generates `webp` files as output. This is a limitation from ComfyUI's workflow and more options may be added in the future. Many tools don't natively support decoding `webp` files. Here are a couple examples of how to convert to better supported formats.
+
+```sh
+# Use ImageMagick to create an animated GIF
+# GIFs will always have lower quality
+$ convert output.webp output.gif
+
+# Use ImageMagick to extract frames into individual files, and then ffmpeg to convert to another format
+$ convert output.webp -coalesce frame_%04d.png
+$ ffmpeg -i frame_%04d.png -c:v libx264 -pix_fmt yuv420p output.mp4
+```
+
+The Hunyuan Video model can be used to generate individual images by setting `comfy.hunyuan_video.num_frames` to `1`, or by using `--num-frames` / `-F`.  For example:
+
+```sh
+# Generate a video
+$ lair comfy hunyuan-video-t2v \
+    --prompt 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.' \
+    --num-frames 1
+```
+
+The number of frames must be `N * 4 + 1`, such as 73, 77, 78. This requirement ensures smooth interpolation and alignment within the model's architecture, as frame counts outside this pattern may cause unexpected behavior or poor quality results.
+
+LoRAs are supported, and multiple LoRAs could be provided. For usage examples, see the [Image Generation](#image---image-generation) section, as the behavior is identical.  The config key `comfy.hunyuan_video.loras` can be used to create modes with LoRAs or LoRA chains.
 
 ### Util
 
