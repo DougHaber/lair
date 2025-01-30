@@ -86,12 +86,40 @@ class Comfy():
 
         command_parser.add_argument('-b', '--batch-size', type=int,
                                     help='Batch size (default: 1)')
+        command_parser.add_argument('-c', '--clip-name-1', type=str,
+                                    help=f'Name of the first clip model (default: {defaults["clip_name_1"]})')
+        command_parser.add_argument('-C', '--clip-name-2', type=str,
+                                    help=f'Name of the second clip model (default: {defaults["clip_name_2"]})')
+        command_parser.add_argument('-f', '--frame-rate', type=int,
+                                    help=f'Batch size (default: {defaults["frame_rate"]})')
+        command_parser.add_argument('-F', '--num-frames', type=int,
+                                    help=f'Number of frames to generate (default: {defaults["num_frames"]}, must be N * 4 + 1)')
+        command_parser.add_argument('-g', '--guidance_scale', type=float,
+                                    help=f'Guidance scale (default: {defaults["guidance_scale"]})')
+        command_parser.add_argument('-H', '--output-height', type=int, dest='height',
+                                    help=f'Output file height (default: {defaults["height"]})')
+        command_parser.add_argument('-m', '--model-name', type=str,
+                                    help=f'Name of the image diffusion model (default: {defaults["model_name"]})')
+        command_parser.add_argument('-M', '--model-weight-dtype', type=str,
+                                    help=f'Dtype to use for the model (default: {defaults["model_weight_dtype"]})')
         command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
                                     help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
+        command_parser.add_argument('-p', '--prompt', type=str,
+                                    help='Prompt to use. (auto-prompt is disabled when this is provided)')
+        command_parser.add_argument('-P', '--prompt-file', type=str,
+                                    help='File name to read a prompt from.  (auto-prompt is disabled when this is provided)')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
+        command_parser.add_argument('-s', '--sampler', type=str,
+                                    help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})')
+        command_parser.add_argument('-S', '--scheduler', type=str,
+                                    help=f'Scheduler to use for image diffusion (default: {defaults["scheduler"]})')
         command_parser.add_argument('-u', '--comfy-url', default=comfy_url,
                                     help=f'URL for the Comfy UI API (default: {comfy_url})')
+        command_parser.add_argument('-w', '--output-width', type=int, dest='width',
+                                    help=f'Output file width (default: {defaults["width"]})')
+        command_parser.add_argument('-x', '--seed', type=int,
+                                    help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})')
 
     def _add_argparse_ltxv_i2v(self, sub_parser):
         command_parser = sub_parser.add_parser('ltxv-i2v', help='LTX Video - Image to Video')

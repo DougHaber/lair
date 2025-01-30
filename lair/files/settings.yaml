@@ -76,7 +76,7 @@ comfy.hunyuan_video.guidance_scale: 6.0
 comfy.hunyuan_video.model_name: 'hunyuan_video_t2v_720p_bf16.safetensors'
 comfy.hunyuan_video.model_weight_dtype: 'default'
 comfy.hunyuan_video.num_frames: 73
-comfy.hunyuan_video.output_file: 'output.mp4'
+comfy.hunyuan_video.output_file: 'output.webp'
 comfy.hunyuan_video.prompt: ''
 comfy.hunyuan_video.sampler: 'euler'
 comfy.hunyuan_video.sampling_shift: 7.0
