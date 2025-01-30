@@ -333,6 +333,7 @@ class ComfyCaller():
             'batch_size': lair.config.get('comfy.hunyuan_video.batch_size', 1),
             'clip_name_1': lair.config.get('comfy.hunyuan_video.clip_name_1', 'clip_l.safetensors'),
             'clip_name_2': lair.config.get('comfy.hunyuan_video.clip_name_2', 'llava_llama3_fp8_scaled.safetensors'),
+            'denoise': lair.config.get('comfy.hunyuan_video.denoise', 1.0),
             'height': lair.config.get('comfy.hunyuan_video.height', 480),
             'frame_rate': lair.config.get('comfy.hunyuan_video.frame_rate', 24),
             'guidance_scale': lair.config.get('comfy.hunyuan_video.guidance_scale', 6.0),
@@ -354,11 +355,10 @@ class ComfyCaller():
             'width': lair.config.get('comfy.hunyuan_video.width', 848),
         }
 
-    async def _workflow_hunyuan_video_t2v(self, *, batch_size, clip_name_1, clip_name_2, frame_rate,
-                                          guidance_scale, height, model_name, num_frames,
-                                          model_weight_dtype, prompt, sampler, sampling_shift, scheduler,  seed,
-                                          steps, tile_overlap, tile_size, tile_temporal_size,
-                                          tile_temporal_overlap, tiled_decode_enabled, width,
+    async def _workflow_hunyuan_video_t2v(self, *, batch_size, clip_name_1, clip_name_2, denoise, frame_rate,
+                                          guidance_scale, height, model_name, num_frames, model_weight_dtype, prompt,
+                                          sampler, sampling_shift, scheduler, seed, steps, tile_overlap, tile_size,
+                                          tile_temporal_size, tile_temporal_overlap, tiled_decode_enabled, width,
                                           vae_model_name):
         if seed is None:
             seed = random.randint(0, 2**31 - 1)
@@ -371,7 +371,7 @@ class ComfyCaller():
         conditioning = FluxGuidance(conditioning, guidance_scale)
         guider = BasicGuider(model2, conditioning)
         sampler = KSamplerSelect('euler_ancestral')
-        sigmas = BasicScheduler(model, 'simple', steps, 1.0)
+        sigmas = BasicScheduler(model, 'simple', steps, denoise)
         latent = EmptyHunyuanLatentVideo(width, height, num_frames, batch_size)
         latent, _ = SamplerCustomAdvanced(noise, guider, sampler, sigmas, latent)
 
