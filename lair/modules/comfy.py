@@ -98,6 +98,8 @@ class Comfy():
                                     help=f'Guidance scale (default: {defaults["guidance_scale"]})')
         command_parser.add_argument('-H', '--output-height', type=int, dest='height',
                                     help=f'Output file height (default: {defaults["height"]})')
+        command_parser.add_argument('-l', '--lora', nargs='*', type=str, dest='loras',
+                                    help='Loras to use. Can be specified multiple times. These are processed in order. Command line usage overrides LoRAs in the settings. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})')
         command_parser.add_argument('-m', '--model-name', type=str,
                                     help=f'Name of the image diffusion model (default: {defaults["model_name"]})')
         command_parser.add_argument('-M', '--model-weight-dtype', type=str,

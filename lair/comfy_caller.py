@@ -193,10 +193,6 @@ class ComfyCaller():
         return images
 
     def _get_defaults_ltxv_i2v(self):
-        loras = lair.config.get('comfy.ltxv_i2v.loras')
-        if loras is not None:
-            loras = loras.split('\n')
-
         return {
             'auto_prompt_extra': lair.config.get('comfy.ltxv_i2v.auto_prompt_extra', ''),
             'auto_prompt_suffix': lair.config.get('comfy.ltxv_i2v.auto_prompt_suffix', ' The scene is captured in real-life footage.'),
@@ -329,6 +325,10 @@ class ComfyCaller():
         return prompts
 
     def _get_defaults_hunyuan_video_t2v(self):
+        loras = lair.config.get('comfy.hunyuan_video.loras')
+        if loras is not None:
+            loras = [lora for lora in loras.split('\n') if lora]
+
         return {
             'batch_size': lair.config.get('comfy.hunyuan_video.batch_size', 1),
             'clip_name_1': lair.config.get('comfy.hunyuan_video.clip_name_1', 'clip_l.safetensors'),
@@ -337,6 +337,7 @@ class ComfyCaller():
             'height': lair.config.get('comfy.hunyuan_video.height', 480),
             'frame_rate': lair.config.get('comfy.hunyuan_video.frame_rate', 24),
             'guidance_scale': lair.config.get('comfy.hunyuan_video.guidance_scale', 6.0),
+            'loras': loras,
             'model_name': lair.config.get('comfy.hunyuan_video.model_name', 'hunyuan_video_t2v_720p_bf16.safetensors'),
             'model_weight_dtype': lair.config.get('comfy.hunyuan_video.model_weight_dtype', 'default'),
             'num_frames': lair.config.get('comfy.hunyuan_video.num_frames', 73),
@@ -356,20 +357,26 @@ class ComfyCaller():
         }
 
     async def _workflow_hunyuan_video_t2v(self, *, batch_size, clip_name_1, clip_name_2, denoise, frame_rate,
-                                          guidance_scale, height, model_name, num_frames, model_weight_dtype, prompt,
-                                          sampler, sampling_shift, scheduler, seed, steps, tile_overlap, tile_size,
-                                          tile_temporal_size, tile_temporal_overlap, tiled_decode_enabled, width,
-                                          vae_model_name):
+                                          guidance_scale, height, loras, model_name, num_frames, model_weight_dtype,
+                                          prompt, sampler, sampling_shift, scheduler, seed, steps, tile_overlap,
+                                          tile_size, tile_temporal_size, tile_temporal_overlap, tiled_decode_enabled,
+                                          width, vae_model_name):
         if seed is None:
             seed = random.randint(0, 2**31 - 1)
 
         noise = RandomNoise(seed)
         model = UNETLoader(model_name, model_weight_dtype)
-        model2 = ModelSamplingSD3(model, sampling_shift)
         clip = DualCLIPLoader(clip_name_1, clip_name_2, 'hunyuan_video', None)
+
+        for lora in loras or []:
+            lora_model, weight, clip_weight = self._parse_lora_argument(lora)
+            model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+
         conditioning = CLIPTextEncode(prompt, clip)
         conditioning = FluxGuidance(conditioning, guidance_scale)
-        guider = BasicGuider(model2, conditioning)
+
+        model_shifted = ModelSamplingSD3(model, sampling_shift)
+        guider = BasicGuider(model_shifted, conditioning)
         sampler = KSamplerSelect('euler_ancestral')
         sigmas = BasicScheduler(model, 'simple', steps, denoise)
         latent = EmptyHunyuanLatentVideo(width, height, num_frames, batch_size)
