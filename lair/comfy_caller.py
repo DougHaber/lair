@@ -69,6 +69,7 @@ class ComfyCaller():
 
     def _init_workflows(self):
         self.workflows = {
+            'hunyuan-video-t2v': self._workflow_hunyuan_video_t2v,
             'image': self._workflow_image,
             'ltxv-i2v': self._workflow_ltxv_i2v,
             'ltxv-prompt': self._workflow_ltxv_prompt,
@@ -76,6 +77,7 @@ class ComfyCaller():
 
     def _init_defaults(self):
         self.defaults = {
+            'hunyuan-video-t2v': self._get_defaults_hunyuan_video_t2v(),
             'image': self._get_defaults_image(),
             'ltxv-i2v': self._get_defaults_ltxv_i2v(),
             'ltxv-prompt': self._get_defaults_ltxv_prompt(),
@@ -157,7 +159,6 @@ class ComfyCaller():
             },
             verify=lair.config.get('comfy.verify_ssl', True)
         )
-
         if response.status_code != 200:
             raise Exception(f'/api/view returned unexpected status code: {response.status_code}')
         else:
@@ -326,3 +327,65 @@ class ComfyCaller():
             prompts.append(prompt.encode())
 
         return prompts
+
+    def _get_defaults_hunyuan_video_t2v(self):
+        return {
+            'batch_size': lair.config.get('comfy.hunyuan_video.batch_size', 1),
+            'clip_name_1': lair.config.get('comfy.hunyuan_video.clip_name_1', 'clip_l.safetensors'),
+            'clip_name_2': lair.config.get('comfy.hunyuan_video.clip_name_2', 'llava_llama3_fp8_scaled.safetensors'),
+            'height': lair.config.get('comfy.hunyuan_video.height', 480),
+            'frame_rate': lair.config.get('comfy.hunyuan_video.frame_rate', 24),
+            'guidance_scale': lair.config.get('comfy.hunyuan_video.guidance_scale', 6.0),
+            'model_name': lair.config.get('comfy.hunyuan_video.model_name', 'hunyuan_video_t2v_720p_bf16.safetensors'),
+            'model_weight_dtype': lair.config.get('comfy.hunyuan_video.model_weight_dtype', 'default'),
+            'num_frames': lair.config.get('comfy.hunyuan_video.num_frames', 73),
+            'prompt': lair.config.get('comfy.hunyuan_video.prompt', ''),
+            'sampler': lair.config.get('comfy.hunyuan_video.sampler', 'euler'),
+            'sampling_shift': lair.config.get('comfy.hunyuan_video.sampling_shift', 7.0),
+            'scheduler': lair.config.get('comfy.hunyuan_video.scheduler', 'simple'),
+            'seed': lair.config.get('comfy.hunyuan_video.seed', None),
+            'steps': lair.config.get('comfy.hunyuan_video.steps', 20),
+            'tiled_decode_enabled': lair.config.get('comfy.hunyuan_video.tiled_decode.enabled', True),
+            'tile_overlap': lair.config.get('comfy.hunyuan_video.tiled_decode.overlap', 64),
+            'tile_size': lair.config.get('comfy.hunyuan_video.tiled_decode.tile_size', 256),
+            'tile_temporal_overlap': lair.config.get('comfy.hunyuan_video.tiled_decode.temporal_overlap', 8),
+            'tile_temporal_size': lair.config.get('comfy.hunyuan_video.tiled_decode.temporal_size', 64),
+            'vae_model_name': lair.config.get('comfy.hunyuan_video.vae_model_name', 'hunyuan_video_vae_bf16.safetensors'),
+            'width': lair.config.get('comfy.hunyuan_video.width', 848),
+        }
+
+    async def _workflow_hunyuan_video_t2v(self, *, batch_size, clip_name_1, clip_name_2, frame_rate,
+                                          guidance_scale, height, model_name, num_frames,
+                                          model_weight_dtype, prompt, sampler, sampling_shift, scheduler,  seed,
+                                          steps, tile_overlap, tile_size, tile_temporal_size,
+                                          tile_temporal_overlap, tiled_decode_enabled, width,
+                                          vae_model_name):
+        if seed is None:
+            seed = random.randint(0, 2**31 - 1)
+
+        noise = RandomNoise(seed)
+        model = UNETLoader(model_name, model_weight_dtype)
+        model2 = ModelSamplingSD3(model, sampling_shift)
+        clip = DualCLIPLoader(clip_name_1, clip_name_2, 'hunyuan_video', None)
+        conditioning = CLIPTextEncode(prompt, clip)
+        conditioning = FluxGuidance(conditioning, guidance_scale)
+        guider = BasicGuider(model2, conditioning)
+        sampler = KSamplerSelect('euler_ancestral')
+        sigmas = BasicScheduler(model, 'simple', steps, 1.0)
+        latent = EmptyHunyuanLatentVideo(width, height, num_frames, batch_size)
+        latent, _ = SamplerCustomAdvanced(noise, guider, sampler, sigmas, latent)
+
+        vae = VAELoader(vae_model_name)
+
+        if tiled_decode_enabled:
+            image = VAEDecodeTiled(latent, vae, tile_size, tile_overlap, tile_temporal_overlap, tile_temporal_size)
+        else:
+            image = VAEDecode(latent, vae)
+
+        save_node = SaveAnimatedWEBP(image, 'ComfyUI', frame_rate, False, 80, 'default')
+
+        videos = []
+        for video in save_node.wait()._output['images']:
+            videos.append(self.view(video['filename'], type='output'))
+
+        return videos

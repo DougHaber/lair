@@ -32,6 +32,7 @@ class Comfy():
 
         self.comfy = lair.comfy_caller.ComfyCaller()
 
+        self._add_argparse_hunyuan_video_t2v(sub_parser)
         self._add_argparse_image(sub_parser)
         self._add_argparse_ltxv_i2v(sub_parser)
         self._add_argparse_ltxv_prompt(sub_parser)
@@ -76,6 +77,21 @@ class Comfy():
                                     help=f'Output file width (default: {defaults["output_width"]})')
         command_parser.add_argument('-x', '--seed', type=int,
                                     help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})')
+
+    def _add_argparse_hunyuan_video_t2v(self, sub_parser):
+        command_parser = sub_parser.add_parser('hunyuan-video-t2v', help='Hunyuan Video - Text to Video')
+        defaults = self.comfy.defaults['hunyuan-video-t2v']
+        output_file = lair.config.get('comfy.hunyuan_video.output_file')
+        comfy_url = lair.config.get('comfy.url')
+
+        command_parser.add_argument('-b', '--batch-size', type=int,
+                                    help='Batch size (default: 1)')
+        command_parser.add_argument('-o', '--output-file', default=output_file, type=str,
+                                    help=f'File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})')
+        command_parser.add_argument('-r', '--repeat', default=1, type=int,
+                                    help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
+        command_parser.add_argument('-u', '--comfy-url', default=comfy_url,
+                                    help=f'URL for the Comfy UI API (default: {comfy_url})')
 
     def _add_argparse_ltxv_i2v(self, sub_parser):
         command_parser = sub_parser.add_parser('ltxv-i2v', help='LTX Video - Image to Video')
