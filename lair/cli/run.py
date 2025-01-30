@@ -69,14 +69,18 @@ def parse_arguments():
 
 
 def set_config_from_arguments(overrides):
-    for setting in overrides or []:
+    if not overrides:
+        return
+
+    for setting in overrides:
         if '=' not in setting:
             logger.error("Invalid usage of --set. Must use key=value style")
             sys.exit(1)
         else:
             key, value = setting.split('=', maxsplit=1)
-            lair.config.set(key, value)
+            lair.config.set(key, value, no_event=True)
 
+    lair.events.fire('config.update')
 
 def start():
     try:
