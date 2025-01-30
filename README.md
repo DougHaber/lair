@@ -708,7 +708,7 @@ lair comfy ltxv-i2v \
 
 ##### hunyuan-video-t2v - Hunyuan Video Text to Video
 
-The Hunyuan Video model is supported natively in ComfyUI, meaning no additional third-party nodes are needed for setup or usage. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
+Tencent's [Hunyuan Video model](https://github.com/Tencent/HunyuanVideo) is supported natively in ComfyUI, meaning no additional third-party nodes are needed for setup or usage. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
 
 Configuration can be found underneath `comfy.hunyuan_video.*`. All available options are documented [here](lair/files/settings.yaml).
 
