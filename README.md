@@ -42,6 +42,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [image - Image Generation](#image---image-generation)
       - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
       - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
+      - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
   - [Util](#util)
     - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
@@ -705,7 +706,7 @@ lair comfy ltxv-i2v \
     --image output.png
 ```
 
-#### hunyuan-video-t2v - Hunyuan Video Text to Video
+##### hunyuan-video-t2v - Hunyuan Video Text to Video
 
 The Hunyuan Video model is supported natively in ComfyUI, meaning no additional third-party nodes are needed for setup or usage. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
 
