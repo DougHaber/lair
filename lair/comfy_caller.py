@@ -44,8 +44,8 @@ class ComfyCaller():
         self._init_defaults()
         self._init_workflows()
 
-        # If the mode changes, update all defaults
-        lair.events.subscribe('config.change_mode', lambda d: self._init_defaults())
+        # If the config changes, update all defaults
+        lair.events.subscribe('config.update', lambda d: self._init_defaults())
 
     def _import_comfy_script(self):
         # The imports actually connect to the server. If the defaults are being requested, that is problematic
