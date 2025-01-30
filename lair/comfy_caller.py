@@ -222,14 +222,10 @@ class ComfyCaller():
             'stg_rescale': lair.config.get('comfy.ltxv_i2v.stg_rescale', 0.75),
         }
 
-    async def _workflow_ltxv_i2v(self, image, *, model_name='ltx-video-2b-v0.9.1.safetensors',
-                                 clip_name='t5xxl_fp16.safetensors', stg_block_indices='14', image_resize_height=800,
-                                 image_resize_width=800, num_frames=105, frame_rate=25, batch_size=1,
-                                 florence_model_name='microsoft/Florence-2-base', negative_prompt='',
-                                 auto_prompt_suffix='', auto_prompt_extra='', prompt=None, cfg=3.0, stg=1.0,
-                                 stg_rescale=0.75, sampler='euler ancestral', scheduler='normal', steps=25,
-                                 pingpong=False, output_format='video/h264-mp4', denoise=1.0, seed=None,
-                                 florence_seed=None):
+    async def _workflow_ltxv_i2v(self, image, *, model_name, clip_name, stg_block_indices, image_resize_height,
+                                 image_resize_width, num_frames, frame_rate, batch_size, florence_model_name,
+                                 negative_prompt, auto_prompt_suffix, auto_prompt_extra, prompte, cfg, stg, stg_rescale,
+                                 sampler, scheduler, steps, pingpong, output_format, denoise, seed, florence_seed):
         if image is None:
             raise ValueError("ltxv-i2v: Image must not be None")
         if seed is None:
@@ -297,8 +293,8 @@ class ComfyCaller():
             'image_resize_width': lair.config.get('comfy.ltxv_prompt.image_resize_width', 800),
         }
 
-    async def _workflow_ltxv_prompt(self, image, *, florence_model_name='microsoft/Florence-2-base', auto_prompt_extra='',
-                                    auto_prompt_suffix='', florence_seed=None, image_resize_height=800, image_resize_width=800):
+    async def _workflow_ltxv_prompt(self, image, *, florence_model_name, auto_prompt_extra, auto_prompt_suffix,
+                                    florence_seed, image_resize_height, image_resize_width):
         if image is None:
             raise ValueError("ltxv-prompt: Image must not be None")
         if florence_seed is None:

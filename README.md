@@ -488,6 +488,12 @@ The ComfyUI Server must have all required nodes installed to use any given workf
   </thead>
   <tbody>
     <tr>
+      <td>hunyuan-video-t2v</td>
+      <td>Hunyuan Video Text to Video</td>
+      <td><a href="https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/">ComfyUI's recommended workflow</a></td>
+      <td></td>
+    </tr>
+    <tr>
       <td>image</td>
       <td>Image generation w/ LoRA support</td>
       <td>Comfy's default workflow</td>
@@ -628,7 +634,6 @@ convert monster-grid-full.jpg -resize 640x monster-grid.jpg
 
 ![Monster Dance Party Grid](docs/images/monster-grid.jpg "Monster Dance Party grid example - downscaled")
 
-
 ##### ltxv-i2v - LTX Video Image to Video
 
 The `ltxv-i2v` workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow. It takes an image as input and then produces a video using LTX Video. The LTX Video model requires detailed prompts to work well. This workflow can automatically generate prompts using Microsoft's Florence2 model.
@@ -699,6 +704,16 @@ lair comfy ltxv-i2v \
     --prompt-file output.txt \
     --image output.png
 ```
+
+#### hunyuan-video-t2v - Hunyuan Video Text to Video
+
+Hunyuan Video is supported natively by ComfyUI, so no third party nodes are required. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
+
+Configuration can be found underneath `comfy.hunyuan_video.*`. All available options can be found [here](lair/files/settings.yaml).
+
+
+
+
 
 ### Util
 
