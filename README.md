@@ -42,6 +42,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [image - Image Generation](#image---image-generation)
       - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
       - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
+      - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
   - [Util](#util)
     - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
@@ -488,6 +489,12 @@ The ComfyUI Server must have all required nodes installed to use any given workf
   </thead>
   <tbody>
     <tr>
+      <td>hunyuan-video-t2v</td>
+      <td>Hunyuan Video Text to Video</td>
+      <td><a href="https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/">ComfyUI's example workflow</a></td>
+      <td></td>
+    </tr>
+    <tr>
       <td>image</td>
       <td>Image generation w/ LoRA support</td>
       <td>Comfy's default workflow</td>
@@ -628,7 +635,6 @@ convert monster-grid-full.jpg -resize 640x monster-grid.jpg
 
 ![Monster Dance Party Grid](docs/images/monster-grid.jpg "Monster Dance Party grid example - downscaled")
 
-
 ##### ltxv-i2v - LTX Video Image to Video
 
 The `ltxv-i2v` workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow. It takes an image as input and then produces a video using LTX Video. The LTX Video model requires detailed prompts to work well. This workflow can automatically generate prompts using Microsoft's Florence2 model.
@@ -699,6 +705,51 @@ lair comfy ltxv-i2v \
     --prompt-file output.txt \
     --image output.png
 ```
+
+##### hunyuan-video-t2v - Hunyuan Video Text to Video
+
+Tencent's [Hunyuan Video model](https://github.com/Tencent/HunyuanVideo) is supported natively in ComfyUI, meaning no additional third-party nodes are needed for setup or usage. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
+
+Configuration can be found underneath `comfy.hunyuan_video.*`. All available options are documented [here](lair/files/settings.yaml).
+
+Many command line options are supported. Run `lair comfy hunyuan-video-t2v --help` for the full list.
+
+This workflow defaults to using tiled decoding. For most users, tiled decoding is necessary to reduce the VRAM requirements, but it may also impact performance and quality. If enough VRAM is available, it is usually best to disable tiled decoding. For smaller tasks, such as image generation, it often makes sense to disable it.  Tiled decoding behavior can be changed via the config `comfy.hunyuan_video.tiled_decode.enabled` flag, and the decoding parameters can all be found under `comfy.hunyuan_video.tiled_decode.*`.
+
+To generate a video, at a minimum it usually is necessary to provide a prompt:
+
+```sh
+# Generate a video
+$ lair comfy hunyuan-video-t2v \
+    -p 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.'
+```
+
+The above command will generate an `output.webp` file by default. The `--output-file` / `-o` flag can be used to specify an alternate filename as well as the `comfy.hunyuan_video.output_file` configuration option. When generating multiple files, such as with the `--repeat` / `-r` or `--batch-size` / `-b` options, the base name becomes a prefix followed by a zero-padded counter (e.g., `output000000.webp`, `output000001.webp`).
+
+This workflow currently only supports generating `webp` files as output. This is a limitation from ComfyUI's workflow and more options may be added in the future. Many tools don't natively support decoding `webp` files. Here are a couple examples of how to convert to better supported formats.
+
+```sh
+# Use ImageMagick to create an animated GIF
+# GIFs will always have lower quality
+$ convert output.webp output.gif
+
+# Use ImageMagick to extract frames into individual files, and then ffmpeg to convert to another format
+$ convert output.webp -coalesce frame_%04d.png
+$ ffmpeg -i frame_%04d.png -c:v libx264 -pix_fmt yuv420p output.mp4
+```
+
+The Hunyuan Video model can be used to generate individual images by setting `comfy.hunyuan_video.num_frames` to `1`, or by using `--num-frames` / `-F`.  For example:
+
+```sh
+# Generate a video
+$ lair comfy hunyuan-video-t2v \
+    --prompt 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.' \
+    --num-frames 1
+```
+
+The number of frames must be `N * 4 + 1`, such as 73, 77, 81. This requirement ensures smooth interpolation and alignment within the model's architecture, as frame counts outside this pattern may cause unexpected behavior or poor quality results.
+
+LoRAs are supported, and multiple LoRAs could be provided. For usage examples, see the [Image Generation](#image---image-generation) section, as the behavior is identical.  The config key `comfy.hunyuan_video.loras` can be used to create modes with LoRAs or LoRA chains.
 
 ### Util
 

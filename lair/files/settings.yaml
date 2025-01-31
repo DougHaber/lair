@@ -67,6 +67,36 @@ comfy.image.scheduler: 'normal'
 comfy.image.seed: __null_int
 comfy.image.steps: 20
 
+comfy.hunyuan_video.batch_size: 1
+comfy.hunyuan_video.clip_name_1: 'clip_l.safetensors'
+comfy.hunyuan_video.clip_name_2: 'llava_llama3_fp8_scaled.safetensors'
+comfy.hunyuan_video.denoise: 1.0
+comfy.hunyuan_video.height: 480
+comfy.hunyuan_video.frame_rate: 24
+comfy.hunyuan_video.guidance_scale: 6.0
+comfy.hunyuan_video.loras: __null_str
+comfy.hunyuan_video.model_name: 'hunyuan_video_t2v_720p_bf16.safetensors'
+comfy.hunyuan_video.model_weight_dtype: 'default'
+comfy.hunyuan_video.num_frames: 73
+# When writing out files the output_file is used as is when there is a single output.  If there are multiple outputs the
+# basename becomes a prefix and a zero-padded counter is added. (For example output000000.webp)
+# The current workflow only supports webp output.
+comfy.hunyuan_video.output_file: 'output.webp'
+comfy.hunyuan_video.prompt: ''
+comfy.hunyuan_video.sampler: 'euler'
+comfy.hunyuan_video.sampling_shift: 7.0
+comfy.hunyuan_video.scheduler: simple
+comfy.hunyuan_video.seed: __null_int
+comfy.hunyuan_video.steps: 20
+comfy.hunyuan_video.width: 848
+# Tiled decoding is enabled by default to reduce the amount of VRAM necessary.
+comfy.hunyuan_video.tiled_decode.enabled: true
+comfy.hunyuan_video.tiled_decode.tile_size: 256
+comfy.hunyuan_video.tiled_decode.overlap: 64
+comfy.hunyuan_video.tiled_decode.temporal_size: 64
+comfy.hunyuan_video.tiled_decode.temporal_overlap: 8
+comfy.hunyuan_video.vae_model_name: 'hunyuan_video_vae_bf16.safetensors'
+
 # ltxv_i2v: LTXV Image to Video
 #   Based on https://github.com/Lightricks/LTX-Video
 # If a prompt isn't provided via comfy.ltxv_i2v.prompt, then one is automatically generated. The Florence model takes an
