@@ -13,6 +13,7 @@ class ChatInterfaceCompleter(Completer):
         self.completion_handlers = {  # prefix -> handler
             '/mode ': lambda *args, **kwargs: self.get_completions__mode(*args, **kwargs),
             '/model ': lambda *args, **kwargs: self.get_completions__model(*args, **kwargs),
+            '/prompt ': lambda *args, **kwargs: self.get_completions__prompt(*args, **kwargs),
             '/set ': lambda *args, **kwargs: self.get_completions__set(*args, **kwargs),
         }
 
@@ -43,6 +44,17 @@ class ChatInterfaceCompleter(Completer):
                 yield Completion(f'/model {model_id}',
                                  display=model_id,
                                  start_position=-len(text))
+
+    def get_completions__prompt(self, text):
+        components = re.split(r'\s+', text, maxsplit=1)
+        current_prompt = self.chat_interface.chat_session.system_prompt
+        if len(components) != 2:
+            return
+
+        if current_prompt.startswith(components[1]):
+            yield Completion(f'/prompt {current_prompt}',
+                             display=current_prompt,
+                             start_position=-len(text))
 
     def get_completions__set(self, text):
         components = re.split(r'\s+', text, maxsplit=3)
