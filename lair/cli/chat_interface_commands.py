@@ -44,6 +44,10 @@ class ChatInterfaceCommands():
                 'callback': lambda c, a: self.command_load(c, a),
                 'description': 'Load a session from a file  (usage: /load [filename?], default filename is chat_session.json)',
             },
+            '/messages': {
+                'callback': lambda c, a: self.command_messages(c, a),
+                'description': 'Show or select a messages  (usage: /messages)'
+            },
             '/mode': {
                 'callback': lambda c, a: self.command_mode(c, a),
                 'description': 'Show or select a mode  (usage: /mode [name?])'
@@ -194,6 +198,18 @@ class ChatInterfaceCommands():
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
         self.chat_session.load(filename)
         self.reporting.system_message(f"Session loaded from {filename}")
+
+    def command_messages(self, command, arguments):
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: /messages takes no arguments")
+        else:
+            messages = self.chat_session.history.get_messages()
+
+            if not messages:
+                return
+            else:
+                for message in messages:
+                    print(message)
 
     def command_mode(self, command, arguments):
         if len(arguments) == 0:  # Show modes
