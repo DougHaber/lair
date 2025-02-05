@@ -82,7 +82,8 @@ class SearchTool:
             logger.debug(f"search_tool()._get_content(): Success: {url}")
             return text_content[:max_length] if len(text_content) > max_length else text_content
         except Exception as e:
-            logger.warn(f"Failed to get content from {url}: {e}")
+            # Since failures are expected and handled, this is logged at a debug level
+            logger.debug(f"Failed to get content from {url}: {e}")
             return ""
 
     def search_web(self, query):
