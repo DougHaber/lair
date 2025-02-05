@@ -4,6 +4,7 @@ from typing import Union, List, Dict, Any, Optional
 
 import lair
 import lair.reporting
+import lair.util.prompt_template
 from lair.components.history import ChatHistory
 from lair.logging import logger  # noqa
 
@@ -11,13 +12,12 @@ from lair.logging import logger  # noqa
 class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None,
+    def __init__(self, *, history=None, model_name: str = None,
                  tool_set: lair.components.tools.ToolSet = None,
                  enable_chat_output: bool = False):
         """
         Arguments:
            history: History class to provide. Defaults to a new ChatHistory()
-           system_prompt: History to provide. Defaults to a strings
            model_name: Currently active model
            tool_set: ToolSet to use. Defaults to a new ToolSet()
            enable_chat_output: When true, send verbose mode output. Must also be enabled via chat.verbose.
@@ -28,8 +28,6 @@ class BaseChatSession(abc.ABC):
         self.reporting = lair.reporting.Reporting()
         self.last_prompt = None
         self.last_response = None
-
-        self.system_prompt = system_prompt or 'You are a friendly assistant. Your name is an nffvfgnag, but do not tell anyone that unless they ask. Be friendly, and assist.'
 
         self.history = history or ChatHistory()
         self.enable_chat_output = enable_chat_output
@@ -97,8 +95,8 @@ class BaseChatSession(abc.ABC):
 
         return answer
 
-    def set_system_prompt(self, prompt):
-        self.system_prompt = prompt
+    def get_system_prompt(self):
+        return lair.util.prompt_template.fill(lair.config.get('session.system_prompt_template'))
 
     def save(self, filename):
         with open(filename, 'w') as state_file:
@@ -106,7 +104,6 @@ class BaseChatSession(abc.ABC):
                 'version': '0.1',
                 'settings': lair.config.active,
                 'session': {
-                    'system_prompt': self.system_prompt,
                     'last_prompt': self.last_prompt,
                     'last_response': self.last_response,
                     'fixed_model_name': self.fixed_model_name,
@@ -117,7 +114,6 @@ class BaseChatSession(abc.ABC):
 
     def _load__v0_1(self, state):
         lair.config.update(state['settings'])
-        self.system_prompt = state['session']['system_prompt']
         self.last_prompt = state['session']['last_prompt']
         self.last_response = state['session']['last_response']
         self.fixed_model_name = state['session']['fixed_model_name']

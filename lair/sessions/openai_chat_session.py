@@ -15,11 +15,10 @@ import openai
 
 class OpenAIChatSession(BaseChatSession):
 
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None,
+    def __init__(self, *, history=None, model_name: str = None,
                  tool_set: lair.components.tools.ToolSet = None,
                  enable_chat_output: bool = False):
         super().__init__(history=history,
-                         system_prompt=system_prompt,
                          model_name=model_name,
                          enable_chat_output=enable_chat_output)
         self.openai = None
@@ -50,8 +49,8 @@ class OpenAIChatSession(BaseChatSession):
         if messages is None:
             messages = []
 
-            if self.system_prompt and not disable_system_prompt:
-                messages.append({"role": "system", "content": self.system_prompt})
+            if not disable_system_prompt:
+                messages.append({"role": "system", "content": self.get_system_prompt()})
 
             messages.extend(self.history.get_messages())
 
@@ -80,8 +79,8 @@ class OpenAIChatSession(BaseChatSession):
         if messages is None:
             messages = []
 
-            if self.system_prompt and not disable_system_prompt:
-                messages.append({"role": "system", "content": self.system_prompt})
+            if not disable_system_prompt:
+                messages.append({"role": "system", "content": self.get_system_prompt()})
 
             messages.extend(self.history.get_messages())
 

@@ -256,9 +256,9 @@ class ChatInterfaceCommands():
 
     def command_prompt(self, command, arguments):
         if len(arguments) == 0:
-            self.reporting.system_message(self.chat_session.system_prompt)
+            self.reporting.system_message(lair.config.get('session.system_prompt_template'))
         else:
-            self.chat_session.set_system_prompt(' '.join(arguments))
+            lair.config.set('session.system_prompt_template', ' '.join(arguments))
 
     def command_reload_settings(self, command, arguments):
         if len(arguments) != 0:

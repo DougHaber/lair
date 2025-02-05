@@ -47,7 +47,7 @@ class ChatInterfaceCompleter(Completer):
 
     def get_completions__prompt(self, text):
         components = re.split(r'\s+', text, maxsplit=1)
-        current_prompt = self.chat_interface.chat_session.system_prompt
+        current_prompt = lair.config.get('session.system_prompt_template')
         if len(components) != 2:
             return
 
