@@ -122,7 +122,6 @@ class Configuration():
         if args[0] in self.modes[mode]:
             return self.modes[mode].get(*args, **kwargs)
         else:
-            import traceback; traceback.print_stack()
             raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {args[0]}")
 
     def set(self, key, value, *, force=False, mode=None, no_event=False):
