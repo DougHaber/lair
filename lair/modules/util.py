@@ -49,15 +49,20 @@ class Util():
                             help='Filename containing instructions for the request')
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
+        parser.add_argument('-t', '--enable-tools', action='store_true',
+                            help='Allow the model to call tools')
 
-    def call_llm(self, chat_session, *, instructions, user_messages):
+    def call_llm(self, chat_session, *, instructions, user_messages, enable_tools=True):
         messages = [
             lair.util.get_message('system', Util.system_prompt),
             lair.util.get_message('user', instructions),
             *user_messages,
         ]
 
-        response = chat_session.invoke(messages)
+        if enable_tools:
+            response, _ = chat_session.invoke_with_tools(messages)
+        else:
+            response = chat_session.invoke(messages)
 
         return response
 
@@ -132,6 +137,7 @@ class Util():
 
         response = self.call_llm(chat_session,
                                  instructions=instructions,
+                                 enable_tools=arguments.enable_tools,
                                  user_messages=user_messages)
         response = self.clean_response(response)
 
