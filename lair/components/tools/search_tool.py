@@ -7,6 +7,7 @@ from lair.logging import logger
 
 
 class SearchTool:
+    name = 'search'
     SEARCH_WEB_DEFINITION = {
         "type": "function",
         "function": {
@@ -27,7 +28,6 @@ class SearchTool:
             }
         }
     }
-
     SEARCH_NEWS_DEFINITION = {
         "type": "function",
         "function": {

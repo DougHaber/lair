@@ -4,20 +4,31 @@ from lair.logging import logger
 
 class ToolSet():
     def __init__(self, *, tools=None):
-        '''
+        """
         Create a collection of tools
 
         Arguments:
            tools: A list of tool classes to include. When not provided, the default tools are included
-        '''
-        self.requested_tools = lair.components.tools.DEFAULT_TOOLS if tools is None else tools
-        self.tools = {}  # name -> {}
-        self._init_tools()
+        """
+        self.requested_tools = None
+        self.tools = {}  # function name -> {}
+        self._init_tools(tools)
 
-    def _init_tools(self):
+    def _init_tools(self, tools):
+        self.requested_tools = lair.components.tools.DEFAULT_TOOLS if tools is None else tools
+
         # Instantiate each tool collection, allowing it to register each individual tool
         for tool in self.requested_tools:
             tool(self)
+
+    def update_tools(self, tools=None):
+        """
+        Recreate all tools in the tool set
+
+        Arguments:
+           tools: A list of tool classes to include. When not provided, the default tools are included
+        """
+        self._init_tools(tools)
 
     def add_tool(self, *, name, flag, definition=None, definition_handler=None, handler, class_name):
         """
@@ -56,9 +67,9 @@ class ToolSet():
         return enabled_tools
 
     def get_all_tools(self):
-        '''
+        """
         Return all tools, adding in an extra 'enabled' field
-        '''
+        """
         all_tools = []
         for tool in self.tools.values():
             tool['enabled'] = lair.config.get('tools.enabled') and lair.config.get(tool['flag']) == True

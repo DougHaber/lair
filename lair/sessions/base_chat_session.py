@@ -11,7 +11,14 @@ from lair.logging import logger  # noqa
 class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None, tool_set: lair.components.tools.ToolSet=None):
+    def __init__(self, *, history=None, system_prompt=None, model_name: str = None, tool_set: lair.components.tools.ToolSet = None):
+        """
+        Arguments:
+           history: History class to provide. Defaults to a new ChatHistory()
+           system_prompt: History to provide. Defaults to a strings
+           model_name: Currently active model
+           tool_set: ToolSet to use. Defaults to a new ToolSet()
+        """
         self.fixed_model_name = model_name  # When set, overrides config
         self.model_name = model_name  # Currently active model
 
@@ -24,31 +31,30 @@ class BaseChatSession(abc.ABC):
         self.history = history or ChatHistory()
         self.tool_set = tool_set or lair.components.tools.ToolSet()
 
-
     @abc.abstractmethod
     def use_model(self, model_name: str):
         self.fixed_model_name = model_name
 
     @abc.abstractmethod
     def invoke(self, messages: list = None, disable_system_prompt=False):
-        '''
+        """
         Call the underlying model without altering state (no history)
 
         Returns:
             str: The response for the model
-        '''
+        """
         pass
 
     @abc.abstractmethod
     def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
-        '''
+        """
         Call the underlying model without altering state (no history)
 
         Returns:
             tuple[str, list[dict]]: A tuple containing:
               - str: The response for the model
               - list[dict]: tool call history messages
-        '''
+        """
         pass
 
     def chat(self, message: Optional[Union[str, List[Dict[str, Any]]]] = None) -> str:
