@@ -43,14 +43,17 @@ class ToolSet():
         }
 
     def get_tools(self):
+        if not lair.config.get('tools.enabled'):
+            return []
+
         enabled_tools = []
         for tool in self.tools.values():
-            if lair.config.get('tools.enabled') and lair.config.get(tool['flag'] == True):
+            if lair.config.get(tool['flag']) is not True:
                 continue
 
             enabled_tools.append(tool)
 
-        return enabled_tools or None
+        return enabled_tools
 
     def get_all_tools(self):
         '''
