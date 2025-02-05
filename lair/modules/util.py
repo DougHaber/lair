@@ -93,8 +93,11 @@ class Util():
             message = "CONTENT is found below. Everything above is instructions and rules:\n" + message
 
         messages = []
-        attachment_content_parts, attachment_messages = lair.util.get_attachments_content(arguments.attachments)
-        messages.extend(attachment_messages)
+        if arguments.attachments:
+            attachment_content_parts, attachment_messages = lair.util.get_attachments_content(arguments.attachments)
+            messages.extend(attachment_messages)
+        else:
+            attachment_content_parts = []
 
         # Add the regular message as a standard message, or image sections if there are images
         if message:
