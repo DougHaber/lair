@@ -140,9 +140,10 @@ class ChatInterface(ChatInterfaceCommands):
     def _handle_request_command(self, request):
         """Handle slash commands."""
         command, *arguments = re.split(r'\s+', request)
+        arguments_str = request[len(command) + 1:].strip()
         if command in self.commands:
             try:
-                self.commands[command]['callback'](command, arguments)
+                self.commands[command]['callback'](command, arguments, arguments_str)
             except Exception as error:
                 self.reporting.error("Command failed: %s" % error)
         else:
