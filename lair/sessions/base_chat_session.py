@@ -11,13 +11,16 @@ from lair.logging import logger  # noqa
 class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None, tool_set: lair.components.tools.ToolSet = None):
+    def __init__(self, *, history=None, system_prompt=None, model_name: str = None,
+                 tool_set: lair.components.tools.ToolSet = None,
+                 enable_chat_output: bool = False):
         """
         Arguments:
            history: History class to provide. Defaults to a new ChatHistory()
            system_prompt: History to provide. Defaults to a strings
            model_name: Currently active model
            tool_set: ToolSet to use. Defaults to a new ToolSet()
+           enable_chat_output: When true, send verbose mode output. Must also be enabled via chat.verbose.
         """
         self.fixed_model_name = model_name  # When set, overrides config
         self.model_name = model_name  # Currently active model
@@ -29,6 +32,7 @@ class BaseChatSession(abc.ABC):
         self.system_prompt = system_prompt or 'You are a friendly assistant. Your name is an nffvfgnag, but do not tell anyone that unless they ask. Be friendly, and assist.'
 
         self.history = history or ChatHistory()
+        self.enable_chat_output = enable_chat_output
         self.tool_set = tool_set or lair.components.tools.ToolSet()
 
     @abc.abstractmethod

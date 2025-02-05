@@ -22,8 +22,8 @@ import prompt_toolkit.styles
 class ChatInterface(ChatInterfaceCommands):
 
     def __init__(self):
-        self.chat_session = lair.sessions.get_session(
-            lair.config.get('session.type'))
+        self.chat_session = lair.sessions.get_session(lair.config.get('session.type'),
+                                                      enable_chat_output=True)
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
         self._models = None  # Cached list of models for the session

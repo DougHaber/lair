@@ -16,11 +16,12 @@ import openai
 class OpenAIChatSession(BaseChatSession):
 
     def __init__(self, *, history=None, system_prompt=None, model_name: str = None,
-                 tool_set: lair.components.tools.ToolSet = None):
+                 tool_set: lair.components.tools.ToolSet = None,
+                 enable_chat_output: bool = False):
         super().__init__(history=history,
                          system_prompt=system_prompt,
-                         model_name=model_name)
-
+                         model_name=model_name,
+                         enable_chat_output=enable_chat_output)
         self.openai = None
         self.recreate_openai_client()
 
@@ -100,7 +101,7 @@ class OpenAIChatSession(BaseChatSession):
             message = answer.choices[0].message
             if message.tool_calls:
                 message_dict = message.dict()
-                if lair.config.get('chat.verbose'):
+                if self.enable_chat_output and lair.config.get('chat.verbose'):
                     self.reporting.assistant_tool_calls(message_dict, show_heading=True)
                 messages.append(message_dict)
                 tool_messages.append(message_dict)
@@ -116,7 +117,7 @@ class OpenAIChatSession(BaseChatSession):
                         "content": json.dumps(result),
                     }
 
-                    if lair.config.get('chat.verbose'):
+                    if self.enable_chat_output and lair.config.get('chat.verbose'):
                         self.reporting.tool_message(tool_response_messsage, show_heading=True)
                     messages.append(tool_response_messsage)
                     tool_messages.append(tool_response_messsage)
