@@ -5,8 +5,8 @@ import zoneinfo
 from typing import Union, List, Dict, Any, Optional
 
 import lair
+import lair.components.tools
 import lair.reporting
-from lair.components.history import ChatHistory
 from lair.logging import logger
 from .base_chat_session import BaseChatSession
 
@@ -15,7 +15,8 @@ import openai
 
 class OpenAIChatSession(BaseChatSession):
 
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None):
+    def __init__(self, *, history=None, system_prompt=None, model_name: str = None,
+                 tool_set: lair.components.tools.ToolSet = None):
         super().__init__(history=history,
                          system_prompt=system_prompt,
                          model_name=model_name)
@@ -65,6 +66,66 @@ class OpenAIChatSession(BaseChatSession):
         )
 
         return answer.choices[0].message.content.strip()
+
+    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+        '''
+        Call the underlying model without altering state (no history)
+
+        Returns:
+            tuple[str, list[dict]]: A tuple containing:
+              - str: The response for the model
+              - list[dict]: New messages from assistant & tool responses
+        '''
+        if messages is None:
+            messages = []
+
+            if self.system_prompt and not disable_system_prompt:
+                messages.append({"role": "system", "content": self.system_prompt})
+
+            messages.extend(self.history.get_messages())
+
+        tool_messages = []
+
+        cycle = 0
+        while True:
+            logger.debug("OpenAIChatSessions(): completions.create(model=%s, len(messages)=%d), cycle=%d" % (self.model_name, len(messages), cycle))
+            answer = self.openai.chat.completions.create(
+                messages=messages,
+                model=self.model_name,
+                temperature=lair.config.get('model.temperature'),
+                max_completion_tokens=lair.config.get('model.max_tokens'),
+                tools=self.tool_set.get_definitions(),
+            )
+
+            message = answer.choices[0].message
+            if message.tool_calls:
+                message_dict = message.dict()
+                if lair.config.get('chat.verbose'):
+                    self.reporting.assistant_tool_calls(message_dict, show_heading=True)
+                messages.append(message_dict)
+                tool_messages.append(message_dict)
+
+                for tool_call in message.tool_calls:
+                    name = tool_call.function.name
+                    arguments = json.loads(tool_call.function.arguments)
+
+                    result = self.tool_set.call_tool(name, arguments, tool_call.id)
+                    tool_response_messsage = {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    }
+
+                    if lair.config.get('chat.verbose'):
+                        self.reporting.tool_message(tool_response_messsage, show_heading=True)
+                    messages.append(tool_response_messsage)
+                    tool_messages.append(tool_response_messsage)
+                    logger.debug(f"Tool result: {tool_response_messsage}")
+                cycle += 1
+            else:
+                self.last_prompt = self.reporting.messages_to_str(messages)
+
+                return message.content.strip(), tool_messages
 
     def list_models(self, *, ignore_errors=False):
         """

@@ -11,7 +11,7 @@ from lair.logging import logger  # noqa
 class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None):
+    def __init__(self, *, history=None, system_prompt=None, model_name: str = None, tool_set: lair.components.tools.ToolSet=None):
         self.fixed_model_name = model_name  # When set, overrides config
         self.model_name = model_name  # Currently active model
 
@@ -22,6 +22,8 @@ class BaseChatSession(abc.ABC):
         self.system_prompt = system_prompt or 'You are a friendly assistant. Your name is an nffvfgnag, but do not tell anyone that unless they ask. Be friendly, and assist.'
 
         self.history = history or ChatHistory()
+        self.tool_set = tool_set or lair.components.tools.ToolSet()
+
 
     @abc.abstractmethod
     def use_model(self, model_name: str):
@@ -34,6 +36,18 @@ class BaseChatSession(abc.ABC):
 
         Returns:
             str: The response for the model
+        '''
+        pass
+
+    @abc.abstractmethod
+    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+        '''
+        Call the underlying model without altering state (no history)
+
+        Returns:
+            tuple[str, list[dict]]: A tuple containing:
+              - str: The response for the model
+              - list[dict]: tool call history messages
         '''
         pass
 
@@ -55,13 +69,19 @@ class BaseChatSession(abc.ABC):
             self.history.add_message('user', message)
 
         try:
-            answer = self.invoke()
+            if lair.config.get('tools.enabled'):
+                answer, tool_messages = self.invoke_with_tools()
+            else:
+                answer = self.invoke()
+                tool_messages = None
         except (Exception, KeyboardInterrupt):
             self.history.rollback()
             raise
 
         self.last_response = answer
 
+        if tool_messages:
+            self.history.add_tool_messages(tool_messages)
         self.history.add_message('assistant', answer)
         self.history.commit()
 

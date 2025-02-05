@@ -7,6 +7,8 @@ import traceback
 import lair
 
 import rich
+import rich.columns
+import rich.highlighter
 import rich.markdown
 import rich.text
 import rich.traceback
@@ -36,12 +38,19 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         self.console = rich.console.Console(no_color=no_color,
                                             force_terminal=force_terminal)
+        self.json_highlighter = rich.highlighter.JSONHighlighter()
 
     def print_rich(self, *args, **kwargs):
         """Print using rich."""
         kwargs['no_wrap'] = not lair.config.get('style.word_wrap')
 
         self.console.print(*args, **kwargs)
+
+    def print_highlighted_json(self, json_str):
+        if lair.config.get('style.messages_command.syntax_highlight'):
+            rich.print_json(json_str, indent=None)
+        else:
+            print(json_str)
 
     def plain(self, *args, **kwargs):
         """Return plain rich string with no Markup."""
@@ -61,11 +70,16 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         if column_names is None:
             if automatic_column_names:
-                column_names = map(lambda i: i, rows_of_dicts[0].keys())
+                column_names = list(rows_of_dicts[0].keys())
             else:
                 column_names = None
+        else:
+            column_names = list(column_names)
 
-        table_rows = list(map(lambda r: [*r.values()], rows_of_dicts))
+        # Construct table rows by selecting values based on the specified column order.
+        # This ensures only the requested columns are included and maintains their order.
+        table_rows = [[r[col] for col in column_names if col in r] for r in rows_of_dicts]
+
         self.table(table_rows,
                    column_names=column_names,
                    style=style,
@@ -86,7 +100,6 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             return
 
         table = rich.table.Table(style=style,
-                                 # row_styles=[style],
                                  show_header=column_names is not None)
 
         if column_names:
@@ -127,14 +140,74 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         self.print_rich(self.plain('ERROR: ' + message),
                         style=lair.config.get('style.error'))
 
-    def tool_message(self, message, show_heading=False):
-        if show_heading:
-            self.console.print('TOOL',
-                               style=lair.config.get('style.tool_message_heading'))
+    def format_json(self, json_str, max_length=None, plain_style=None, enable_highlighting=True):
+        if enable_highlighting:
+            json_text = self.json_highlighter(json_str)
+        else:
+            json_text = rich.text.Text(json_str, style=plain_style)
 
-        self.print_rich(self.plain(message),
-                        markup=False,
-                        style=lair.config.get('style.tool_message'))
+        if max_length is not None and len(json_text) > max_length:
+            json_text = json_text[:max_length]
+            json_text.append("...", style=lair.config.get('style.ellipsis'))
+
+        return json_text
+
+    def assistant_tool_calls(self, message, show_heading=False):
+        if lair.config.get('style.llm_output.tool_call.background'):
+            background_style = ' on ' + lair.config.get('style.llm_output.tool_call.background')
+        else:
+            background_style = ''
+
+        if show_heading:
+            self.print_rich('AI' + ' ' * (self.console.width - 2),
+                            style=lair.config.get('style.llm_output_heading') + background_style,
+                            soft_wrap=True)
+
+        for tool_call in message['tool_calls']:
+            function = tool_call['function']
+
+            text = rich.text.Text()
+            text.append("- ", style=lair.config.get('style.llm_output.tool_call.bullet'))
+            text.append("TOOL CALL: ", style=lair.config.get('style.llm_output.tool_call.prefix'))
+            text.append(f"{function['name']}(", style=lair.config.get('style.llm_output.tool_call.function'))
+            arguments = self.format_json(function['arguments'],
+                                         max_length=lair.config.get('style.llm_output.tool_call.max_arguments_length'),
+                                         plain_style=lair.config.get('style.llm_output.tool_call.arguments'),
+                                         enable_highlighting=lair.config.get('style.llm_output.tool_call.arguments_syntax_highlighting'))
+            text.append(arguments)
+
+            text.append(")", style=lair.config.get('style.llm_output.tool_call.function'))
+            text.append(f"  ({tool_call['id']})", style=lair.config.get('style.llm_output.tool_call.id'))
+            self.console.print(text, markup=False, style=background_style, soft_wrap=True, end="")
+
+            remaining_characters = self.console.width - len(text) % self.console.width
+            self.console.print(' ' * remaining_characters, style=background_style)
+
+    def tool_message(self, message, show_heading=False):
+        if lair.config.get('style.tool_message.background'):
+            background_style = ' on ' + lair.config.get('style.tool_message.background')
+        else:
+            background_style = ''
+
+        if show_heading:
+            self.console.print('TOOL' + ' ' * (self.console.width - 4),
+                               style=lair.config.get('style.tool_message.heading') + background_style,
+                               soft_wrap=True)
+
+        text = rich.text.Text()
+        text.append("- ", style=lair.config.get('style.tool_message.bullet'))
+        text.append(f"({message['tool_call_id']})", style=lair.config.get('style.tool_message.id'))
+        text.append(" -> ", style=lair.config.get('style.tool_message.arrow'))
+
+        response = self.format_json(message['content'],
+                                    max_length=lair.config.get('style.tool_message.max_response_length'),
+                                    plain_style=lair.config.get('style.tool_message.response'),
+                                    enable_highlighting=lair.config.get('style.tool_message.response_syntax_highlighting'))
+        text.append(response)
+        self.console.print(text, end='', soft_wrap=True, style=background_style)
+
+        remaining_characters = self.console.width - len(text) % self.console.width
+        self.console.print(' ' * remaining_characters, style=background_style)
 
     def user_error(self, message):
         self.print_rich(self.plain(message),
@@ -210,11 +283,14 @@ class Reporting(metaclass=ReportingSingletoneMeta):
                             style=lair.config.get('style.human_output_heading'))
             self.print_rich(content, style=lair.config.get('style.human_output'))
         elif message['role'] == 'assistant':
-            self.llm_output(content, show_heading=True)
+            if 'tool_calls' in message:
+                self.assistant_tool_calls(message, show_heading=True)
+            else:
+                self.llm_output(content, show_heading=True)
         elif message['role'] == 'system':
             self.system_message(content, show_heading=True)
         elif message['role'] == 'tool':
-            self.tool_message(content, show_heading=True)
+            self.tool_message(message, show_heading=True)
         else:
             self.system_message(content, show_heading=True)
 

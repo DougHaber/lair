@@ -1,3 +1,4 @@
+import json
 import os
 
 import lair
@@ -40,13 +41,17 @@ class ChatInterfaceCommands():
                 'callback': lambda c, a: self.command_list_models(c, a),
                 'description': 'Display a list of available models for the current session'
             },
+            '/list-tools': {
+                'callback': lambda c, a: self.command_list_tools(c, a),
+                'description': 'Show tools and their status'
+            },
             '/load': {
                 'callback': lambda c, a: self.command_load(c, a),
                 'description': 'Load a session from a file  (usage: /load [filename?], default filename is chat_session.json)',
             },
             '/messages': {
                 'callback': lambda c, a: self.command_messages(c, a),
-                'description': 'Show or select a messages  (usage: /messages)'
+                'description': 'Display or save the JSON message history as JSONL (usage: /messages [filename?])'
             },
             '/mode': {
                 'callback': lambda c, a: self.command_mode(c, a),
@@ -200,16 +205,23 @@ class ChatInterfaceCommands():
         self.reporting.system_message(f"Session loaded from {filename}")
 
     def command_messages(self, command, arguments):
-        if len(arguments) != 0:
-            self.reporting.user_error("ERROR: /messages takes no arguments")
+        if len(arguments) > 1:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage /messages [filename?]")
         else:
             messages = self.chat_session.history.get_messages()
 
             if not messages:
+                logger.warn("No messages found")
                 return
+
+            filename = arguments[0] if len(arguments) == 1 else None
+            if filename is not None:
+                jsonl_str = "\n".join(json.dumps(message) for message in messages)
+                lair.util.save_file(filename, jsonl_str + "\n")
+                self.reporting.system_message(f'Messages saved  ({len(jsonl_str)} bytes)')
             else:
                 for message in messages:
-                    print(message)
+                    self.reporting.print_highlighted_json(json.dumps(message))
 
     def command_mode(self, command, arguments):
         if len(arguments) == 0:  # Show modes
@@ -278,3 +290,10 @@ class ChatInterfaceCommands():
                 self.reporting.user_error("ERROR Unknown key: %s" % key)
             else:
                 lair.config.set(key, value)
+
+    def command_list_tools(self, command, arguments):
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: /list-tools takes no arguments")
+        else:
+            tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: m['name'])
+            self.reporting.table_from_dicts_system(tools, column_names=['class_name', 'name', 'enabled'])

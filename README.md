@@ -31,6 +31,9 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Reasoning Models](#reasoning-models)
     - [Chat Examples](#chat-examples)
       - [Attaching Files](#attaching-files)
+      - [Tools](#tools)
+        - [Python Tool](#python-tool)
+        - [Search Tool](#search-tool)
       - [One-off Chat](#one-off-chat)
       - [Extracting Embedded Responses](#extracting-embedded-responses)
     - [Model Settings](#model-settings)
@@ -141,12 +144,15 @@ Much of the interface is customizable through overriding `chat.*` & `style.*` se
 
 The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled show with capital letters and brighter colors. The current flags are:
 
-| Flag | Meaning                    | Shortcut Key |
-|------|----------------------------|--------------|
-| L    | Multi-line input           | ESC-L        |
-| M    | Markdown rendering         | ESC-M        |
-| V    | Verbose (currently unused) | ESC-V        |
-| W    | Word-wrapping              | ESC-W        |
+| Flag | Meaning            | Shortcut Key |
+|------|--------------------|--------------|
+| L    | Multi-line input   | ESC-L        |
+| M    | Markdown rendering | ESC-M        |
+| T    | Tools              | ESC-T        |
+| V    | Verbose Output     | ESC-V        |
+| W    | Word-wrapping      | ESC-W        |
+
+When Verbose output is enabled tool calls and responses are displayed.
 
 #### Commands
 
@@ -173,15 +179,16 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 
 In addition to all the standard GNU-readline style key combinations, the following shortcuts are provided.
 
-| Shortcut Key | Action                                    |
-|--------------|-------------------------------------------|
-| ESC-L        | Toggle multi-line input                   |
-| ESC-M        | Toggle markdown rendering                 |
-| ESC-T        | Toggle bottom toolbar                     |
-| ESC-V        | Toggle verbose output  (currently unused) |
-| ESC-W        | Toggle word wrapping                      |
+| Shortcut Key | Action                    |
+|--------------|---------------------------|
+| ESC-B        | Toggle bottom toolbar     |
+| ESC-L        | Toggle multi-line input   |
+| ESC-M        | Toggle markdown rendering |
+| ESC-T        | Toggle Tools              |
+| ESC-V        | Toggle verbose output     |
+| ESC-W        | Toggle word wrapping      |
 
-The verbose output options might be removed in the future. They were originally around langchain's verbose flag, but since langchain is no longer used by Lair, there may not be much or any impact from enabling it.
+When Verbose output is enabled tool calls and responses are displayed. It is enabled by default.
 
 #### Markdown Rendering
 
@@ -288,6 +295,15 @@ stained_glass.png: A geometric stained glass window with shapes in red, blue, gr
 ```
 
 These descriptions are suboptimal. This example used `llama3.2-vision:11b`, which tends to struggle with multiple images. Providing the filenames also influenced the responses. For this specific request, it would be better to process one file per request and exclude filenames. See the "Attaching Files" section of the "Util" examples below for a different approach.
+
+##### Tools
+
+###### Python Tool
+![Python Tool Example](docs/images/tool-python.jpg "Python tool example")
+
+###### Search Tool
+![Search Tool Example](docs/images/tool-search.jpg "Search tool example")
+
 
 ##### One-off Chat
 

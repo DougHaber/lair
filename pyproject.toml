@@ -18,6 +18,8 @@ transformers = "^4.45.1"
 compel = "^2.0.3"
 comfy-script = {extras = ["client"], version = "^0.5.1"}
 pdfplumber = "^0.11.5"
+duckduckgo-search = "^7.3.0"
+trafilatura = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.1.0"
