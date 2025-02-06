@@ -48,6 +48,7 @@ class Util():
         ]
 
         if enable_tools:
+            lair.config.set('tools.enabled', True)
             response, _ = chat_session.invoke_with_tools(messages)
         else:
             response = chat_session.invoke(messages)
