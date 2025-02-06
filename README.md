@@ -79,15 +79,14 @@ The full Lair repository includes additional features, such as an agent framewor
   * Simple I/O for sending content via file or pipes to LLMs
   * Support for image, PDF, and text attachments
 
+* Tools Support
+  * Works in the chat interface and the util command
+  * Search Tool: Search the web or news with DuckDuckGo
+  * Python Tool: Run python code inside of a containre
+
 ## Future
 
-As this is a hobby project, there is no roadmap or guarantee that anything will be addressed, but these are the next big features and fixes I'd like to see added in:
-
-* Support for tools in chat. This existed in an older unreleased version of lair, but a refactor removed langchain, and with it tools support.
-    * A search tool should be added, allowing the LLM to use a search engine and read the results.
-* Support for external sub-command and module loading.
-
-As an experiment, a [GitHub project exists](https://github.com/users/DougHaber/projects/1) to track possible improvements. This might change in the future.
+Lair is a hobby project with no official roadmap or guarantee that anything will be addressed. That said, a [GitHub project exists](https://github.com/users/DougHaber/projects/1) where possible improvements are listed and tracked. GitHub Issues can be created to request new features or report bugs.
 
 ## Installation
 
