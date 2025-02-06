@@ -82,7 +82,7 @@ The full Lair repository includes additional features, such as an agent framewor
 * Tools Support
   * Works in the chat interface and the util command
   * Search Tool: Search the web or news with DuckDuckGo
-  * Python Tool: Run python code inside of a containre
+  * Python Tool: Run python code inside of a container
 
 ## Future
 
