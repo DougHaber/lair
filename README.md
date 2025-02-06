@@ -298,12 +298,66 @@ These descriptions are suboptimal. This example used `llama3.2-vision:11b`, whic
 
 ##### Tools
 
+Tools allow the AI to perform actions beyond generating responses. By utilizing tools, the AI can perform actions such as executing computations and searching news sources, and incorporate the retrieved data into more informed responses.
+
+Since tools enable the AI to take actions that may have unintended consequences, they are disabled by default. To enable them, set `tools.enabled` to `true`.
+
+Each tool has its own configuration namespace and an individual `enabled` flag, which must also be set to `true` in addition to `tools.enabled`.
+
+Tools are only compatible with models that support them. Attempting to use tools with unsupported models may result in errors or unpredictable behavior.
+
+The chat CLI provides the `/list-tools` command to display all available tools and their current status.
+
+Tools can be quickly toggled on or off using the `ESC-T` shortcut.
+
 ###### Python Tool
+
 ![Python Tool Example](docs/images/tool-python.jpg "Python tool example")
 
+The Python tool enables a model to execute Python scripts. To enhance security, the code runs within a Docker container, providing a level of isolation. The script can interact within the container and access the network.
+
+Due to potential security risks, this tool is disabled by default. To enable it, set `tools.python.enabled` to `true`. This can be configured using the `/set` command or by modifying `~/.lair/config.yaml`.
+
+To use this tool, the user must have permission to run Docker containers, and Docker must be able to access or pull an appropriate image.
+
+The `tools.python.docker_image` setting specifies which Docker image to use. By default, it is set to `python:latest`. Custom images can be used to include additional modules. For example:
+
+```Dockerfile
+FROM python:latest
+
+RUN pip install numpy requests
+```
+
+This image can then be built using a command such as:
+
+```sh
+docker build -t example-python:latest .
+```
+
+To use the custom image, update the configuration accordingly. The `tools.python.extra_modules` setting allows specifying additional packages, making them known to the language model in the tool description:
+
+```yaml
+tools.python.docker_image: 'example-python:latest'
+tools.python.extra_modules: 'numpy, requests'
+```
+
+Python scripts will execute until they reach a timeout limit. The timeout duration is configurable via `tools.python.timeout` and defaults to 30 seconds.
+
 ###### Search Tool
+
 ![Search Tool Example](docs/images/tool-search.jpg "Search tool example")
 
+The search tool utilizes the [DuckDuckGo](https://duckduckgo.com/) search engine to perform web and news searches. DuckDuckGo was selected because it does not require an API key for access. However, it does impose rate limits, so excessive search requests may require a cooldown period before additional searches can be completed.
+
+This tool is enabled by default. To disable it, set `tools.search.enabled` to `false`.
+
+The search function allows the module to query either web or news sources. The resulting URLs are processed sequentially, attempting to extract content from each page. If a page fails to load or does not provide usable content, the next URL in the list is tried. This continues until a sufficient amount of content is retrieved or no more URLs remain.
+
+Web requests to retrieved URLs are subject to a timeout, which is configurable via `tools.search.timeout`. The default timeout is 5 seconds.
+
+Search results can be large. To manage this, content extracted from each page is truncated based on the `tools.search.max_length` parameter. Additionally, the number of pages from which content is extracted is controlled by `tools.search.max_results`, which defaults to `5`.
+
+The total amount of retrieved content can be as large as `max_results * max_length`, potentially exceeding the default context window of a language model. For users utilizing Ollama, the default context size is set to 2048 tokens. If this limit is exceeded, truncation may occur, leading to incomplete or inaccurate responses. To mitigate this, adjust the `num_ctx` parameter within Ollama as needed.
 
 ##### One-off Chat
 
