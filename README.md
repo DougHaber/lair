@@ -136,6 +136,33 @@ Individual settings may be overridden with the `--set` / `-s` flag. For example 
 
 The `--model` / `-m` flag is a shorthand for setting `model.name`.
 
+### Prompt Templates
+
+The system prompt is configured via `session.system_prompt_template`. This allows for defining different modes with custom prompts in `~/.lair/config.yaml` or modifying the prompt dynamically using the `/set` command in the chat interface. When using the `util` sub-command, the prompt is generated based on `util.system_prompt_template`.
+
+Prompts use [Jinja templates](https://jinja.palletsprojects.com/en/stable/templates/), providing a full-featured templating system for customization.
+
+The following variables are automatically available:
+- `date`: The current date in UTC, formatted as `%Y-%m-%d UTC`.
+- `datetime`: The current date and time in UTC, formatted as `%Y-%m-%d %H:%M:%S UTC`.
+
+**Note:** Using `datetime` or any dynamic prompt behavior can disrupt caching, potentially slowing down future requests. While this may not be an issue for one-time requests, maintaining a stable system prompt is recommended for chat sessions.
+
+Additionally, a `get_config()` function is available, allowing retrieval of configuration values. This can be useful for dynamically adjusting instructions based on the settings. For example, the following YAML configuration modifies the system prompt when tools are enabled:
+
+```yaml
+session.system_prompt_template: |-
+  You are a friendly assistant.
+  TODAYS DATE: {{ date }}
+  {%- if get_config('tools.enabled') -%}
+  - When using tools:
+    - If the search or news tool returns irrelevant results, do not mention them.
+    - Do not ask whether to call a tool—just execute it.
+  {%- endif -%}
+```
+
+The `/last-prompt` command in the chat interface displays the full last prompt, including rendered system messages, which can be useful for debugging prompt templates.
+
 ### Chat - Command Line Chat Interface
 
 The `chat` command provides a rich command-line interface for interacting with large language models.
