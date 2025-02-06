@@ -51,6 +51,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Generating Content](#generating-content)
       - [Providing Input Content](#providing-input-content)
       - [Attaching Files](#attaching-files-1)
+      - [Using Tools](#using-tools)
 
 <!-- markdown-toc end -->
 
@@ -598,7 +599,7 @@ The ComfyUI Server must have all required nodes installed to use any given workf
 
 #### Comfy Usage & Examples
 
-The `comfy` command provides distinct subcommands for each supported workflow, each with its own flags and configuration options.
+The `comfy` command provides distinct sub-commands for each supported workflow, each with its own flags and configuration options.
 
 Flags offer a quick way to set common options but do not cover all available configuration settings. They act as shortcuts to simplify usage of the most frequently used settings. Configuration options can be set either through the configuration file or directly from the command line. For example, a sampler can be specified using `lair -s 'comfy.image.sampler=euler_ancestral' comfy image ...` or `lair comfy image --sampler euler_ancestral ...`. Flags take precedence over configuration settings.
 
@@ -958,3 +959,36 @@ stained_glass.png: Colorful stained glass window.
 ```
 
 Note, the `Max 60 characters` instruction isn't followed by most current models. LLMs aren't that precise. Giving specific numbers like that nudges it in a direction, but doesn't introduce an actual limit.
+
+##### Using Tools
+
+The `--enable-tools` (`-t`) flag allows the model to invoke tools when using the `util` sub-command. When this flag is enabled, `tools.enabled` is automatically set to `true`, but individual tools must still be explicitly enabled in the configuration for them to be available.
+
+For more information on using tools within Lair, available tools, and setup instructions, refer to the [Tools Documentation](#tools) in the Chat section.
+
+The following example demonstrates using the search tool to retrieve recent news results:
+
+```sh
+$ lair --model llama3.2:3b-ctx0 util \
+        -i 'New AI news. Reply format: - {date,YYYY-MM-DD}: {headline}' \
+        --enable-tools
+- 2025-02-05: TikTok Owners New AI Tool Makes Lifelike Videos From A Single Photo
+- 2025-02-06: Palantir On Verge Of Exploding With Powerful Reasoning AI
+- 2025-02-06: Reframing digital transformation through the lens of generative AI
+- 2025-02-06: UB study finds framing can boost employee confidence in AI, but one big error can destroy it
+- 2025-02-06: Workday lays off 1,750 employees, or about 8.5% of its workforce in AI shift
+- 2025-02-06: New Teladoc, same acquisition strategy
+```
+
+Specifying `--model` is optional. However, in this example, a locally modified `llama3.2:3b` model was used with Ollama to extend the context window via `num_ctx`. By default, Ollama uses a context size of 2048, which may be insufficient for search-based tasks. For guidance on configuring the search tool, see the [Search Tool Documentation](#search-tool).
+
+The Python tool allows the model to generate and execute Python code within a container, retrieving the results. This tool is disabled by default. For instructions on enabling and configuring it, refer to the [Python Tool Documentation](#python-tool).
+
+```sh
+$ lair util -i 'Use Python to GET whatismyip.akamai.com, and return the IP' -t
+255.1.2.3
+```
+
+*Note:* The IP address shown above is a placeholder. The actual output has been replaced for privacy reasons.
+
+The `--debug` flag can be added before `util` to enable detailed output, displaying all requests and responses. In the Python tool example, a common behavior is for the model to first attempt using the `requests` library. If `requests` is not installed, it encounters an error and retries using `urllib`. This additional cycle can be avoided by explicitly specifying `urllib` in the instructions or by using a custom Docker image that includes `requests` pre-installed.
