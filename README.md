@@ -343,7 +343,9 @@ Tools can be quickly toggled on or off using the `ESC-T` shortcut.
 
 The Python tool enables a model to execute Python scripts. To enhance security, the code runs within a Docker container, providing a level of isolation. The script can interact within the container and access the network.
 
-Due to potential security risks, this tool is disabled by default. To enable it, set `tools.python.enabled` to `true`. This can be configured using the `/set` command or by modifying `~/.lair/config.yaml`.
+In the screenshot above, the tool calls and responses are shown in the output. This is called "verbose mode" and can be toggled modified in the configuration via `chat.verbose` or toggle with `ESC-V` in the chat interface.
+
+Due to potential security risks, the Python tool is disabled by default. To enable it, set `tools.python.enabled` to `true`. This can be configured using the `/set` command or by modifying `~/.lair/config.yaml`.
 
 To use this tool, the user must have permission to run Docker containers, and Docker must be able to access or pull an appropriate image.
 
