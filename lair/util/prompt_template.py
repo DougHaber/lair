@@ -13,7 +13,7 @@ def fill(prompt_template):
     context = {
         'date': utc_now.strftime("%Y-%m-%d UTC"),
         'datetime': utc_now.strftime("%Y-%m-%d %H:%M:%S UTC"),
-        'get_setting': lambda k: lair.config.get(k),
+        'get_config': lambda k: lair.config.get(k),
     }
 
     return template.render(context)
