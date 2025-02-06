@@ -24,6 +24,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Lair Core](#lair-core)
+  - [Prompt Templates](#prompt-templates)
   - [Chat - Command Line Chat Interface](#chat---command-line-chat-interface)
     - [Commands](#commands)
     - [Shortcut Keys](#shortcut-keys)
