@@ -26,8 +26,28 @@ class ChatHistory():
             logger.warn("Invalid value for session.max_history_length. Must be greater than 0. Setting to null.")
             lair.config.active['session.max_history_length'] = None
 
-    def add_message(self, role, message):
-        if role not in self.ALLOWED_ROLES:
+    def add_tool_messages(self, messages):
+        for message in messages:
+            if message['role'] == 'tool':
+                self._history.append({
+                    "role": 'tool',
+                    "content": message['content'],
+                    "tool_call_id": message['tool_call_id'],
+                })
+            elif message['role'] == 'assistant':
+                self._history.append({
+                    "role": 'assistant',
+                    "content": message['content'],
+                    "refusal": message['refusal'],
+                    "tool_calls": message['tool_calls'],
+                })
+            else:
+                raise ValueError("ChatHistory(): add_tool_messages() received a message with a role that wasn't 'tool' or 'assistant'")
+
+    def add_message(self, role, message, *, meta=None):
+        if role == 'tool':
+            raise ValueError("add_message(): Role of tool is invalid. Use add_tool_message()")
+        elif role not in self.ALLOWED_ROLES:
             raise ValueError("add_message(): Unknown role: %s" % role)
 
         self._history.append({

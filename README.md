@@ -31,6 +31,9 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Reasoning Models](#reasoning-models)
     - [Chat Examples](#chat-examples)
       - [Attaching Files](#attaching-files)
+      - [Tools](#tools)
+        - [Python Tool](#python-tool)
+        - [Search Tool](#search-tool)
       - [One-off Chat](#one-off-chat)
       - [Extracting Embedded Responses](#extracting-embedded-responses)
     - [Model Settings](#model-settings)
@@ -48,6 +51,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Generating Content](#generating-content)
       - [Providing Input Content](#providing-input-content)
       - [Attaching Files](#attaching-files-1)
+      - [Using Tools](#using-tools)
 
 <!-- markdown-toc end -->
 
@@ -76,15 +80,14 @@ The full Lair repository includes additional features, such as an agent framewor
   * Simple I/O for sending content via file or pipes to LLMs
   * Support for image, PDF, and text attachments
 
+* Tools Support
+  * Works in the chat interface and the util command
+  * Search Tool: Search the web or news with DuckDuckGo
+  * Python Tool: Run python code inside of a container
+
 ## Future
 
-As this is a hobby project, there is no roadmap or guarantee that anything will be addressed, but these are the next big features and fixes I'd like to see added in:
-
-* Support for tools in chat. This existed in an older unreleased version of lair, but a refactor removed langchain, and with it tools support.
-    * A search tool should be added, allowing the LLM to use a search engine and read the results.
-* Support for external sub-command and module loading.
-
-As an experiment, a [GitHub project exists](https://github.com/users/DougHaber/projects/1) to track possible improvements. This might change in the future.
+Lair is a hobby project with no official roadmap or guarantee that anything will be addressed. That said, a [GitHub project exists](https://github.com/users/DougHaber/projects/1) where possible improvements are listed and tracked. GitHub Issues can be created to request new features or report bugs.
 
 ## Installation
 
@@ -133,6 +136,33 @@ Individual settings may be overridden with the `--set` / `-s` flag. For example 
 
 The `--model` / `-m` flag is a shorthand for setting `model.name`.
 
+### Prompt Templates
+
+The system prompt is configured via `session.system_prompt_template`. This allows for defining different modes with custom prompts in `~/.lair/config.yaml` or modifying the prompt dynamically using the `/set` command in the chat interface. When using the `util` sub-command, the prompt is generated based on `util.system_prompt_template`.
+
+Prompts use [Jinja templates](https://jinja.palletsprojects.com/en/stable/templates/), providing a full-featured templating system for customization.
+
+The following variables are automatically available:
+- `date`: The current date in UTC, formatted as `%Y-%m-%d UTC`.
+- `datetime`: The current date and time in UTC, formatted as `%Y-%m-%d %H:%M:%S UTC`.
+
+**Note:** Using `datetime` or any dynamic prompt behavior can disrupt caching, potentially slowing down future requests. While this may not be an issue for one-time requests, maintaining a stable system prompt is recommended for chat sessions.
+
+Additionally, a `get_config()` function is available, allowing retrieval of configuration values. This can be useful for dynamically adjusting instructions based on the settings. For example, the following YAML configuration modifies the system prompt when tools are enabled:
+
+```yaml
+session.system_prompt_template: |-
+  You are a friendly assistant.
+  TODAYS DATE: {{ date }}
+  {%- if get_config('tools.enabled') -%}
+  - When using tools:
+    - If the search or news tool returns irrelevant results, do not mention them.
+    - Do not ask whether to call a tool—just execute it.
+  {%- endif -%}
+```
+
+The `/last-prompt` command in the chat interface displays the full last prompt, including rendered system messages, which can be useful for debugging prompt templates.
+
 ### Chat - Command Line Chat Interface
 
 The `chat` command provides a rich command-line interface for interacting with large language models.
@@ -141,12 +171,15 @@ Much of the interface is customizable through overriding `chat.*` & `style.*` se
 
 The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled show with capital letters and brighter colors. The current flags are:
 
-| Flag | Meaning                    | Shortcut Key |
-|------|----------------------------|--------------|
-| L    | Multi-line input           | ESC-L        |
-| M    | Markdown rendering         | ESC-M        |
-| V    | Verbose (currently unused) | ESC-V        |
-| W    | Word-wrapping              | ESC-W        |
+| Flag | Meaning            | Shortcut Key |
+|------|--------------------|--------------|
+| L    | Multi-line input   | ESC-L        |
+| M    | Markdown rendering | ESC-M        |
+| T    | Tools              | ESC-T        |
+| V    | Verbose Output     | ESC-V        |
+| W    | Word-wrapping      | ESC-W        |
+
+When Verbose output is enabled tool calls and responses are displayed.
 
 #### Commands
 
@@ -173,15 +206,16 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 
 In addition to all the standard GNU-readline style key combinations, the following shortcuts are provided.
 
-| Shortcut Key | Action                                    |
-|--------------|-------------------------------------------|
-| ESC-L        | Toggle multi-line input                   |
-| ESC-M        | Toggle markdown rendering                 |
-| ESC-T        | Toggle bottom toolbar                     |
-| ESC-V        | Toggle verbose output  (currently unused) |
-| ESC-W        | Toggle word wrapping                      |
+| Shortcut Key | Action                    |
+|--------------|---------------------------|
+| ESC-B        | Toggle bottom toolbar     |
+| ESC-L        | Toggle multi-line input   |
+| ESC-M        | Toggle markdown rendering |
+| ESC-T        | Toggle Tools              |
+| ESC-V        | Toggle verbose output     |
+| ESC-W        | Toggle word wrapping      |
 
-The verbose output options might be removed in the future. They were originally around langchain's verbose flag, but since langchain is no longer used by Lair, there may not be much or any impact from enabling it.
+When Verbose output is enabled tool calls and responses are displayed. It is enabled by default.
 
 #### Markdown Rendering
 
@@ -288,6 +322,71 @@ stained_glass.png: A geometric stained glass window with shapes in red, blue, gr
 ```
 
 These descriptions are suboptimal. This example used `llama3.2-vision:11b`, which tends to struggle with multiple images. Providing the filenames also influenced the responses. For this specific request, it would be better to process one file per request and exclude filenames. See the "Attaching Files" section of the "Util" examples below for a different approach.
+
+##### Tools
+
+Tools allow the AI to perform actions beyond generating responses. By utilizing tools, the AI can perform actions such as executing computations and searching news sources, and incorporate the retrieved data into more informed responses.
+
+Since tools enable the AI to take actions that may have unintended consequences, they are disabled by default. To enable them, set `tools.enabled` to `true`.
+
+Each tool has its own configuration namespace and an individual `enabled` flag, which must also be set to `true` in addition to `tools.enabled`.
+
+Tools are only compatible with models that support them. Attempting to use tools with unsupported models may result in errors or unpredictable behavior.
+
+The chat CLI provides the `/list-tools` command to display all available tools and their current status.
+
+Tools can be quickly toggled on or off using the `ESC-T` shortcut.
+
+###### Python Tool
+
+![Python Tool Example](docs/images/tool-python.jpg "Python tool example")
+
+The Python tool enables a model to execute Python scripts. To enhance security, the code runs within a Docker container, providing a level of isolation. The script can interact within the container and access the network.
+
+In the screenshot above, the tool calls and responses are shown in the output. This is called "verbose mode" and can be toggled modified in the configuration via `chat.verbose` or toggle with `ESC-V` in the chat interface.
+
+Due to potential security risks, the Python tool is disabled by default. To enable it, set `tools.python.enabled` to `true`. This can be configured using the `/set` command or by modifying `~/.lair/config.yaml`.
+
+To use this tool, the user must have permission to run Docker containers, and Docker must be able to access or pull an appropriate image.
+
+The `tools.python.docker_image` setting specifies which Docker image to use. By default, it is set to `python:latest`. Custom images can be used to include additional modules. For example:
+
+```Dockerfile
+FROM python:latest
+
+RUN pip install numpy requests
+```
+
+This image can then be built using a command such as:
+
+```sh
+docker build -t example-python:latest .
+```
+
+To use the custom image, update the configuration accordingly. The `tools.python.extra_modules` setting allows specifying additional packages, making them known to the language model in the tool description:
+
+```yaml
+tools.python.docker_image: 'example-python:latest'
+tools.python.extra_modules: 'numpy, requests'
+```
+
+Python scripts will execute until they reach a timeout limit. The timeout duration is configurable via `tools.python.timeout` and defaults to 30 seconds.
+
+###### Search Tool
+
+![Search Tool Example](docs/images/tool-search.jpg "Search tool example")
+
+The search tool utilizes the [DuckDuckGo](https://duckduckgo.com/) search engine to perform web and news searches. DuckDuckGo was selected because it does not require an API key for access. However, it does impose rate limits, so excessive search requests may require a cooldown period before additional searches can be completed.
+
+This tool is enabled by default. To disable it, set `tools.search.enabled` to `false`.
+
+The search function allows the module to query either web or news sources. The resulting URLs are processed sequentially, attempting to extract content from each page. If a page fails to load or does not provide usable content, the next URL in the list is tried. This continues until a sufficient amount of content is retrieved or no more URLs remain.
+
+Web requests to retrieved URLs are subject to a timeout, which is configurable via `tools.search.timeout`. The default timeout is 5 seconds.
+
+Search results can be large. To manage this, content extracted from each page is truncated based on the `tools.search.max_length` parameter. Additionally, the number of pages from which content is extracted is controlled by `tools.search.max_results`, which defaults to `5`.
+
+The total amount of retrieved content can be as large as `max_results * max_length`, potentially exceeding the default context window of a language model. For users utilizing Ollama, the default context size is set to 2048 tokens. If this limit is exceeded, truncation may occur, leading to incomplete or inaccurate responses. To mitigate this, adjust the `num_ctx` parameter within Ollama as needed.
 
 ##### One-off Chat
 
@@ -529,7 +628,7 @@ The ComfyUI Server must have all required nodes installed to use any given workf
 
 #### Comfy Usage & Examples
 
-The `comfy` command provides distinct subcommands for each supported workflow, each with its own flags and configuration options.
+The `comfy` command provides distinct sub-commands for each supported workflow, each with its own flags and configuration options.
 
 Flags offer a quick way to set common options but do not cover all available configuration settings. They act as shortcuts to simplify usage of the most frequently used settings. Configuration options can be set either through the configuration file or directly from the command line. For example, a sampler can be specified using `lair -s 'comfy.image.sampler=euler_ancestral' comfy image ...` or `lair comfy image --sampler euler_ancestral ...`. Flags take precedence over configuration settings.
 
@@ -889,3 +988,36 @@ stained_glass.png: Colorful stained glass window.
 ```
 
 Note, the `Max 60 characters` instruction isn't followed by most current models. LLMs aren't that precise. Giving specific numbers like that nudges it in a direction, but doesn't introduce an actual limit.
+
+##### Using Tools
+
+The `--enable-tools` (`-t`) flag allows the model to invoke tools when using the `util` sub-command. When this flag is enabled, `tools.enabled` is automatically set to `true`, but individual tools must still be explicitly enabled in the configuration for them to be available.
+
+For more information on using tools within Lair, available tools, and setup instructions, refer to the [Tools Documentation](#tools) in the Chat section.
+
+The following example demonstrates using the search tool to retrieve recent news results:
+
+```sh
+$ lair --model llama3.2:3b-ctx0 util \
+        -i 'New AI news. Reply format: - {date,YYYY-MM-DD}: {headline}' \
+        --enable-tools
+- 2025-02-05: TikTok Owners New AI Tool Makes Lifelike Videos From A Single Photo
+- 2025-02-06: Palantir On Verge Of Exploding With Powerful Reasoning AI
+- 2025-02-06: Reframing digital transformation through the lens of generative AI
+- 2025-02-06: UB study finds framing can boost employee confidence in AI, but one big error can destroy it
+- 2025-02-06: Workday lays off 1,750 employees, or about 8.5% of its workforce in AI shift
+- 2025-02-06: New Teladoc, same acquisition strategy
+```
+
+Specifying `--model` is optional. However, in this example, a locally modified `llama3.2:3b` model was used with Ollama to extend the context window via `num_ctx`. By default, Ollama uses a context size of 2048, which may be insufficient for search-based tasks. For guidance on configuring the search tool, see the [Search Tool Documentation](#search-tool).
+
+The Python tool allows the model to generate and execute Python code within a container, retrieving the results. This tool is disabled by default. For instructions on enabling and configuring it, refer to the [Python Tool Documentation](#python-tool).
+
+```sh
+$ lair util -i 'Use Python to GET whatismyip.akamai.com, and return the IP' -t
+255.1.2.3
+```
+
+*Note:* The IP address shown above is a placeholder. The actual output has been replaced for privacy reasons.
+
+The `--debug` flag can be added before `util` to enable detailed output, displaying all requests and responses. In the Python tool example, a common behavior is for the model to first attempt using the `requests` library. If `requests` is not installed, it encounters an error and retries using `urllib`. This additional cycle can be avoided by explicitly specifying `urllib` in the instructions or by using a custom Docker image that includes `requests` pre-installed.

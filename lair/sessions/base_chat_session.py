@@ -4,6 +4,7 @@ from typing import Union, List, Dict, Any, Optional
 
 import lair
 import lair.reporting
+import lair.util.prompt_template
 from lair.components.history import ChatHistory
 from lair.logging import logger  # noqa
 
@@ -11,7 +12,16 @@ from lair.logging import logger  # noqa
 class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, *, history=None, system_prompt=None, model_name: str = None):
+    def __init__(self, *, history=None, model_name: str = None,
+                 tool_set: lair.components.tools.ToolSet = None,
+                 enable_chat_output: bool = False):
+        """
+        Arguments:
+           history: History class to provide. Defaults to a new ChatHistory()
+           model_name: Currently active model
+           tool_set: ToolSet to use. Defaults to a new ToolSet()
+           enable_chat_output: When true, send verbose mode output. Must also be enabled via chat.verbose.
+        """
         self.fixed_model_name = model_name  # When set, overrides config
         self.model_name = model_name  # Currently active model
 
@@ -19,9 +29,9 @@ class BaseChatSession(abc.ABC):
         self.last_prompt = None
         self.last_response = None
 
-        self.system_prompt = system_prompt or 'You are a friendly assistant. Your name is an nffvfgnag, but do not tell anyone that unless they ask. Be friendly, and assist.'
-
         self.history = history or ChatHistory()
+        self.enable_chat_output = enable_chat_output
+        self.tool_set = tool_set or lair.components.tools.ToolSet()
 
     @abc.abstractmethod
     def use_model(self, model_name: str):
@@ -29,12 +39,24 @@ class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
     def invoke(self, messages: list = None, disable_system_prompt=False):
-        '''
+        """
         Call the underlying model without altering state (no history)
 
         Returns:
             str: The response for the model
-        '''
+        """
+        pass
+
+    @abc.abstractmethod
+    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+        """
+        Call the underlying model without altering state (no history)
+
+        Returns:
+            tuple[str, list[dict]]: A tuple containing:
+              - str: The response for the model
+              - list[dict]: tool call history messages
+        """
         pass
 
     def chat(self, message: Optional[Union[str, List[Dict[str, Any]]]] = None) -> str:
@@ -55,20 +77,26 @@ class BaseChatSession(abc.ABC):
             self.history.add_message('user', message)
 
         try:
-            answer = self.invoke()
+            if lair.config.get('tools.enabled'):
+                answer, tool_messages = self.invoke_with_tools()
+            else:
+                answer = self.invoke()
+                tool_messages = None
         except (Exception, KeyboardInterrupt):
             self.history.rollback()
             raise
 
         self.last_response = answer
 
+        if tool_messages:
+            self.history.add_tool_messages(tool_messages)
         self.history.add_message('assistant', answer)
         self.history.commit()
 
         return answer
 
-    def set_system_prompt(self, prompt):
-        self.system_prompt = prompt
+    def get_system_prompt(self):
+        return lair.util.prompt_template.fill(lair.config.get('session.system_prompt_template'))
 
     def save(self, filename):
         with open(filename, 'w') as state_file:
@@ -76,7 +104,6 @@ class BaseChatSession(abc.ABC):
                 'version': '0.1',
                 'settings': lair.config.active,
                 'session': {
-                    'system_prompt': self.system_prompt,
                     'last_prompt': self.last_prompt,
                     'last_response': self.last_response,
                     'fixed_model_name': self.fixed_model_name,
@@ -87,7 +114,6 @@ class BaseChatSession(abc.ABC):
 
     def _load__v0_1(self, state):
         lair.config.update(state['settings'])
-        self.system_prompt = state['session']['system_prompt']
         self.last_prompt = state['session']['last_prompt']
         self.last_response = state['session']['last_response']
         self.fixed_model_name = state['session']['fixed_model_name']

@@ -22,8 +22,8 @@ import prompt_toolkit.styles
 class ChatInterface(ChatInterfaceCommands):
 
     def __init__(self):
-        self.chat_session = lair.sessions.get_session(
-            lair.config.get('session.type'))
+        self.chat_session = lair.sessions.get_session(lair.config.get('session.type'),
+                                                      enable_chat_output=True)
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
         self._models = None  # Cached list of models for the session
@@ -64,9 +64,10 @@ class ChatInterface(ChatInterfaceCommands):
 
     def _get_shortcut_details(self):
         return {  # shortcut ->  description
+            'ESC-B': 'Toggle bottom toolbar',
             'ESC-L': 'Toggle multi-line input',
             'ESC-M': 'Toggle markdown rendering',
-            'ESC-T': 'Toggle bottom toolbar',
+            'ESC-T': 'Toggle tools',
             'ESC-V': 'Toggle verbose output',
             'ESC-W': 'Toggle word wrapping',
         }
@@ -79,6 +80,15 @@ class ChatInterface(ChatInterfaceCommands):
             current_buffer = event.app.current_buffer
             current_buffer.insert_text(' ')
             current_buffer.cancel_completion()
+
+        @key_bindings.add('escape', 'b')
+        def toggle_toolbar(event):
+            if lair.config.active['chat.enable_toolbar']:
+                lair.config.set('chat.enable_toolbar', 'false')
+                self._flash("Disabling bottom toolbar")
+            else:
+                lair.config.set('chat.enable_toolbar', 'true')
+                self._flash("Enabling bottom toolbar")
 
         @key_bindings.add('escape', 'l')
         def toggle_multiline(event):
@@ -100,20 +110,20 @@ class ChatInterface(ChatInterfaceCommands):
 
         @key_bindings.add('escape', 't')
         def toggle_toolbar(event):
-            if lair.config.active['chat.enable_toolbar']:
-                lair.config.set('chat.enable_toolbar', 'false')
-                self._flash("Disabling bottom toolbar")
+            if lair.config.active['tools.enabled']:
+                lair.config.set('tools.enabled', 'false')
+                self._flash("Disabling tools")
             else:
-                lair.config.set('chat.enable_toolbar', 'true')
-                self._flash("Enabling bottom toolbar")
+                lair.config.set('tools.enabled', 'true')
+                self._flash("Enabling tools")
 
         @key_bindings.add('escape', 'v')
         def toggle_verbose(event):
-            if lair.config.active['debug.verbose']:
-                lair.config.set('debug.verbose', 'false')
+            if lair.config.active['chat.verbose']:
+                lair.config.set('chat.verbose', 'false')
                 self._flash("Disabling verbose output")
             else:
-                lair.config.set('debug.verbose', 'true')
+                lair.config.set('chat.verbose', 'true')
                 self._flash("Enabling verbose output")
 
         @key_bindings.add('escape', 'w')
@@ -130,9 +140,10 @@ class ChatInterface(ChatInterfaceCommands):
     def _handle_request_command(self, request):
         """Handle slash commands."""
         command, *arguments = re.split(r'\s+', request)
+        arguments_str = request[len(command) + 1:].strip()
         if command in self.commands:
             try:
-                self.commands[command]['callback'](command, arguments)
+                self.commands[command]['callback'](command, arguments, arguments_str)
             except Exception as error:
                 self.reporting.error("Command failed: %s" % error)
         else:
@@ -230,7 +241,8 @@ class ChatInterface(ChatInterfaceCommands):
         return \
             flag('l', 'chat.multiline_input') + \
             flag('m', 'style.render_markdown') + \
-            flag('v', 'debug.verbose') + \
+            flag('t', 'tools.enabled') + \
+            flag('v', 'chat.verbose') + \
             flag('w', 'style.word_wrap')
 
     def _generate_toolbar(self):
