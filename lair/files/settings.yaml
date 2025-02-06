@@ -268,7 +268,7 @@ style.word_wrap: true
 
 # When false, all tools are disabled
 # Enabling tools with models that don't support tools may cause errors.
-tools.enabled: true
+tools.enabled: false
 
 # The python tool runs python scripts within a docker container. This can be dangerous as it allows
 # for code execution, and so it is disabled by default. In order for this feature to work, the user
