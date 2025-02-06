@@ -109,20 +109,24 @@ class Configuration():
 
         lair.events.fire('config.update')
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, mode=None, allow_not_found=False, **kwargs):
         '''
         Retrieve a value, failing if it is undefined.
-        All arguments are forwarded to dict.get() call, except 'mode', which can specify which mode to use.
-        If 'mode' isn't provided, it defaults to the active mode.
-        '''
-        mode = kwargs.get('mode', self.active_mode)
-        if 'mode' in kwargs:  # Delete the mode override so it isn't passed to the real get()
-            del kwargs['mode']
+        All arguments are forwarded to dict.get() call, except 'mode' and `allow_not_found`
 
-        if args[0] in self.modes[mode]:
+        Arguments:
+          mode: The config mode to get the key from. Default is the active mode.
+          allow_not_found: When false, unknown keys raise a ValueError(). When true, standard dict get() behavior is used, including specifying defaults. Default is false.
+        '''
+        mode = mode or self.active_mode
+
+        if allow_not_found or args[0] in self.modes[mode]:
             return self.modes[mode].get(*args, **kwargs)
         else:
             raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {args[0]}")
+
+    def is_known_key(self, key, mode=None):
+        return key in self.modes[mode or self.active_mode]
 
     def set(self, key, value, *, force=False, mode=None, no_event=False):
         """Only allow setting to the existing type."""

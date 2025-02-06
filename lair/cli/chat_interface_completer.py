@@ -62,11 +62,11 @@ class ChatInterfaceCompleter(Completer):
 
         if num_components == 3:  # Provide the current value as an auto-complete choice
             key = components[1]
-            value_raw = lair.config.get(key)
+            value_raw = lair.config.get(key, allow_not_found=True)
             value = str(value_raw)
 
             if value_raw is None:
-                if not components[2]:
+                if not components[2] and lair.config.is_known_key(key):
                     # If the current value is None, show a <null> choice
                     yield Completion(f'/set {key}',
                                      display='<null>',
