@@ -355,7 +355,7 @@ The `tools.python.docker_image` setting specifies which Docker image to use. By 
 ```Dockerfile
 FROM python:latest
 
-RUN pip install numpy requests
+RUN pip install numpy pandas requests
 ```
 
 This image can then be built using a command such as:
