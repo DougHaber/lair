@@ -75,7 +75,7 @@ The full Lair repository includes additional features, such as an agent framewor
   * Support for extracting content from responses such as code block sections
 
 * **comfy**: Run workflows on ComfyUI
-  * Image diffusion, LTX Video, Hunyaun Video, and upscaling support
+  * Image diffusion, LTX Video, Hunyuan Video, and upscaling support
   * Simple interface for command line usage and scripting
 
 * **util**: Unix-style utility for scripting or one-off LLM usage
