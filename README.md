@@ -832,7 +832,7 @@ To generate a video, at a minimum it usually is necessary to provide a prompt:
 ```sh
 # Generate a video
 $ lair comfy hunyuan-video-t2v \
-    -p 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.'
+    -p 'Video of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.'
 ```
 
 The above command will generate an `output.webp` file by default. The `--output-file` / `-o` flag can be used to specify an alternate filename as well as the `comfy.hunyuan_video.output_file` configuration option. When generating multiple files, such as with the `--repeat` / `-r` or `--batch-size` / `-b` options, the base name becomes a prefix followed by a zero-padded counter (e.g., `output000000.webp`, `output000001.webp`).
@@ -854,7 +854,7 @@ The Hunyuan Video model can be used to generate individual images by setting `co
 ```sh
 # Generate a video
 $ lair comfy hunyuan-video-t2v \
-    --prompt 'Photo of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.' \
+    --prompt 'Video of a penguin playing saxaphone on the ice at night. Stars and moon in the sky.' \
     --num-frames 1
 ```
 
