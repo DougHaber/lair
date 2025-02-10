@@ -47,6 +47,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
       - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
       - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
+      - [Upscale - Enlarge Images and Improve Quality](#upscale---enlarge-images-and-improve-quality)
   - [Util](#util)
     - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
@@ -74,7 +75,7 @@ The full Lair repository includes additional features, such as an agent framewor
   * Support for extracting content from responses such as code block sections
 
 * **comfy**: Run workflows on ComfyUI
-  * Image diffusion & LTX Video image-to-video support
+  * Image diffusion, LTX Video, Hunyaun Video, and upscaling support
   * Simple interface for command line usage and scripting
 
 * **util**: Unix-style utility for scripting or one-off LLM usage
@@ -624,6 +625,16 @@ The ComfyUI Server must have all required nodes installed to use any given workf
 	    </ul>
       </td>
     </tr>
+    <tr>
+      <td>upscale</td>
+      <td>Enlarge Images and Improve Quality</td>
+      <td></td>
+      <td>
+        <ul>
+          <li><a href="https://github.com/Acly/comfyui-tooling-nodes">comfyui-tooling-nodes</a></li>
+	    </ul>
+      </td>
+    </tr>
   </tbody>
 </table>
 
@@ -850,6 +861,44 @@ $ lair comfy hunyuan-video-t2v \
 The number of frames must be `N * 4 + 1`, such as 73, 77, 81. This requirement ensures smooth interpolation and alignment within the model's architecture, as frame counts outside this pattern may cause unexpected behavior or poor quality results.
 
 LoRAs are supported, and multiple LoRAs could be provided. For usage examples, see the [Image Generation](#image---image-generation) section, as the behavior is identical.  The config key `comfy.hunyuan_video.loras` can be used to create modes with LoRAs or LoRA chains.
+
+
+##### Upscale - Enlarge Images and Enhance Quality
+
+Upscale models can be used to enlarge images and enhance their quality by generating additional details based on learned patterns from other images. This is useful for sharpening images and improving quality.
+
+ComfyUI natively supports various upscale models. To utilize this feature, an upscale model must be placed in ComfyUI’s `upscale_models/` directory. Many models are available at [OpenModelDB](https://openmodeldb.info/).
+
+**Configuration**
+
+Upscale settings are managed under the `comfy.upscale.*` namespace. The default model is `RealESRGAN_x2.pth`, which can be changed via `comfy.upscale.model_name`.
+
+Each upscaled image is saved as a new file, with the filename determined by `comfy.upscale.output_filename`. This is a Python format string that should include the `{basename}` variable, which represents the original file path without its extension. For example, if the setting is `{basename}-upscaled.png`, then an image located at `foo/bar.png` will be upscaled and saved as `foo/bar-upscaled.png`.
+
+**Usage Examples**
+
+```sh
+# Upscale an image using the default model
+$ lair comfy upscale images/example.png
+
+# Upscale multiple images at once
+$ lair comfy upscale images/example.png images/example2.png other/*.jpg
+
+# Use a specific upscale model
+$ lair comfy upscale -m my_model.pth images/example.png
+
+# Avoid overwriting existing files
+$ lair comfy upscale --skip-existing images/example.png
+```
+
+**Processing Directory Trees**
+
+The `--recursive` / `-r` flag enables recursive processing of directory trees. Only image files with supported extensions (`.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.webp`) will be included.
+
+```sh
+# Upscale all images in a directory and its subdirectories
+$ lair comfy upscale --recursive images/
+```
 
 ### Util
 

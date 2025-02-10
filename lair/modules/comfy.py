@@ -1,5 +1,6 @@
 import argparse
 import os
+import pathlib
 import shlex
 import sys
 
@@ -31,11 +32,13 @@ class Comfy():
         sub_parser = parser.add_subparsers(dest='comfy_command', required=True)
 
         self.comfy = lair.comfy_caller.ComfyCaller()
+        self._image_file_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
 
         self._add_argparse_hunyuan_video_t2v(sub_parser)
         self._add_argparse_image(sub_parser)
         self._add_argparse_ltxv_i2v(sub_parser)
         self._add_argparse_ltxv_prompt(sub_parser)
+        self._add_argparse_upscale(sub_parser)
 
         lair.events.subscribe('chat.init', lambda d: self._on_chat_init(d))
 
@@ -193,14 +196,32 @@ class Comfy():
         command_parser.add_argument('-x', '--seed', type=int, dest='florence_seed',
                                     help=f'The seed to use with the Florence model (default: {defaults["florence_seed"] if defaults["florence_seed"] is not None else "random"})')
 
+    def _add_argparse_upscale(self, sub_parser):
+        command_parser = sub_parser.add_parser('upscale', help='Upscale images')
+        defaults = self.comfy.defaults['upscale']
+        comfy_url = lair.config.get('comfy.url')
+
+        command_parser.add_argument('-m', '--model-name', type=str,
+                                    help=f'Upscale model  (required, default: {defaults["model_name"]})')
+        command_parser.add_argument('-r', '--recursive', action='store_true',
+                                    help='Recursively process all files in provided paths')
+        command_parser.add_argument('--skip-existing', action='store_true',
+                                    help='Do not perform upscaling for files that already have an output file')
+        command_parser.add_argument('-u', '--comfy-url', default=comfy_url,
+                                    help=f'URL for the Comfy UI API (default: {comfy_url})')
+        command_parser.add_argument('scale_files', type=str, nargs='+',
+                                    help='File(s) to scale')
+
     def _get_chat_command_parser(self):
         '''Create a parser that can be used for parsing for chat commands without exiting on errors'''
         new_parser = ErrorRaisingArgumentParser(prog='/comfy')
         sub_parser = new_parser.add_subparsers(dest='comfy_command', required=True)
 
+        self._add_argparse_hunyuan_video_t2v(sub_parser)
         self._add_argparse_image(sub_parser)
         self._add_argparse_ltxv_i2v(sub_parser)
         self._add_argparse_ltxv_prompt(sub_parser)
+        self._add_argparse_upscale(sub_parser)
 
         return new_parser
 
@@ -248,7 +269,7 @@ class Comfy():
         else:
             raise TypeError("Unsupported output type. Unable to save output file.")
 
-    def _save_output(self, results, filename, start_index, single_output=False):
+    def _save_output(self, results, filename, start_index=0, single_output=False):
         """
         Saves a list of outputs to disk.
 
@@ -283,6 +304,52 @@ class Comfy():
 
         logger.debug(f"saved: {', '.join(output_files)}")
 
+    def get_output_file_name(self, file_name):
+        return f'{os.path.splitext(file_name)[0]}-upscaled{os.path.splitext(file_name)[1]}'
+
+    def run_workflow_upscale(self, arguments, defaults, function_arguments):
+        queue = [*arguments.scale_files]
+        output_filename_template = lair.config.get('comfy.upscale.output_filename')
+
+        while queue:
+            source_filename = queue.pop(0)
+            if os.path.isdir(source_filename):
+                if arguments.recursive:
+                    for filename in os.listdir(source_filename):
+                        path = pathlib.Path(source_filename) / filename
+                        if path.is_dir() or path.suffix.lower() in self._image_file_extensions:
+                            queue.append(str(path.absolute()))
+                else:
+                    logger.warn(f"Path ignored: Use --recursive to process directories: {source_filename}")
+            else:
+                function_arguments['source_image'] = source_filename
+                output_filename = output_filename_template.format(
+                    basename=os.path.splitext(source_filename)[0],
+                )
+
+                if os.path.exists(output_filename) and arguments.skip_existing:
+                    logger.warn(f"Skipping existing file: {output_filename}")
+                    continue
+
+                output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+                if output is None or len(output) == 0:
+                    raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
+                else:
+                    self._save_output(output, output_filename, single_output=True)
+
+    def run_workflow_default(self, arguments, defaults, function_arguments):
+        # True when there is only a single file output
+        batch_size = function_arguments.get('batch_size', defaults.get('batch_size', 1))
+        single_output = (arguments.repeat == 1 and batch_size == 1)
+
+        for i in range(0, arguments.repeat):
+            output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+
+            if output is None or len(output) == 0:
+                raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
+            self._save_output(output, arguments.output_file, i * len(output),
+                              single_output=single_output)
+
     def run(self, arguments):
         self.comfy.set_url(arguments.comfy_url)
 
@@ -295,14 +362,7 @@ class Comfy():
         defaults = self.comfy.defaults[arguments.comfy_command]
         function_arguments = {key: value for key, value in arguments_dict.items() if key in defaults and arguments_dict[key] is not None}
 
-        # True when there is only a single file output
-        batch_size = function_arguments.get('batch_size', defaults.get('batch_size', 1))
-        single_output = (arguments.repeat == 1 and batch_size == 1)
-
-        for i in range(0, arguments.repeat):
-            output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
-
-            if output is None or len(output) == 0:
-                raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
-            self._save_output(output, arguments.output_file, i * len(output),
-                              single_output=single_output)
+        if arguments.comfy_command == 'upscale':
+            self.run_workflow_upscale(arguments, defaults, function_arguments)
+        else:
+            self.run_workflow_default(arguments, defaults, function_arguments)

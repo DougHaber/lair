@@ -151,6 +151,14 @@ comfy.ltxv_prompt.image_resize_height: 800
 comfy.ltxv_prompt.image_resize_width: 800
 comfy.ltxv_prompt.output_file: 'output.txt'
 
+# The default model to use
+comfy.upscale.model_name: 'RealESRGAN_x2.pth'
+# This is the format for new filenames applied to each file being written. It is a python format
+# string. The variable `basename` provides the full filename without extension. (For example
+# /foo/bar/baz.png has a basename of `/foo/bar/baz` Not including {basename} will likely be
+# undesirable.
+comfy.upscale.output_filename: '{basename}-upscaled.png'
+
 # These are from the original lair. The open source lair currently has
 # no database and so these have no effect.
 # NOTE: These are only here as convenience for me, since I use both the old and new lair. -dhaber

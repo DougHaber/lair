@@ -73,6 +73,7 @@ class ComfyCaller():
             'image': self._workflow_image,
             'ltxv-i2v': self._workflow_ltxv_i2v,
             'ltxv-prompt': self._workflow_ltxv_prompt,
+            'upscale': self._workflow_upscale,
         }
 
     def _init_defaults(self):
@@ -81,6 +82,7 @@ class ComfyCaller():
             'image': self._get_defaults_image(),
             'ltxv-i2v': self._get_defaults_ltxv_i2v(),
             'ltxv-prompt': self._get_defaults_ltxv_prompt(),
+            'upscale': self._get_defaults_upscale(),
         }
 
     def _parse_lora_argument(self, lora):
@@ -107,6 +109,7 @@ class ComfyCaller():
             raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
 
     def run_workflow(self, workflow, *args, **kwargs):
+        logger.debug(f"run_workflow({workflow}, {kwargs})")
         handler = self.workflows[workflow]
         kwargs = {**self.defaults[workflow], **kwargs}
 
@@ -388,3 +391,18 @@ class ComfyCaller():
             videos.append(self.view(video['filename'], type='output'))
 
         return videos
+
+    def _get_defaults_upscale(self):
+        return {
+            'source_image': None,
+            'model_name': 'RealESRGAN_x2.pth'
+        }
+
+    async def _workflow_upscale(self, *, source_image, model_name):
+        upscale_model = UpscaleModelLoader(model_name)
+        image, _ = ETNLoadImageBase64(self._image_to_base64(source_image))
+        image = ImageUpscaleWithModel(upscale_model, image)
+        save_image_node = SaveImage(image, self.output_prefix)
+        images = await save_image_node.wait()
+
+        return images
