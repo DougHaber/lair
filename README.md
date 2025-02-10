@@ -47,7 +47,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
       - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
       - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
-      - [Upscale - Enlarge Images and Improve Quality](#upscale---enlarge-images-and-improve-quality)
+      - [upscale - Enlarge Images and Enhance Quality](#upscale---enlarge-images-and-enhance-quality)
   - [Util](#util)
     - [Util Examples](#util-examples)
       - [Generating Content](#generating-content)
@@ -863,7 +863,7 @@ The number of frames must be `N * 4 + 1`, such as 73, 77, 81. This requirement e
 LoRAs are supported, and multiple LoRAs could be provided. For usage examples, see the [Image Generation](#image---image-generation) section, as the behavior is identical.  The config key `comfy.hunyuan_video.loras` can be used to create modes with LoRAs or LoRA chains.
 
 
-##### Upscale - Enlarge Images and Enhance Quality
+##### upscale - Enlarge Images and Enhance Quality
 
 Upscale models can be used to enlarge images and enhance their quality by generating additional details based on learned patterns from other images. This is useful for sharpening images and improving quality.
 
@@ -881,7 +881,7 @@ Each upscaled image is saved as a new file, with the filename determined by `com
 # Upscale an image using the default model
 $ lair comfy upscale images/example.png
 
-# Upscale multiple images at once
+# Upscale multiple images
 $ lair comfy upscale images/example.png images/example2.png other/*.jpg
 
 # Use a specific upscale model
