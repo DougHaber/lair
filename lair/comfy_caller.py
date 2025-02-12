@@ -47,6 +47,27 @@ class ComfyCaller():
         # If the config changes, update all defaults
         lair.events.subscribe('config.update', lambda d: self._init_defaults())
 
+    def _monkey_patch_comfy_script(self):
+        '''
+        Disable SSL verification in ComfyScript
+        ComfyScript provides no mechanism to accomplish this, so a monkey patch is necessary.
+        A PR against ComfyScript would be a better solution.
+        '''
+        import aiohttp
+        import ssl
+
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+
+        original_init = aiohttp.TCPConnector.__init__
+
+        def patched_init(self, *args, **kwargs):
+            kwargs['ssl'] = ssl_context
+            return original_init(self, *args, **kwargs)
+
+        aiohttp.TCPConnector.__init__ = patched_init
+
     def _import_comfy_script(self):
         # The imports actually connect to the server. If the defaults are being requested, that is problematic
         # since that happens before the server URL is provided. To work around that, importing is deferred
@@ -59,6 +80,10 @@ class ComfyCaller():
             from comfy_script.runtime import load, Workflow
             globals()['load'] = load
             globals()['Workflow'] = Workflow
+
+            if lair.config.get('comfy.verify_ssl') is False:
+                self._monkey_patch_comfy_script()
+
             load(self.url)
 
             nodes_module = importlib.import_module("comfy_script.runtime.nodes")
