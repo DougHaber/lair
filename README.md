@@ -196,6 +196,7 @@ When Verbose output is enabled tool calls and responses are displayed.
 | /last-prompt     | Display or save the most recently used prompt  (usage: /last-prompt [filename?])                          |
 | /last-response   | Display or save the most recently seen response  (usage: /last-response [filename?])                      |
 | /list-models     | Display a list of available models for the current session                                                |
+| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                        |
 | /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
 | /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                           |
 | /model           | Show or set a model  (usage: `/model [name?]`)                                                            |
