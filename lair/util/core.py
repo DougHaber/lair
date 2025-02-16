@@ -248,8 +248,8 @@ def decode_jsonl(jsonl_str):
     return records
 
 
-def slice_from_str(arr, slice_str: str):
-    """Apply a user-defined slice string (e.g., ':2', '-2:', '1:4:2') to an array."""
+def slice_from_str(original_list, slice_str: str):
+    """Apply a slice string (e.g., ':2', '-2:', '1:4:2') to a list and return the new list."""
     parts = slice_str.split(':')
 
     def safe_int(value):
@@ -261,4 +261,4 @@ def slice_from_str(arr, slice_str: str):
     stop = safe_int(parts[1]) if len(parts) > 1 and parts[1] else None
     step = safe_int(parts[2]) if len(parts) > 2 and parts[2] else None
 
-    return arr[slice(start, stop, step)]
+    return original_list[slice(start, stop, step)]
