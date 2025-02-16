@@ -486,9 +486,9 @@ Lair's chat interface provides several ways to view and modify chat history, mak
 
 The chat history can be viewed in different formats. The `/history` command presents the chat in a formatted, readable manner, which may include markdown rendering, reasoning model formatting, and truncation, depending on configuration. For a raw data view, the `/messages` command displays the chat history as a JSONL-formatted list of message objects.
 
-To remove specific messages from the history, use the `/history-slice` command. This command accepts Python-style slicing syntax:
+To remove specific messages from the history, use the `/history-slice` command. This command accepts Python-style slicing syntax (`start:stop:step`). Each section is optional. Start defaults to `0`, stop to the end of the sequence, and step to `1`. For example:
 
-- `:4` retains only the first four messages.
+- `:4` retains only the first four messages. This is equivalent to `0:4:1`.
 - `:-2` removes the last two messages while keeping the rest.
 - `::2` keeps every other message, starting with the first.
 
@@ -504,7 +504,7 @@ crocodile> /messages
 {"role": "assistant", "content": "I would pick Botty McBotface."}
 ```
 
-Applying `/history-slice :-2` removes the last two messages:
+Using `/history-slice` :-2 removes the last two messages. The slice `:-2` is a shorthand for `0:-2:1`, meaning it starts from the first element, stops at the second-to-last, and moves one step at a time.
 
 ```
 crocodile> /history-slice :-2
