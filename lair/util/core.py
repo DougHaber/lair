@@ -8,6 +8,9 @@ import mimetypes
 import pathlib
 import os
 import re
+import shlex
+import subprocess
+import tempfile
 
 import lair
 from lair.logging import logger
@@ -207,3 +210,55 @@ def get_attachments_content(filenames):
             messages.append(_get_attachments_content__text_file(filename))
 
     return content_parts, messages
+
+
+def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
+    '''
+    Edit the content in an external editor
+    Return the new content or None if unchanged
+    '''
+    editor_cmd = lair.config.get('misc.editor_command') or \
+        os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
+    editor_args = shlex.split(editor_cmd)
+
+    temp_file = tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix)
+    temp_path = pathlib.Path(temp_file.name)
+
+    try:
+        temp_file.write(content)
+        temp_file.close()
+
+        subprocess.run(editor_args + [str(temp_path)], check=True)
+        modified_content = temp_path.read_text()
+
+        return modified_content if modified_content != content else None
+    finally:
+        temp_path.unlink()
+
+
+def decode_jsonl(jsonl_str):
+    """
+    Decode JSONL content and return a list of each decoded line
+    """
+    records = []
+    for line in jsonl_str.split('\n'):
+        if line:  # Process only non-blank lines
+            records.append(json.loads(line))
+
+    return records
+
+
+def slice_from_str(arr, slice_str: str):
+    """Apply a user-defined slice string (e.g., ':2', '-2:', '1:4:2') to an array."""
+    parts = slice_str.split(':')
+
+    def safe_int(value):
+        """Convert to integer if value is not empty, otherwise return None."""
+        return int(value) if value else None
+
+    # Convert parts to integers or None
+    start = safe_int(parts[0]) if len(parts) > 0 and parts[0] else None
+    stop = safe_int(parts[1]) if len(parts) > 1 and parts[1] else None
+    step = safe_int(parts[2]) if len(parts) > 2 and parts[2] else None
+
+    return arr[slice(start, stop, step)]

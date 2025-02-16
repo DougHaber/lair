@@ -175,6 +175,9 @@ database.port_environment_variable: 'DB_PORT'
 database.user: 'lair'
 database.user_environment_variable: 'DB_USER'
 
+# Which editor to use when opening an external editor. When null, this defaults to the VISUAL or
+# EDITOR environment variables or `vi` if they aren't set.
+misc.editor_command: __null_str
 # When enabled and attachments are used, the filenames are provided to the model.
 misc.provide_attachment_filenames: false
 # Maximum size for text attachments in bytes (including PDF that are converted to text)
