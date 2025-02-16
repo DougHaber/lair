@@ -326,6 +326,41 @@ stained_glass.png: A geometric stained glass window with shapes in red, blue, gr
 
 These descriptions are suboptimal. This example used `llama3.2-vision:11b`, which tends to struggle with multiple images. Providing the filenames also influenced the responses. For this specific request, it would be better to process one file per request and exclude filenames. See the "Attaching Files" section of the "Util" examples below for a different approach.
 
+Assuming the model's context window is large enough, many files can easily be attached. For example, to provide all Python files within the lair repository, something like `<<~/src/lair/lair/**/*.py>>` can be used.
+
+```
+openai> Write some notes to help someone new to the provided code base quickly understand the structure. No
+recommendations. Just documentation. <<~/src/lair/lair/**/*.py>>
+
+Here's a summary of the code base to help you understand the structure and components:
+
+                                                               Overview
+
+This code base is a chat interface framework built around the concept of a "lair" structure, which is capable of
+handling different commands and interacting with language models, particularly OpenAI models.
+
+                                                            Main Components
+
+  1 Chat Interface (ChatInterface):
+     • Provides the command line interface (CLI) for interacting with OpenAI models.
+     • Uses prompt_toolkit for managing prompt sessions and command completions.
+     • Manages command execution and handles user input.
+  2 Commands and Completers (ChatInterfaceCommands, ChatInterfaceCompleter):
+     • ChatInterfaceCommands manages a set of commands that can be used within the chat interface, such as
+	   clearing history or setting configurations.
+     • ChatInterfaceCompleter handles tab-completion for known commands and arguments in the chat interface.
+  3 Sessions (BaseChatSession, OpenAIChatSession):
+     • BaseChatSession is an abstract base class that defines the structure for chat sessions, including
+	   history management and model invocation.
+     • OpenAIChatSession is a concrete implementation for interacting with OpenAI's API, handling API client
+	   creation, and invoking models either directly or through a tool interface.
+   ...
+```
+
+The response above is truncated, as it continues with additional details across multiple sections.
+
+Attaching files in this manner allows for more than just documentation generation. It can also be used for tasks such as answering specific questions about the codebase, refactoring suggestions, or deeper analysis. Since the attached files remain in the chat history, follow-up questions and iterative requests can be made without reattaching the files.
+
 ##### Tools
 
 Tools allow the AI to perform actions beyond generating responses. By utilizing tools, the AI can perform actions such as executing computations and searching news sources, and incorporate the retrieved data into more informed responses.
