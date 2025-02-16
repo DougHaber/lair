@@ -306,11 +306,11 @@ Autonomous roads
 
 With text and PDF files, the LLM must support large context windows. For users working with Ollama, the default is set low to 2048 tokens, and anything beyond that is truncated causing bad responses. To fix this, adjust the `num_ctx` parameter within Ollama.
 
-By default, filenames are not provided to the LLM, but this behavior can be changed via `model.provide_attachment_filenames`.
+By default, filenames are not provided to the LLM, but this behavior can be changed via `misc.provide_attachment_filenames`.
 
 ```
 # Enable providing filenames
-crocodile> /set model.provide_attachment_filenames true
+crocodile> /set misc.provide_attachment_filenames true
 
 # Include all files matching ~/test/*.png
 crocodile> Provide an accurate one-liner description for each of the provided images. Max 60 characters. Output format: {filename}: {description} <<~/test/*.png>>
@@ -326,7 +326,7 @@ stained_glass.png: A geometric stained glass window with shapes in red, blue, gr
 
 These descriptions are suboptimal. This example used `llama3.2-vision:11b`, which tends to struggle with multiple images. Providing the filenames also influenced the responses. For this specific request, it would be better to process one file per request and exclude filenames. See the "Attaching Files" section of the "Util" examples below for a different approach.
 
-Assuming the model's context window is large enough, many files can easily be attached. For example, to provide all Python files within the lair repository, something like `<<~/src/lair/lair/**/*.py>>` can be used.
+Assuming the model's context window is large enough, many files can easily be attached. For example, to provide all Python files within the lair repository, something like `<<~/src/lair/lair/**/*.py>>` can be used. The `misc.provide_attachment_filenames` setting should be set to `true` for tasks like this, since the filenames provide context hints and help with communicating back about the structure.
 
 ```
 openai> Write some notes to help someone new to the provided code base quickly understand the structure. No
