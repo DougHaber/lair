@@ -35,6 +35,8 @@ class Util():
                             help='Instructions for the request')
         parser.add_argument('-I', '--instructions-file', type=str,
                             help='Filename containing instructions for the request')
+        parser.add_argument('-m', '--markdown', action='store_true',
+                            help='Enable markdown output')
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
         parser.add_argument('-t', '--enable-tools', action='store_true',
@@ -116,6 +118,8 @@ class Util():
         util_prompt_template = lair.config.get('util.system_prompt_template')
         lair.config.set('session.system_prompt_template', util_prompt_template)
 
+        lair.config.set('style.render_markdown', arguments.markdown)
+
         chat_session = lair.sessions.get_session(
             session_type=lair.config.get('session.type'),
         )
@@ -132,4 +136,8 @@ class Util():
                                  user_messages=user_messages)
         response = self.clean_response(response)
 
-        print(response)
+        if arguments.markdown:
+            reporting = lair.reporting.Reporting()
+            reporting.llm_output(response)
+        else:
+            print(response)

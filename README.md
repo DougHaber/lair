@@ -985,6 +985,8 @@ $ lair comfy upscale --recursive images/
 
 The Util command provides a simple interface for calling LLMs. It is intended for one shot tasks and for making LLMs easy to work with in the shell and scripts.
 
+By default, the Util command does not render markdown, and the system prompt discourages markdown formatting unless explicitly requested. When the `--markdown` / `-m` flag is used, the system prompt permits markdown output, and the final response is rendered accordingly.
+
 #### Util Examples
 
 ##### Generating Content
