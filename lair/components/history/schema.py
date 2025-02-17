@@ -1,6 +1,5 @@
 import jsonschema
 
-
 MESSAGES_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "array",
@@ -12,8 +11,45 @@ MESSAGES_SCHEMA = {
                 "enum": ["system", "user", "assistant", "tool"]
             },
             "content": {
-                "type": ["string", "null"],
-                "description": "The primary text content of the message. Null if tool call or file attachment is present."
+                "oneOf": [
+                    {"type": "string"},
+                    {
+                        "type": "array",
+                        "description": "Structured content with text and/or image URLs.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["text", "image_url"],
+                                    "description": "Defines the type of content block."
+                                },
+                                "text": {
+                                    "type": "string",
+                                    "description": "Text content, present if type is 'text'."
+                                },
+                                "image_url": {
+                                    "type": "object",
+                                    "description": "Image content, present if type is 'image_url'.",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "A valid URI for the image, including base64-encoded data URLs."
+                                        }
+                                    },
+                                    "required": ["url"]
+                                }
+                            },
+                            "required": ["type"],
+                            "anyOf": [
+                                {"required": ["text"]},
+                                {"required": ["image_url"]}
+                            ]
+                        }
+                    }
+                ],
+                "description": "The primary text content of the message, or structured content (text and images)."
             },
             "tool_calls": {
                 "type": ["array", "null"],
@@ -25,17 +61,32 @@ MESSAGES_SCHEMA = {
                             "type": "string",
                             "description": "Unique identifier for the tool call."
                         },
-                        "name": {
+                        "type": {
                             "type": "string",
-                            "description": "The tool's name being invoked."
+                            "enum": ["function"],
+                            "description": "The type of tool call (e.g., function)."
                         },
-                        "arguments": {
+                        "function": {
                             "type": "object",
-                            "description": "Arguments passed to the tool.",
-                            "additionalProperties": True
+                            "description": "Function call details.",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "The function's name being invoked."
+                                },
+                                "arguments": {
+                                    "type": "string",
+                                    "description": "Arguments passed to the function, typically as a JSON string."
+                                }
+                            },
+                            "required": ["name", "arguments"]
+                        },
+                        "index": {
+                            "type": "integer",
+                            "description": "Index of the tool call in the sequence."
                         }
                     },
-                    "required": ["id", "name", "arguments"]
+                    "required": ["id", "type", "function", "index"]
                 }
             },
             "refusal": {
