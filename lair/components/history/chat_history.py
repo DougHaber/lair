@@ -1,4 +1,7 @@
+import json
+
 import lair
+import lair.components.history.schema
 from lair.logging import logger
 
 
@@ -59,6 +62,9 @@ class ChatHistory():
         for message in messages:
             self.add_message(message['role'], message['content'])
 
+    def num_messages(self):
+        return len(self._history)
+
     def get_messages(self, *, extra_messages=None):
         """
         Return the message history, truncating as necessary
@@ -70,8 +76,14 @@ class ChatHistory():
         else:
             return self._history[-max_length:] + extra_messages
 
+    def get_messages_as_jsonl_string(self):
+        messages = self.get_messages()
+        return "\n".join(json.dumps(message) for message in messages)
+
     def set_history(self, messages):
         '''Replace history with the provided messages'''
+        lair.components.history.schema.validate_messages(messages)
+
         self._history = messages
         self._truncate()
         self.finalized_index = len(self._history)

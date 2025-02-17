@@ -37,6 +37,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
         - [Search Tool](#search-tool)
       - [One-off Chat](#one-off-chat)
       - [Extracting Embedded Responses](#extracting-embedded-responses)
+      - [Modifying Chat History](#modifying-chat-history)
     - [Model Settings](#model-settings)
     - [Session Management](#session-management)
     - [Calling Comfy Workflows](#calling-comfy-workflows)
@@ -185,25 +186,27 @@ When Verbose output is enabled tool calls and responses are displayed.
 
 #### Commands
 
-| Command          | Description                                                                                               |
-|------------------|-----------------------------------------------------------------------------------------------------------|
-| /clear           | Clear the conversation history                                                                            |
-| /comfy           | Call ComfyUI workflows                                                                                    |
-| /debug           | Toggle debugging                                                                                          |
-| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                         |
-| /help            | Show available commands and shortcuts                                                                     |
-| /history         | Show current conversation                                                                                 |
-| /last-prompt     | Display or save the most recently used prompt  (usage: /last-prompt [filename?])                          |
-| /last-response   | Display or save the most recently seen response  (usage: /last-response [filename?])                      |
-| /list-models     | Display a list of available models for the current session                                                |
-| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                        |
-| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)         |
-| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                           |
-| /model           | Show or set a model  (usage: `/model [name?]`)                                                            |
-| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                               |
-| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                       |
-| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`) |
-| /set             | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)  |
+| Command          | Description                                                                                                            |
+|------------------|------------------------------------------------------------------------------------------------------------------------|
+| /clear           | Clear the conversation history                                                                                         |
+| /comfy           | Call ComfyUI workflows                                                                                                 |
+| /debug           | Toggle debugging                                                                                                       |
+| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                                      |
+| /help            | Show available commands and shortcuts                                                                                  |
+| /history         | Show current conversation                                                                                              |
+| /history-edit    | Modify the history JSONL in an external editor                                                                         |
+| /history-slice   | Modify the history with a Python style slice string (usage: `/history-slice [slice]`, slice format: `start:stop:step`) |
+| /last-prompt     | Display or save the most recently used prompt  (usage: `/last-prompt [filename?]`)                                     |
+| /last-response   | Display or save the most recently seen response  (usage: `/last-response [filename?]`)                                 |
+| /list-models     | Display a list of available models for the current session                                                             |
+| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                     |
+| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                      |
+| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                        |
+| /model           | Show or set a model  (usage: `/model [name?]`)                                                                         |
+| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                                            |
+| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                    |
+| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)              |
+| /set             | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)               |
 
 #### Shortcut Keys
 
@@ -511,6 +514,48 @@ A second argument can specify a filename as a destination for writing out the se
 crocodile> /extract 0 ~/hello.go
 Response saved  (76 bytes)
 ```
+
+##### Modifying Chat History
+
+Lair's chat interface provides several ways to view and modify chat history, making it easier to refine past interactions.
+
+The chat history can be viewed in different formats. The `/history` command presents the chat in a formatted, readable manner, which may include markdown rendering, reasoning model formatting, and truncation, depending on configuration. For a raw data view, the `/messages` command displays the chat history as a JSONL-formatted list of message objects.
+
+To remove specific messages from the history, use the `/history-slice` command. This command accepts Python-style slicing syntax (`start:stop:step`). Each section is optional. Start defaults to `0`, stop to the end of the sequence, and step to `1`. For example:
+
+- `:4` retains only the first four messages. This is equivalent to `0:4:1`.
+- `:-2` removes the last two messages while keeping the rest.
+- `::2` keeps every other message, starting with the first.
+
+For example, consider the following chat history:
+
+```
+crocodile> /messages
+{"role": "user", "content": "Hi"}
+{"role": "assistant", "content": "Hello there."}
+{"role": "user", "content": "What is your name?"}
+{"role": "assistant", "content": "My name is ChatBot."}
+{"role": "user", "content": "If you could pick a new name, what would it be?"}
+{"role": "assistant", "content": "I would pick Botty McBotface."}
+```
+
+Using `/history-slice` :-2 removes the last two messages. The slice `:-2` is a shorthand for `0:-2:1`, meaning it starts from the first element, stops at the second-to-last, and moves one step at a time.
+
+```
+crocodile> /history-slice :-2
+History updated (Selected 4 messages out of 6)
+crocodile> /messages
+{"role": "user", "content": "Hi"}
+{"role": "assistant", "content": "Hello there."}
+{"role": "user", "content": "What is your name?"}
+{"role": "assistant", "content": "My name is ChatBot."}
+```
+
+For more advanced modifications, the `/history-edit` command allows editing the chat history in an external text editor. The editor used is determined by `misc.editor_command`, or, if not set, the `VISUAL` or `EDITOR` environment variables.
+
+When `/history-edit` is executed, the full chat history is loaded into a JSONL-formatted file where each line represents a message object following the OpenAI API format. This allows users to add or remove messages, as well as modifying any message content, including assistant responses
+
+Since `/history-edit` loads the complete history without truncation, large files may result if attachments or tool calls are present.
 
 #### Model Settings
 

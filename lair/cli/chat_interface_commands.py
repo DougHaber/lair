@@ -29,6 +29,14 @@ class ChatInterfaceCommands():
                 'callback': lambda command, arguments, arguments_str: self.command_history(command, arguments, arguments_str),
                 'description': 'Show current conversation'
             },
+            '/history-edit': {
+                'callback': lambda command, arguments, arguments_str: self.command_history_edit(command, arguments, arguments_str),
+                'description': 'Modify the history JSONL in an external editor'
+            },
+            '/history-slice': {
+                'callback': lambda command, arguments, arguments_str: self.command_history_slice(command, arguments, arguments_str),
+                'description': 'Modify the history with a Python style slice string  (usage: /history-slice [slice], Slice format: start:stop:step)'
+            },
             '/last-prompt': {
                 'callback': lambda command, arguments, arguments_str: self.command_last_prompt(command, arguments, arguments_str),
                 'description': 'Display the most recently used prompt'
@@ -161,6 +169,41 @@ class ChatInterfaceCommands():
                 for message in messages:
                     self.reporting.message(message)
 
+    def command_history_edit(self, command, arguments, arguments_str):
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: /history-edit takes no arguments")
+        else:
+            history = self.chat_session.history
+            jsonl_str = history.get_messages_as_jsonl_string()
+            edited_jsonl_str = lair.util.edit_content_in_editor(jsonl_str, '.json')
+
+            if edited_jsonl_str is not None:
+                try:
+                    if not edited_jsonl_str.strip():
+                        new_messages = []
+                    else:
+                        new_messages = lair.util.decode_jsonl(edited_jsonl_str)
+                except Exception as error:
+                    logger.error(f"Failed to decode edited history JSONL: {error}")
+                    return
+
+                history.set_history(new_messages)
+                self.reporting.system_message(f"History updated  ({history.num_messages()} messages)")
+            else:
+                self.reporting.user_error("History was not modified.")
+
+    def command_history_slice(self, command, arguments, arguments_str):
+        if len(arguments) != 1:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage: /history-slice [slice]")
+        else:
+            history = self.chat_session.history
+            original_num_messages = history.num_messages()
+            messages = lair.util.slice_from_str(history.get_messages(), arguments[0])
+            self.chat_session.history.set_history(messages)
+            new_num_messages = history.num_messages()
+
+            self.reporting.system_message(f"History updated  (Selected {new_num_messages} messages out of {original_num_messages})")
+
     def command_last_prompt(self, command, arguments, arguments_str):
         if len(arguments) > 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /last-prompt [filename?]")
@@ -208,18 +251,18 @@ class ChatInterfaceCommands():
         if len(arguments) > 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage /messages [filename?]")
         else:
-            messages = self.chat_session.history.get_messages()
-
-            if not messages:
+            history = self.chat_session.history
+            if history.num_messages() == 0:
                 logger.warn("No messages found")
                 return
 
             filename = arguments[0] if len(arguments) == 1 else None
             if filename is not None:
-                jsonl_str = "\n".join(json.dumps(message) for message in messages)
+                jsonl_str = history.get_messages_as_jsonl_string()
                 lair.util.save_file(filename, jsonl_str + "\n")
                 self.reporting.system_message(f'Messages saved  ({len(jsonl_str)} bytes)')
             else:
+                messages = history.get_messages()
                 for message in messages:
                     self.reporting.print_highlighted_json(json.dumps(message))
 
