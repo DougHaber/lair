@@ -983,15 +983,17 @@ $ lair comfy upscale --recursive images/
 
 ### Util
 
-The Util command provides a simple interface for calling LLMs. It is intended for one shot tasks and for making LLMs easy to work with in the shell and scripts.
+The `util` command provides a simple interface for calling LLMs. It is intended for one shot tasks and for making LLMs easy to work with in the shell and scripts.
 
-By default, the Util command does not render markdown, and the system prompt discourages markdown formatting unless explicitly requested. When the `--markdown` / `-m` flag is used, the system prompt permits markdown output, and the final response is rendered accordingly.
+The system prompt for the `util` command can be customized by setting `util.system_prompt_template` in the configuration. For tasks that require distinct instructions, it may be beneficial to define separate modes, each with its own dedicated system prompt.
+
+By default, the `util` command does not render markdown, and the system prompt discourages markdown formatting unless explicitly requested. When the `--markdown` / `-m` flag is used, the system prompt permits markdown output, and the final response is rendered accordingly.
 
 #### Util Examples
 
 ##### Generating Content
 
-The util command can be used to create content very easily. For example, to create some CSV test data:
+The `util` command can be used to create content very easily. For example, to create some CSV test data:
 
 ```bash
 $ lair util \
@@ -1050,7 +1052,7 @@ Now its users just sigh with despair.
 
 ##### Providing Input Content
 
-The util command can operate on content, which could be provided a few different ways. The `--content` / `-c` flags allow providing the content as a string on the command line. The `--content-file` / `-C` flags provide the specified file as content. The `--pipe` / `-p` flags read the content from stdin.
+The `util` command can operate on content, which could be provided a few different ways. The `--content` / `-c` flags allow providing the content as a string on the command line. The `--content-file` / `-C` flags provide the specified file as content. The `--pipe` / `-p` flags read the content from stdin.
 
 Here is an example of using an LLM to look at the `/etc/passwd` file and throw warnings on anything unusual.
 
@@ -1124,7 +1126,7 @@ Note, the `Max 60 characters` instruction isn't followed by most current models.
 
 ##### Using Tools
 
-The `--enable-tools` (`-t`) flag allows the model to invoke tools when using the `util` sub-command. When this flag is enabled, `tools.enabled` is automatically set to `true`, but individual tools must still be explicitly enabled in the configuration for them to be available.
+The `--enable-tools` (`-t`) flag allows the model to invoke tools when using the `util` command. When this flag is enabled, `tools.enabled` is automatically set to `true`, but individual tools must still be explicitly enabled in the configuration for them to be available.
 
 For more information on using tools within Lair, available tools, and setup instructions, refer to the [Tools Documentation](#tools) in the Chat section.
 
