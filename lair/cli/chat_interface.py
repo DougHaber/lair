@@ -22,8 +22,11 @@ import prompt_toolkit.styles
 class ChatInterface(ChatInterfaceCommands):
 
     def __init__(self):
-        self.chat_session = lair.sessions.get_session(lair.config.get('session.type'),
-                                                      enable_chat_output=True)
+        self.active_chat_session = lair.sessions.get_session(lair.config.get('session.type'),
+                                                             enable_chat_output=True)
+        self.chat_sessions = {}
+        self.add_chat_session(self.active_chat_session)
+
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
         self._models = None  # Cached list of models for the session
@@ -42,7 +45,7 @@ class ChatInterface(ChatInterfaceCommands):
     def _on_config_update(self):
         self._init_history()
         self._init_prompt_session()
-        self._models = self.chat_session.list_models(ignore_errors=True)
+        self._models = self.active_chat_session.list_models(ignore_errors=True)
 
     def _init_history(self):
         history_file = lair.config.get('chat.history_file')
@@ -167,11 +170,11 @@ class ChatInterface(ChatInterfaceCommands):
                     *content_parts,
                 ]
             if request:
-                self.chat_session.history.add_message('user', request)
+                self.active_chat_session.history.add_message('user', request)
 
-            self.chat_session.history.add_messages(messages)
+            self.active_chat_session.history.add_messages(messages)
 
-        response = self.chat_session.chat()
+        response = self.active_chat_session.chat()
         self.reporting.llm_output(response)
 
     def _handle_request(self, request):
@@ -222,7 +225,7 @@ class ChatInterface(ChatInterfaceCommands):
         return {
             'flags': self._generate_toolbar_template_flags(),
             'mode': lair.config.active_mode,
-            'model': self.chat_session.model_name,
+            'model': self.active_chat_session.model_name,
         }
 
     def _generate_prompt(self):
@@ -283,6 +286,20 @@ class ChatInterface(ChatInterfaceCommands):
             }))
         self.is_reading_prompt = False
         self._handle_request(request.strip())
+
+    def add_chat_session(self, session):
+        new_id = max(self.chat_sessions.keys()) + 1 if self.chat_sessions else 1
+        self.chat_sessions[new_id] = {
+            'id': new_id,
+            'alias': None,
+            'session': session,
+        }
+
+    def remove_chat_session(self, session_id):
+        del self.chat_sessions[session_id]
+
+    def update_chat_session_alias(self, session_id, alias):
+        self.chat_sessions[session_id]['alias'] = alias
 
     def start(self):
         self.startup_message()
