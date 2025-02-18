@@ -1,6 +1,5 @@
 import re
 import sys
-import textwrap
 
 import lair
 import lair.cli
@@ -19,9 +18,6 @@ def _module_info():
 
 
 class Util():
-    system_prompt = textwrap.dedent("""\
-    """)
-
     def __init__(self, parser):
         parser.add_argument('-a', '--attach-file', type=str, dest='attachments', action='append',
                             help='Specify one or more image files to attach to the request. Multiple files may be provided by repeating the argument. Ensure the model you are interacting with supports file attachments. Globs are supported.')
