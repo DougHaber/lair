@@ -19,6 +19,7 @@ class Configuration():
         self.modes = {}
         self.types = {}  # Preserve the valid type for each key (key -> type)
         self._init_default_mode()
+        self.default_settings = self.modes['_default'].copy()  # Immutable copy of the defaults
 
         self.modes['_active'] = self.modes['_default'].copy()
         self.active = self.modes['_active']
@@ -184,3 +185,9 @@ class Configuration():
         self._load_config()
 
         lair.events.fire('config.update')
+
+    def get_modified_config(self):
+        """
+        Return a dictionary of the active configuration's settings that don't match the defaults
+        """
+        return {k: v for k, v in self.active.items() if self.default_settings.get(k) != v}

@@ -102,7 +102,7 @@ class BaseConversationManager(abc.ABC):
         with open(filename, 'w') as state_file:
             state = {
                 'version': '0.1',
-                'settings': lair.config.active,
+                'settings': lair.config.get_modified_config(),
                 'session': {
                     'last_prompt': self.last_prompt,
                     'last_response': self.last_response,
