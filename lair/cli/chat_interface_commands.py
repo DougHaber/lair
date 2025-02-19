@@ -246,6 +246,13 @@ class ChatInterfaceCommands():
             self._models = models  # Update the cached list of models with the latest results
             self.reporting.table_from_dicts_system(models)
 
+    def command_list_tools(self, command, arguments, arguments_str):
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: /list-tools takes no arguments")
+        else:
+            tools = sorted(self.conversation_manager.tool_set.get_all_tools(), key=lambda m: m['name'])
+            self.reporting.table_from_dicts_system(tools, column_names=['class_name', 'name', 'enabled'])
+
     def command_load(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
         self.conversation_manager.load(filename)
@@ -364,9 +371,3 @@ class ChatInterfaceCommands():
             else:
                 lair.config.set(key, value)
 
-    def command_list_tools(self, command, arguments, arguments_str):
-        if len(arguments) != 0:
-            self.reporting.user_error("ERROR: /list-tools takes no arguments")
-        else:
-            tools = sorted(self.conversation_manager.tool_set.get_all_tools(), key=lambda m: m['name'])
-            self.reporting.table_from_dicts_system(tools, column_names=['class_name', 'name', 'enabled'])
