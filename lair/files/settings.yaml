@@ -31,6 +31,10 @@ chat.multiline_input: false
 # The CLI prompt to use in the chat interface. This is a Python f-string
 # Provided variables: flags, mode, model
 chat.prompt_template: '<style fg="#8f8f8f">{mode}</style>> '
+# With /set, modified settings are printed with this style
+chat.set_command.modified_style: 'cyan bold'
+# With /set, unmodified settings are printed with this style
+chat.set_command.unmodified_style: 'gray50'
 # Toolbar style when a notification is being shown
 chat.toolbar_flash_style: 'fg:#101080 bg:#f1f1f1'
 # The default toolbar style

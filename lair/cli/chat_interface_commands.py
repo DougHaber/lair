@@ -342,10 +342,18 @@ class ChatInterfaceCommands():
     def command_set(self, command, arguments, arguments_str):
         if len(arguments) == 0:
             self.reporting.system_message(f"Current mode: {lair.config.active_mode}")
+
+            default_settings = lair.config.default_settings
+            modified_style = lair.config.get('chat.set_command.modified_style')
+            unmodified_style = lair.config.get('chat.set_command.unmodified_style')
             rows = []
             for key, value in sorted(lair.config.active.items()):
                 if not key.startswith('_'):
-                    rows.append([key, str(value)])
+                    if value == default_settings.get(key):
+                        display_value = self.reporting.plain(str(value), style=unmodified_style)
+                    else:
+                        display_value = self.reporting.plain(str(value), style=modified_style)
+                    rows.append([key, display_value])
 
             self.reporting.table_system(rows)
         else:

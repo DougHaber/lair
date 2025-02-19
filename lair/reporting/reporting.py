@@ -108,7 +108,9 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         for row in rows:
             if not markup:
-                row = map(lambda i: self.plain(self.format_value(i)), row)
+                row = [i if isinstance(i, rich.text.Text)
+                       else self.plain(self.format_value(i))
+                       for i in row]
             table.add_row(*row)
 
         self.print_rich(table)
