@@ -33,8 +33,6 @@ def load(conversation_manager, filename):
 
     if 'version' not in state:
         raise Exception("Session state is missing 'version'")
-    elif state['version'] == '0.2':
-        _load__v0_2(conversation_manager, state)
     elif state['version'] == '0.1':
         _load__v0_1(conversation_manager, state)
     else:
