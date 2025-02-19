@@ -226,7 +226,7 @@ class Comfy():
         return new_parser
 
     def _on_chat_init(self, chat_interface):
-        def comfy_command(command, arguments):
+        def comfy_command(command, arguments, arguments_str):
             try:
                 chat_command_parser = self._get_chat_command_parser()
                 new_arguments = shlex.split(' '.join(arguments))
