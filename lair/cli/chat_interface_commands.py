@@ -255,7 +255,7 @@ class ChatInterfaceCommands():
 
     def command_load(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
-        self.conversation_manager.load(filename)
+        self.conversation_manager.load_from_file(filename)
         self.reporting.system_message(f"Session loaded from {filename}")
 
     def command_messages(self, command, arguments, arguments_str):
@@ -324,7 +324,7 @@ class ChatInterfaceCommands():
 
     def command_save(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
-        self.conversation_manager.save(filename)
+        self.conversation_manager.save_to_file(filename)
         self.reporting.system_message(f"Session written to {filename}")
 
     def command_session(self, command, arguments, arguments_str):
@@ -342,7 +342,7 @@ class ChatInterfaceCommands():
             self.reporting.table_from_dicts_system(rows,
                                                    column_names=['id', 'alias', 'model', 'num_messages'])
         elif len(arguments) == 1:
-            ...
+            ...  # TODO
         else:
             self.reporting.user_error("ERROR: USAGE: /session [session_id|alias?]")
 

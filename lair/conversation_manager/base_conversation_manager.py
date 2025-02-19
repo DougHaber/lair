@@ -1,8 +1,8 @@
 import abc
-import json
 from typing import Union, List, Dict, Any, Optional
 
 import lair
+import lair.conversation_manager.serializer
 import lair.reporting
 import lair.util.prompt_template
 from lair.components.history import ChatHistory
@@ -98,38 +98,11 @@ class BaseConversationManager(abc.ABC):
     def get_system_prompt(self):
         return lair.util.prompt_template.fill(lair.config.get('session.system_prompt_template'))
 
-    def save(self, filename):
-        with open(filename, 'w') as state_file:
-            state = {
-                'version': '0.1',
-                'settings': lair.config.get_modified_config(),
-                'session': {
-                    'last_prompt': self.last_prompt,
-                    'last_response': self.last_response,
-                    'fixed_model_name': self.fixed_model_name,
-                },
-                'history': self.history.get_messages(),
-            }
-            state_file.write(json.dumps(state))
+    def save_to_file(self, filename):
+        lair.conversation_manager.serializer.save(self, filename)
 
-    def _load__v0_1(self, state):
-        lair.config.update(state['settings'])
-        self.last_prompt = state['session']['last_prompt']
-        self.last_response = state['session']['last_response']
-        self.fixed_model_name = state['session']['fixed_model_name']
-        self.history.set_history(state['history'])
-
-    def load(self, filename):
-        with open(filename, 'r') as state_file:
-            contents = state_file.read()
-            state = json.loads(contents)
-
-        if 'version' not in state:
-            raise Exception("Session state is missing 'version'")
-        elif state['version'] == '0.1':
-            self._load__v0_1(state)
-        else:
-            raise Exception(f"Session state uses unknown version: {state['version']}")
+    def load_from_file(self, filename):
+        lair.conversation_manager.serializer.load(self, filename)
 
     @abc.abstractmethod
     def list_models(self, *, ignore_errors=False):
