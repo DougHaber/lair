@@ -370,4 +370,3 @@ class ChatInterfaceCommands():
                 self.reporting.user_error("ERROR Unknown key: %s" % key)
             else:
                 lair.config.set(key, value)
-

@@ -298,6 +298,7 @@ class ChatInterface(ChatInterfaceCommands):
                 'flag.off': lair.config.active['chat.flag_off_style'],
                 'flag.on': lair.config.active['chat.flag_on_style'],
             }))
+
         self.is_reading_prompt = False
         self._handle_request(request.strip())
 
