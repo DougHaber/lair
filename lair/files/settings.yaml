@@ -200,8 +200,8 @@ model.temperature: __null_float
 openai.api_base: __null_str
 # Environment variable name containing API key to use against OpenAI compatible APIs.
 openai.api_key_environment_variable: 'OPENAI_API_KEY'
-openai.max_retries: 2,
-openai.timeout: 65,
+openai.max_retries: 2
+openai.timeout: 65
 
 # How many entries to store in the history file.  Entries can be
 # messages from the assistant, user, or attached files.  There is no

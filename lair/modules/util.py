@@ -38,18 +38,18 @@ class Util():
         parser.add_argument('-t', '--enable-tools', action='store_true',
                             help='Allow the model to call tools')
 
-    def call_llm(self, chat_session, *, instructions, user_messages, enable_tools=True):
+    def call_llm(self, conversation_manager, *, instructions, user_messages, enable_tools=True):
         messages = [
-            lair.util.get_message('system', chat_session.get_system_prompt()),
+            lair.util.get_message('system', conversation_manager.get_system_prompt()),
             lair.util.get_message('user', instructions),
             *user_messages,
         ]
 
         if enable_tools:
             lair.config.set('tools.enabled', True)
-            response, _ = chat_session.invoke_with_tools(messages)
+            response, _ = conversation_manager.invoke_with_tools(messages)
         else:
-            response = chat_session.invoke(messages)
+            response = conversation_manager.invoke(messages)
 
         return response
 
@@ -116,7 +116,7 @@ class Util():
 
         lair.config.set('style.render_markdown', arguments.markdown)
 
-        chat_session = lair.sessions.get_session(
+        conversation_manager = lair.conversation_manager.get_conversation_manager(
             session_type=lair.config.get('session.type'),
         )
 
@@ -126,7 +126,7 @@ class Util():
         instructions = self._get_instructions(arguments)
         user_messages = self._get_user_messages(arguments)
 
-        response = self.call_llm(chat_session,
+        response = self.call_llm(conversation_manager,
                                  instructions=instructions,
                                  enable_tools=arguments.enable_tools,
                                  user_messages=user_messages)

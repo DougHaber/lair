@@ -9,7 +9,7 @@ from lair.components.history import ChatHistory
 from lair.logging import logger  # noqa
 
 
-class BaseChatSession(abc.ABC):
+class BaseConversationManager(abc.ABC):
 
     @abc.abstractmethod
     def __init__(self, *, history=None, model_name: str = None,

@@ -5,7 +5,7 @@ import sys
 import time
 
 import lair
-import lair.sessions
+import lair.conversation_manager
 from lair.cli.chat_interface_commands import ChatInterfaceCommands
 from lair.cli.chat_interface_completer import ChatInterfaceCompleter
 from lair.logging import logger  # noqa
@@ -22,14 +22,16 @@ import prompt_toolkit.styles
 class ChatInterface(ChatInterfaceCommands):
 
     def __init__(self):
-        self.active_chat_session = lair.sessions.get_session(lair.config.get('session.type'),
-                                                             enable_chat_output=True)
+        self.conversation_manager = lair.conversation_manager.get_conversation_manager(
+            lair.config.get('session.type'),
+            enable_chat_output=True
+        )
         self.chat_sessions = {}
-        self.add_chat_session(self.active_chat_session)
+        self.add_chat_session(self.conversation_manager)
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
-        self._models = None  # Cached list of models for the session
+        self._models = None  # Cached list of models
 
         self.flash_message = None
         self.flash_message_expiration = 0
@@ -45,7 +47,7 @@ class ChatInterface(ChatInterfaceCommands):
     def _on_config_update(self):
         self._init_history()
         self._init_prompt_session()
-        self._models = self.active_chat_session.list_models(ignore_errors=True)
+        self._models = self.conversation_manager.list_models(ignore_errors=True)
 
     def _init_history(self):
         history_file = lair.config.get('chat.history_file')
@@ -112,7 +114,7 @@ class ChatInterface(ChatInterfaceCommands):
                 self._flash("Enabling markdown rendering")
 
         @key_bindings.add('escape', 't')
-        def toggle_toolbar(event):
+        def toggle_tools(event):
             if lair.config.active['tools.enabled']:
                 lair.config.set('tools.enabled', 'false')
                 self._flash("Disabling tools")
@@ -137,6 +139,18 @@ class ChatInterface(ChatInterfaceCommands):
             else:
                 lair.config.set('style.word_wrap', 'true')
                 self._flash("Enabling word wrapping")
+
+        @key_bindings.add('c-x', 'n')
+        def next_session(event):
+            print("NEXT")  # TODO
+
+        @key_bindings.add('c-x', 'p')
+        def previous_session(event):
+            print("PREV")  # TODO
+
+        @key_bindings.add('c-x', 's')
+        def show_session(event):
+            print("SHOW")  # TODO
 
         return key_bindings
 
@@ -170,11 +184,11 @@ class ChatInterface(ChatInterfaceCommands):
                     *content_parts,
                 ]
             if request:
-                self.active_chat_session.history.add_message('user', request)
+                self.conversation_manager.history.add_message('user', request)
 
-            self.active_chat_session.history.add_messages(messages)
+            self.conversation_manager.history.add_messages(messages)
 
-        response = self.active_chat_session.chat()
+        response = self.conversation_manager.chat()
         self.reporting.llm_output(response)
 
     def _handle_request(self, request):
@@ -225,7 +239,7 @@ class ChatInterface(ChatInterfaceCommands):
         return {
             'flags': self._generate_toolbar_template_flags(),
             'mode': lair.config.active_mode,
-            'model': self.active_chat_session.model_name,
+            'model': self.conversation_manager.model_name,
         }
 
     def _generate_prompt(self):
