@@ -106,7 +106,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /clear takes no arguments")
         else:
-            self.conversation_manager.history.clear()
+            self.chat_session.history.clear()
 
     def command_debug(self, command, arguments, arguments_str):
         if len(arguments) != 0:
@@ -132,8 +132,8 @@ class ChatInterfaceCommands():
             else:
                 position = int(position)
 
-            if self.conversation_manager.last_response:
-                response = self._get_embedded_response(self.conversation_manager.last_response, position)
+            if self.chat_session.last_response:
+                response = self._get_embedded_response(self.chat_session.last_response, position)
                 if response:
                     if filename is not None:
                         lair.util.save_file(filename, response + '\n')
@@ -165,7 +165,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /history takes no arguments")
         else:
-            messages = self.conversation_manager.history.get_messages()
+            messages = self.chat_session.history.get_messages()
 
             if not messages:
                 return
@@ -177,7 +177,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /history-edit takes no arguments")
         else:
-            history = self.conversation_manager.history
+            history = self.chat_session.history
             jsonl_str = history.get_messages_as_jsonl_string()
             edited_jsonl_str = lair.util.edit_content_in_editor(jsonl_str, '.json')
 
@@ -200,10 +200,10 @@ class ChatInterfaceCommands():
         if len(arguments) != 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /history-slice [slice]")
         else:
-            history = self.conversation_manager.history
+            history = self.chat_session.history
             original_num_messages = history.num_messages()
             messages = lair.util.slice_from_str(history.get_messages(), arguments[0])
-            self.conversation_manager.history.set_history(messages)
+            self.chat_session.history.set_history(messages)
             new_num_messages = history.num_messages()
 
             self.reporting.system_message(f"History updated  (Selected {new_num_messages} messages out of {original_num_messages})")
@@ -212,7 +212,7 @@ class ChatInterfaceCommands():
         if len(arguments) > 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /last-prompt [filename?]")
         else:
-            last_prompt = self.conversation_manager.last_prompt
+            last_prompt = self.chat_session.last_prompt
             if last_prompt:
                 filename = arguments[0] if len(arguments) == 1 else None
                 if filename is not None:
@@ -227,7 +227,7 @@ class ChatInterfaceCommands():
         if len(arguments) > 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /last-response [filename?]")
         else:
-            last_response = self.conversation_manager.last_response
+            last_response = self.chat_session.last_response
             if last_response:
                 filename = arguments[0] if len(arguments) == 1 else None
                 if filename is not None:
@@ -242,7 +242,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /list-models takes no arguments")
         else:
-            models = sorted(self.conversation_manager.list_models(), key=lambda m: m['id'])
+            models = sorted(self.chat_session.list_models(), key=lambda m: m['id'])
             self._models = models  # Update the cached list of models with the latest results
             self.reporting.table_from_dicts_system(models)
 
@@ -250,19 +250,19 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /list-tools takes no arguments")
         else:
-            tools = sorted(self.conversation_manager.tool_set.get_all_tools(), key=lambda m: m['name'])
+            tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: m['name'])
             self.reporting.table_from_dicts_system(tools, column_names=['class_name', 'name', 'enabled'])
 
     def command_load(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
-        self.conversation_manager.load_from_file(filename)
+        self.chat_session.load_from_file(filename)
         self.reporting.system_message(f"Session loaded from {filename}")
 
     def command_messages(self, command, arguments, arguments_str):
         if len(arguments) > 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage /messages [filename?]")
         else:
-            history = self.conversation_manager.history
+            history = self.chat_session.history
             if history.num_messages() == 0:
                 logger.warn("No messages found")
                 return
@@ -287,8 +287,8 @@ class ChatInterfaceCommands():
             self.reporting.table_system(rows)
         elif len(arguments) == 1:  # Set mode
             lair.config.change_mode(arguments[0])
-            old_session = self.conversation_manager
-            self.conversation_manager = lair.conversation_manager.get_conversation_manager(
+            old_session = self.chat_session
+            self.chat_session = lair.sessions.get_chat_session(
                 lair.config.get('session.type'),
                 history=old_session.history,
             )
@@ -301,7 +301,7 @@ class ChatInterfaceCommands():
         elif len(arguments) == 0:
             active_config = lair.config.active
             self.reporting.table_system([
-                ['Name', self.conversation_manager.fixed_model_name or active_config.get('model.name')],
+                ['Name', self.chat_session.fixed_model_name or active_config.get('model.name')],
                 ['Temperature', str(active_config.get('model.temperature'))],
                 ['OpenAI API Base', str(active_config.get('openai.api_base'))],
                 ['Max Tokens', str(active_config.get('model.max_tokens'))],
@@ -324,7 +324,7 @@ class ChatInterfaceCommands():
 
     def command_save(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
-        self.conversation_manager.save_to_file(filename)
+        self.chat_session.save_to_file(filename)
         self.reporting.system_message(f"Session written to {filename}")
 
     def command_session(self, command, arguments, arguments_str):

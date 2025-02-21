@@ -5,7 +5,7 @@ import sys
 import time
 
 import lair
-import lair.conversation_manager
+import lair.sessions
 from lair.cli.chat_interface_commands import ChatInterfaceCommands
 from lair.cli.chat_interface_completer import ChatInterfaceCompleter
 from lair.logging import logger  # noqa
@@ -22,12 +22,12 @@ import prompt_toolkit.styles
 class ChatInterface(ChatInterfaceCommands):
 
     def __init__(self):
-        self.conversation_manager = lair.conversation_manager.get_conversation_manager(
+        self.chat_session = lair.sessions.get_chat_session(
             lair.config.get('session.type'),
             enable_chat_output=True
         )
         self.chat_sessions = {}
-        self.add_chat_session(self.conversation_manager)
+        self.add_chat_session(self.chat_session)
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
@@ -47,7 +47,7 @@ class ChatInterface(ChatInterfaceCommands):
     def _on_config_update(self):
         self._init_history()
         self._init_prompt_session()
-        self._models = self.conversation_manager.list_models(ignore_errors=True)
+        self._models = self.chat_session.list_models(ignore_errors=True)
 
     def _init_history(self):
         history_file = lair.config.get('chat.history_file')
@@ -184,11 +184,11 @@ class ChatInterface(ChatInterfaceCommands):
                     *content_parts,
                 ]
             if request:
-                self.conversation_manager.history.add_message('user', request)
+                self.chat_session.history.add_message('user', request)
 
-            self.conversation_manager.history.add_messages(messages)
+            self.chat_session.history.add_messages(messages)
 
-        response = self.conversation_manager.chat()
+        response = self.chat_session.chat()
         self.reporting.llm_output(response)
 
     def _handle_request(self, request):
@@ -239,7 +239,7 @@ class ChatInterface(ChatInterfaceCommands):
         return {
             'flags': self._generate_toolbar_template_flags(),
             'mode': lair.config.active_mode,
-            'model': self.conversation_manager.model_name,
+            'model': self.chat_session.model_name,
         }
 
     def _generate_prompt(self):

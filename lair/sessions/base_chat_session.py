@@ -2,14 +2,14 @@ import abc
 from typing import Union, List, Dict, Any, Optional
 
 import lair
-import lair.conversation_manager.serializer
+import lair.sessions.serializer
 import lair.reporting
 import lair.util.prompt_template
 from lair.components.history import ChatHistory
 from lair.logging import logger  # noqa
 
 
-class BaseConversationManager(abc.ABC):
+class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
     def __init__(self, *, history=None, model_name: str = None,
@@ -99,10 +99,10 @@ class BaseConversationManager(abc.ABC):
         return lair.util.prompt_template.fill(lair.config.get('session.system_prompt_template'))
 
     def save_to_file(self, filename):
-        lair.conversation_manager.serializer.save(self, filename)
+        lair.sessions.serializer.save(self, filename)
 
     def load_from_file(self, filename):
-        lair.conversation_manager.serializer.load(self, filename)
+        lair.sessions.serializer.load(self, filename)
 
     @abc.abstractmethod
     def list_models(self, *, ignore_errors=False):

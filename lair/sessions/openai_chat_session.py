@@ -7,12 +7,12 @@ import lair
 import lair.components.tools
 import lair.reporting
 from lair.logging import logger
-from .base_conversation_manager import BaseConversationManager
+from .base_chat_session import BaseChatSession
 
 import openai
 
 
-class OpenAIConversationManager(BaseConversationManager):
+class OpenAIChatSession(BaseChatSession):
 
     def __init__(self, *, history=None, model_name: str = None,
                  tool_set: lair.components.tools.ToolSet = None,
@@ -34,7 +34,7 @@ class OpenAIConversationManager(BaseConversationManager):
 
     def recreate_openai_client(self):
         self.model_name = self.fixed_model_name or lair.config.get('model.name')
-        logger.debug("OpenAIConversationManager(): Rebuild model (model_name=%s)" % self.model_name)
+        logger.debug("OpenAIChatSession(): Rebuild model (model_name=%s)" % self.model_name)
         self._get_openai_client()
 
     def use_model(self, model_name: str):
@@ -56,7 +56,7 @@ class OpenAIConversationManager(BaseConversationManager):
         messages_str = self.reporting.messages_to_str(messages)
         self.last_prompt = messages_str
 
-        logger.debug("OpenAIConversationManager(): completions.create(model=%s, len(messages)=%d)" % (self.model_name, len(messages)))
+        logger.debug("OpenAIChatSession(): completions.create(model=%s, len(messages)=%d)" % (self.model_name, len(messages)))
         answer = self.openai.chat.completions.create(
             messages=messages,
             model=self.model_name,
@@ -87,7 +87,7 @@ class OpenAIConversationManager(BaseConversationManager):
 
         cycle = 0
         while True:
-            logger.debug("OpenAIConversationManager(): completions.create(model=%s, len(messages)=%d), cycle=%d" % (self.model_name, len(messages), cycle))
+            logger.debug("OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d" % (self.model_name, len(messages), cycle))
             answer = self.openai.chat.completions.create(
                 messages=messages,
                 model=self.model_name,
