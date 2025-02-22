@@ -97,10 +97,10 @@ Lair is a hobby project with no official roadmap or guarantee that anything will
 Lair is installed as a Python command and requires Python 3.10 or later. Any Python package management tool can be used to install Lair, such as `pip`, `pipx`, or `uv`. For most users, `pipx` or `uv` are likely the best options.
 
 ```sh
-pipx install git+https://github.com/DougHaber/lair.git@0.4.0
+pipx install git+https://github.com/DougHaber/lair.git@0.5.0
 ```
 
-Replace `0.4.0` with the latest version. The `master` branch contains the latest unreleased version, which may be unstable. Official releases are tagged using semantic versioning.
+Replace `0.5.0` with the latest version. The `master` branch contains the latest unreleased version, which may be unstable. Official releases are tagged using semantic versioning.
 
 ## Configuration
 
@@ -109,6 +109,8 @@ In Lair, configuration is a set of namespaced key-value pairs. All pairs can be 
 When Lair is first run, it creates `~/.lair/config.yaml`. Within this file, modes can be defined to customize settings. A mode is a named collection of settings, allowing users to quickly switch between different configurations. The top-level `default_mode` key specifies the mode to use if none is specified.
 
 YAML anchors and aliasing can be used to make modes inherit from each other. An experimental feature also allows a key `_inherit` to contain a list of other modes to inherit from. The modes to inherit from must be defined above the point they are referenced. While this feature is available, it should be considered experimental, and its behavior might change in the future.
+
+Modes with names beginning with an underscore are considered hidden and not displayed by the `/mode` command. This is helpful when making modes that are intended to be used with `_inherit`, but not otherwise used directly.
 
 In the current release, the only supported `session.type` is `openai_chat`, which uses OpenAI's API or other APIs that provide compatibility, such as Ollama. Lair originally used LangChain and supported various other options, but these have been removed to simplify the code.
 
