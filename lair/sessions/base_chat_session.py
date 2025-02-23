@@ -29,6 +29,9 @@ class BaseChatSession(abc.ABC):
         self.last_prompt = None
         self.last_response = None
 
+        self.session_id = None  # Id for session management, provided by SessionManager()
+        self.session_alias = None  # Alias string for session management purposes
+
         self.history = history or ChatHistory()
         self.enable_chat_output = enable_chat_output
         self.tool_set = tool_set or lair.components.tools.ToolSet()
@@ -103,6 +106,12 @@ class BaseChatSession(abc.ABC):
 
     def load_from_file(self, filename):
         lair.sessions.serializer.load(self, filename)
+
+    def to_dict(self):
+        return lair.sessions.serializer.session_to_dict(self)
+
+    def update_from_dict(self, state):
+        return lair.sessions.serializer.update_session_from_dict(self)
 
     @abc.abstractmethod
     def list_models(self, *, ignore_errors=False):

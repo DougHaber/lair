@@ -186,6 +186,8 @@ The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled 
 
 When Verbose output is enabled tool calls and responses are displayed.
 
+The prompt and toolbar can be customized via `chat.*` settings.
+
 #### Commands
 
 | Command          | Description                                                                                                            |

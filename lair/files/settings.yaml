@@ -29,8 +29,10 @@ chat.flag_on_style: 'bg:#00f1f1 bold'
 # When enabled, pressing enter will move to the new line instead of submitting. To submit, us M-RET (escape enter.)
 chat.multiline_input: false
 # The CLI prompt to use in the chat interface. This is a Python f-string
-# Provided variables: flags, mode, model
-chat.prompt_template: '<style fg="#8f8f8f">{mode}</style>> '
+# This string uses PromptToolkit HTML styling:
+#   https://python-prompt-toolkit.readthedocs.io/en/stable/pages/printing_text.html#html
+# Provided variables: flags, mode, model, session_alias, session_id
+chat.prompt_template: '<style fg="#8f8f8f">{mode}</style>:{session_id}> '
 # With /set, modified settings are printed with this style
 chat.set_command.modified_style: 'cyan bold'
 # With /set, unmodified settings are printed with this style
@@ -41,9 +43,12 @@ chat.toolbar_flash_style: 'fg:#101080 bg:#f1f1f1'
 chat.toolbar_style: 'fg:#1f1f1f bg:#f1f1f1'
 # This toolbar template to use. This is a python f-string and should not have any newlines.
 # The YAML ">-" keeps it folded so that there are no newlines.
-# Provided variables: flags, mode, model
+# This string uses PromptToolkit HTML styling:
+#   https://python-prompt-toolkit.readthedocs.io/en/stable/pages/printing_text.html#html
+# Provided variables: flags, mode, model, session_alias, session_id
 chat.toolbar_template: >-
   [{flags}]
+  ({session_id})
   <style bg="#6f6f6f">mode</style> <b>{mode}</b> 
   <style bg="#6f6f6f">model</style> <b>{model}</b>
 # The Default toolbar text style
@@ -163,21 +168,15 @@ comfy.upscale.model_name: 'RealESRGAN_x2.pth'
 # undesirable.
 comfy.upscale.output_filename: '{basename}-upscaled.png'
 
-# These are from the original lair. The open source lair currently has
-# no database and so these have no effect.
-# NOTE: These are only here as convenience for me, since I use both the old and new lair. -dhaber
-database.host: 'localhost'
-database.host_environment_variable: 'DB_HOST'
-database.name: 'lair'
-database.name_environment_variable: 'DB_NAME'
-# WARNING: database.password is discouraged except for local test
-# All settings are stored in saved session files, including passwords.
-database.password: 'lair'
-database.password_environment_variable: 'DB_PASS'
-database.port: 5432
-database.port_environment_variable: 'DB_PORT'
-database.user: 'lair'
-database.user_environment_variable: 'DB_USER'
+# The sesssion's database in an LMDB storing session state The size of the file. This can only be
+# modified safely before launch. When starting up, if the value has changed, the file will be
+# resized.
+database.sessions.size: 104857600
+# The name of the LMDB database path to use. Changing this is not completely supported. If run with
+# a configuration with an independent value, everything will work, but modifying this value within a
+# session or having different conversations within a session use different settings has an undefined
+# behavior.
+database.sessions.path: '~/.lair/sessions'
 
 # Which editor to use when opening an external editor. When null, this defaults to the VISUAL or
 # EDITOR environment variables or `vi` if they aren't set.

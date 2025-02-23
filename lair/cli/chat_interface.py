@@ -26,8 +26,8 @@ class ChatInterface(ChatInterfaceCommands):
             lair.config.get('session.type'),
             enable_chat_output=True
         )
-        self.chat_sessions = {}
-        self.add_chat_session(self.chat_session)
+        self.session_manager = lair.sessions.SessionManager()
+        self.session_manager.add_from_chat_session(self.chat_session)
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
@@ -239,7 +239,9 @@ class ChatInterface(ChatInterfaceCommands):
         return {
             'flags': self._generate_toolbar_template_flags(),
             'mode': lair.config.active_mode,
-            'model': self.chat_session.model_name,
+            'model': self.chat_session.fixed_model_name or self.chat_session.model_name,
+            'session_id': self.chat_session.session_id,
+            'session_alias': self.chat_session.session_alias or '',
         }
 
     def _generate_prompt(self):
@@ -300,21 +302,8 @@ class ChatInterface(ChatInterfaceCommands):
             }))
 
         self.is_reading_prompt = False
+        self.session_manager.refresh_from_chat_session(self.chat_session)
         self._handle_request(request.strip())
-
-    def add_chat_session(self, session):
-        new_id = max(self.chat_sessions.keys()) + 1 if self.chat_sessions else 1
-        self.chat_sessions[new_id] = {
-            'id': new_id,
-            'alias': None,
-            'session': session,
-        }
-
-    def remove_chat_session(self, session_id):
-        del self.chat_sessions[session_id]
-
-    def update_chat_session_alias(self, session_id, alias):
-        self.chat_sessions[session_id]['alias'] = alias
 
     def start(self):
         self.startup_message()

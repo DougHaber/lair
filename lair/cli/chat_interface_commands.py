@@ -329,20 +329,22 @@ class ChatInterfaceCommands():
 
     def command_session(self, command, arguments, arguments_str):
         if len(arguments) == 0:
+            current_session_id = self.chat_session.session_id
             rows = []
-            for session_id, details in self.chat_sessions.items():
-                session = details['session']
+            for details in sorted(self.session_manager.all_sessions(), key=lambda s: s['id']):
                 rows.append({
-                    'id': session_id,
+                    'active': '*' if details['id'] == current_session_id else '',
+                    'id': details['id'],
                     'alias': details['alias'],
-                    'model': session.model_name,
-                    'num_messages': session.history.num_messages(),
+                    'model': details['session']['fixed_model_name'],
+                    'num_messages': len(details['history']),
                 })
 
             self.reporting.table_from_dicts_system(rows,
-                                                   column_names=['id', 'alias', 'model', 'num_messages'])
+                                                   column_names=['active', 'id', 'alias', 'model', 'num_messages'])
         elif len(arguments) == 1:
-            ...  # TODO
+            id_or_alias = arguments[0]
+            self.session_manager.switch_to_session(id_or_alias, self.chat_session)
         else:
             self.reporting.user_error("ERROR: USAGE: /session [session_id|alias?]")
 
