@@ -48,7 +48,7 @@ class SessionManager:
             for session_id in session_ids_to_delete:
                 self.delete_session(session_id, txn=txn)
 
-        logger.debug("SessionManager(): prune_empty() removed {len(session_ids_to_delete)} empty sessions")
+        logger.debug(f"SessionManager(): prune_empty() removed {len(session_ids_to_delete)} empty sessions")
 
     def _get_next_session_id(self):
         with self.env.begin() as txn:
@@ -120,6 +120,12 @@ class SessionManager:
                         str(chat_session.session_id).encode())
 
     def delete_session(self, id_or_alias, txn=None):
+        """
+        Delete a session
+
+        Arguments:
+          txn: When provided, this lmdb transaction is used instead of creating a new one
+        """
         session_id = self.get_session_id(id_or_alias)
         should_commit = txn is None  # Track if we need to start a transaction
 
@@ -128,15 +134,14 @@ class SessionManager:
 
         try:
             session_data = txn.get(f'session:{session_id:08d}'.encode())
-            if session_data:
-                session = json.loads(session_data.decode())
+            session = json.loads(session_data.decode())
 
-                alias = session.get('alias')
-                if alias:
-                    txn.delete(f'alias:{alias}'.encode())
+            alias = session.get('alias')
+            if alias:
+                txn.delete(f'alias:{alias}'.encode())
 
-                txn.delete(f'session:{session_id:08d}'.encode())
-                logger.debug(f"SessionManager(): delete_session({session_id})")
+            txn.delete(f'session:{session_id:08d}'.encode())
+            logger.debug(f"SessionManager(): delete_session({session_id})")
 
             if should_commit:
                 txn.commit()  # Commit only if we started the transaction
@@ -144,19 +149,6 @@ class SessionManager:
             if should_commit:
                 txn.abort()  # Abort if we started the transaction and something went wrong
             raise
-
-    # def delete_session(self, id_or_alias):
-    #     session_id = self.get_session_id(id_or_alias)
-    #     with self.env.begin(write=True) as txn:
-    #         session_data = txn.get(f'session:{session_id:08d}'.encode())
-    #         session = json.loads(session_data.decode())
-
-    #         alias = session.get('alias')
-    #         if alias:
-    #             txn.delete(f'alias:{alias}'.encode())
-
-    #         txn.delete(f'session:{session_id:08d}'.encode())
-    #         logger.debug("SessionManager(): delete_session({session_id})")
 
     def switch_to_session(self, id_or_alias, chat_session):
         session_id = self.get_session_id(id_or_alias)
