@@ -161,17 +161,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /help takes no arguments")
         else:
-            rows = []
-            for command, details in sorted(self.commands.items()):
-                rows.append([command, details['description']])
-
-            self.reporting.table_system(rows)
-
-            rows = []
-            for shortcut, description in sorted(self._get_shortcut_details().items()):
-                rows.append([shortcut, description])
-
-            self.reporting.table_system(rows)
+            self.print_help()
 
     def command_history(self, command, arguments, arguments_str):
         if len(arguments) != 0:
@@ -254,16 +244,13 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /list-models takes no arguments")
         else:
-            models = sorted(self.chat_session.list_models(), key=lambda m: m['id'])
-            self._models = models  # Update the cached list of models with the latest results
-            self.reporting.table_from_dicts_system(models)
+            self.print_models_report(update_cache=True)
 
     def command_list_tools(self, command, arguments, arguments_str):
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /list-tools takes no arguments")
         else:
-            tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: m['name'])
-            self.reporting.table_from_dicts_system(tools, column_names=['class_name', 'name', 'enabled'])
+            self.print_tools_report()
 
     def command_load(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
@@ -290,13 +277,8 @@ class ChatInterfaceCommands():
                     self.reporting.print_highlighted_json(json.dumps(message))
 
     def command_mode(self, command, arguments, arguments_str):
-        if len(arguments) == 0:  # Show modes
-            rows = []
-            for mode in filter(lambda m: not m.startswith('_'), lair.config.modes.keys()):
-                current = '* ' if mode == lair.config.active_mode else '  '
-                rows.append([current + mode, lair.config.modes[mode].get('_description', '')])
-
-            self.reporting.table_system(rows)
+        if len(arguments) == 0:
+            self.print_modes_report()
         elif len(arguments) == 1:  # Set mode
             lair.config.change_mode(arguments[0])
             old_session = self.chat_session
@@ -311,13 +293,7 @@ class ChatInterfaceCommands():
         if len(arguments) > 1:
             self.reporting.user_error("ERROR: Invalid arguments: Usage /model [name?]")
         elif len(arguments) == 0:
-            active_config = lair.config.active
-            self.reporting.table_system([
-                ['Name', self.chat_session.fixed_model_name or active_config.get('model.name')],
-                ['Temperature', str(active_config.get('model.temperature'))],
-                ['OpenAI API Base', str(active_config.get('openai.api_base'))],
-                ['Max Tokens', str(active_config.get('model.max_tokens'))],
-            ])
+            self.print_current_model_report()
         elif len(arguments) == 1:
             lair.config.set('model.name', arguments[0])
 
@@ -341,20 +317,7 @@ class ChatInterfaceCommands():
 
     def command_session(self, command, arguments, arguments_str):
         if len(arguments) == 0:
-            current_session_id = self.chat_session.session_id
-            rows = []
-            for details in sorted(self.session_manager.all_sessions(), key=lambda s: s['id']):
-                rows.append({
-                    'active': '*' if details['id'] == current_session_id else '',
-                    'id': details['id'],
-                    'alias': details['alias'],
-                    'title': details['title'],
-                    'model': details['session']['fixed_model_name'],
-                    'num_messages': len(details['history']),
-                })
-
-            self.reporting.table_from_dicts_system(rows,
-                                                   column_names=['active', 'id', 'alias', 'model', 'title', 'num_messages'])
+            self.print_sessions_report()
         elif len(arguments) == 1:
             id_or_alias = arguments[0]
             self.session_manager.switch_to_session(id_or_alias, self.chat_session)
@@ -394,21 +357,7 @@ class ChatInterfaceCommands():
 
     def command_set(self, command, arguments, arguments_str):
         if len(arguments) == 0:
-            self.reporting.system_message(f"Current mode: {lair.config.active_mode}")
-
-            default_settings = lair.config.default_settings
-            modified_style = lair.config.get('chat.set_command.modified_style')
-            unmodified_style = lair.config.get('chat.set_command.unmodified_style')
-            rows = []
-            for key, value in sorted(lair.config.active.items()):
-                if not key.startswith('_'):
-                    if value == default_settings.get(key):
-                        display_value = self.reporting.plain(str(value), style=unmodified_style)
-                    else:
-                        display_value = self.reporting.plain(str(value), style=modified_style)
-                    rows.append([key, display_value])
-
-            self.reporting.table_system(rows)
+            self.print_config_report()
         else:
             key = arguments[0]
             value = '' if len(arguments) == 1 else arguments_str[len(arguments[0]) + 1:]

@@ -22,10 +22,18 @@ chat.enable_toolbar: true
 # The history file to use in the chat interface for readline history.
 # When set to an empty string, there is no history file
 chat.history_file: '~/.lair/history'
+#
+# chat.keys: Key bindings used from the chat interface
+# NOTE: Modifying these within a session can get confusing. It is recommended to only have one
+#       global version of the key bindings for consistency.
 chat.keys.session.new: 'c-x n'
 chat.keys.session.next: 'c-x space'
 chat.keys.session.previous: 'c-x p'
 chat.keys.session.reset: 'c-x r'
+chat.keys.session.show: 'c-x s'
+chat.keys.show_help: 'c-x ?'
+chat.keys.list_models: 'c-x m'
+chat.keys.list_tools: 'c-x t'
 chat.keys.toggle_markdown: 'escape m'
 chat.keys.toggle_multiline_input: 'escape l'
 chat.keys.toggle_toolbar: 'escape b'

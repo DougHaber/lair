@@ -8,6 +8,7 @@ import lair
 import lair.sessions
 from lair.cli.chat_interface_commands import ChatInterfaceCommands
 from lair.cli.chat_interface_completer import ChatInterfaceCompleter
+from lair.cli.chat_interface_reports import ChatInterfaceReports
 from lair.logging import logger  # noqa
 
 import prompt_toolkit
@@ -19,7 +20,7 @@ import prompt_toolkit.keys
 import prompt_toolkit.styles
 
 
-class ChatInterface(ChatInterfaceCommands):
+class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def __init__(self):
         self.chat_session = lair.sessions.get_chat_session(
@@ -78,6 +79,10 @@ class ChatInterface(ChatInterfaceCommands):
             format_key('session.next'): 'Cycle to the next session',
             format_key('session.previous'): 'Cycle to the previous session',
             format_key('session.reset'): 'Reset the current session',
+            format_key('session.show'): 'Display all sessions',
+            format_key('show_help'): 'Show keys and shortcuts',
+            format_key('list_models'): 'Show all available models',
+            format_key('list_tools'): 'Show all available tools',
             format_key('toggle_markdown'): 'Toggle markdown rendering',
             format_key('toggle_multiline_input'): 'Toggle multi-line input',
             format_key('toggle_toolbar'): 'Toggle bottom toolbar',
@@ -151,21 +156,37 @@ class ChatInterface(ChatInterfaceCommands):
                 self._flash("Enabling word wrapping")
 
         @key_bindings.add(*get_key('session.new'), eager=True)
-        def new_session(event):
+        def session_new(event):
             print("NEW")  # TODO
 
         @key_bindings.add(*get_key('session.next'), eager=True)
-        def next_session(event):
+        def session_next(event):
             print("NEXT")  # TODO
 
         @key_bindings.add(*get_key('session.reset'), eager=True)
-        def reset_session(event):
+        def session_reset(event):
             self.chat_session.new_session()
             self._flash("Session reset")
 
         @key_bindings.add(*get_key('session.previous'), eager=True)
-        def previous_session(event):
+        def session_previous(event):
             print("PREV")  # TODO
+
+        @key_bindings.add(*get_key('session.show'), eager=True)
+        def session_status(event):
+            prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
+
+        @key_bindings.add(*get_key('show_help'), eager=True)
+        def show_help(event):
+            prompt_toolkit.application.run_in_terminal(self.print_help)
+
+        @key_bindings.add(*get_key('list_models'), eager=True)
+        def list_models(event):
+            prompt_toolkit.application.run_in_terminal(lambda: self.print_models_report(update_cache=True))
+
+        @key_bindings.add(*get_key('list_tools'), eager=True)
+        def list_tools(event):
+            prompt_toolkit.application.run_in_terminal(self.print_tools_report)
 
         return key_bindings
 
