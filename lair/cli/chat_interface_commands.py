@@ -85,6 +85,18 @@ class ChatInterfaceCommands():
                 'callback': lambda command, arguments, arguments_str: self.command_session(command, arguments, arguments_str),
                 'description': 'List or switch sessions  (usage: /session [session_id|alias?])'
             },
+            '/session-alias': {
+                'callback': lambda command, arguments, arguments_str: self.command_session_alias(command, arguments, arguments_str),
+                'description': 'Set or remove a session alias  (usage: /session-alias [session_id|alias?] [new_alias?])'
+            },
+            '/session-delete': {
+                'callback': lambda command, arguments, arguments_str: self.command_session_delete(command, arguments, arguments_str),
+                'description': 'Delete session(s)  (usage: /session-delete [session_id|alias?]...)'
+            },
+            '/session-title': {
+                'callback': lambda command, arguments, arguments_str: self.command_session_title(command, arguments, arguments_str),
+                'description': 'Set or remove a session title  (usage: /session-title [session_id|alias?] [new_title?])'
+            },
             '/set': {
                 'callback': lambda command, arguments, arguments_str: self.command_set(command, arguments, arguments_str),
                 'description': 'Show configuration or set a configuration value for the current mode  (usage: /set ([key?] [value?])?'
@@ -348,6 +360,37 @@ class ChatInterfaceCommands():
             self.session_manager.switch_to_session(id_or_alias, self.chat_session)
         else:
             self.reporting.user_error("ERROR: USAGE: /session [session_id|alias?]")
+
+    def command_session_alias(self, command, arguments, arguments_str):
+        if len(arguments) != 1 and len(arguments) != 2:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage /session-alias [session_id|alias?] [new_alias?])")
+        else:
+            session_id = self.session_manager.get_session_id(arguments[0])
+            new_alias = arguments[1] if len(arguments) == 2 else None
+            if self.chat_session.session_id == session_id:
+                self.chat_session.session_alias = new_alias
+            self.session_manager.set_alias(session_id, new_alias)
+
+    def command_session_delete(self, command, arguments, arguments_str):
+        if len(arguments) == 0:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage /session-delete [session_id|alias?]...)")
+        else:
+            self.session_manager.delete_sessions(arguments)
+
+            try:
+                self.session_manager.get_session_id(self.chat_session.session_id)
+            except lair.sessions.session_manager.UnknownSessionException: # Current session was deleted
+                self.chat_session.new_session()
+
+    def command_session_title(self, command, arguments, arguments_str):
+        if len(arguments) == 0:
+            self.reporting.user_error("ERROR: Invalid arguments: Usage /session-title [session_id|alias?] [new_title?])")
+        else:
+            session_id = self.session_manager.get_session_id(arguments[0])
+            new_title = ' '.join(arguments[1:]) if len(arguments) != 1 else None
+            if self.chat_session.session_id == session_id:
+                self.chat_session.session_title = new_title
+            self.session_manager.set_title(session_id, new_title)
 
     def command_set(self, command, arguments, arguments_str):
         if len(arguments) == 0:

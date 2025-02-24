@@ -172,3 +172,8 @@ class BaseChatSession(abc.ABC):
                 If an error occurs during model retrieval and `ignore_errors` is False.
         """
         pass
+
+    def new_session(self):
+        self.session_alias = None
+        self.session_title = None
+        self.history.clear()

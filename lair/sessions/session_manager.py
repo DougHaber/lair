@@ -38,17 +38,14 @@ class SessionManager:
                 self.env.set_mapsize(configured_size)
 
     def prune_empty(self):
-        session_ids_to_delete = []
+        session_list = []
 
         for session in self.all_sessions():
             if len(session['history']) == 0:
-                session_ids_to_delete.append(session['id'])
+                session_list.append(session['id'])
 
-        with self.env.begin(write=True) as txn:
-            for session_id in session_ids_to_delete:
-                self.delete_session(session_id, txn=txn)
-
-        logger.debug(f"SessionManager(): prune_empty() removed {len(session_ids_to_delete)} empty sessions")
+        self.delete_sessions(session_list)
+        logger.debug(f"SessionManager(): prune_empty() removed {len(session_list)} empty sessions")
 
     def _get_next_session_id(self):
         with self.env.begin() as txn:
@@ -75,9 +72,11 @@ class SessionManager:
             if session_id:
                 return int(session_id.decode())
 
-            session_id = txn.get(f'session:{lair.util.safe_int(id_or_alias):08d}'.encode())
-            if session_id:
-                return int(id_or_alias)
+            session_id_int = lair.util.safe_int(id_or_alias)
+            if isinstance(session_id_int, int):
+                session_id = txn.get(f'session:{session_id_int:08d}'.encode())
+                if session_id:
+                    return int(id_or_alias)
 
         raise UnknownSessionException(f"Unknown session: {id_or_alias}")
 
@@ -95,8 +94,13 @@ class SessionManager:
     def refresh_from_chat_session(self, chat_session):
         session = lair.sessions.serializer.session_to_dict(chat_session)
         session_id = session['id']
-        with self.env.begin(write=True) as txn:
+        with self.env.begin() as txn:
             prev_session_data = txn.get(f'session:{session_id:08d}'.encode())
+            if not prev_session_data:  # If the session doesn't exist, create it
+                self.add_from_chat_session(chat_session)
+                return
+
+        with self.env.begin(write=True) as txn:
             prev_session = json.loads(prev_session_data.decode())
             prev_alias = prev_session.get('alias')
 
@@ -150,10 +154,15 @@ class SessionManager:
                 txn.abort()  # Abort if we started the transaction and something went wrong
             raise
 
+    def delete_sessions(self, session_list):
+        with self.env.begin(write=True) as txn:
+            for session_id in session_list:
+                self.delete_session(session_id, txn=txn)
+
     def switch_to_session(self, id_or_alias, chat_session):
         session_id = self.get_session_id(id_or_alias)
         with self.env.begin() as txn:
-            logger.debug("SessionManager(): switch_to_session({session_id})")
+            logger.debug(f"SessionManager(): switch_to_session({session_id})")
             session_data = txn.get(f'session:{session_id:08d}'.encode())
             session = json.loads(session_data.decode())
             lair.sessions.serializer.update_session_from_dict(chat_session, session)
@@ -172,6 +181,16 @@ class SessionManager:
             session['alias'] = new_alias
             txn.put(f'session:{session_id:08d}'.encode(), json.dumps(session).encode())
             txn.put(f'alias:{new_alias}'.encode(), str(session_id).encode())
+
+    def set_title(self, id_or_alias, new_title):
+        session_id = self.get_session_id(id_or_alias)
+
+        with self.env.begin(write=True) as txn:
+            session_data = txn.get(f'session:{session_id:08d}'.encode())
+            session = json.loads(session_data.decode())
+
+            session['title'] = new_title
+            txn.put(f'session:{session_id:08d}'.encode(), json.dumps(session).encode())
 
     def get_session_dict(self, id_or_alias):
         session_id = self.get_session_id(id_or_alias)
