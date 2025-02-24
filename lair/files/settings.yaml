@@ -206,9 +206,23 @@ openai.api_key_environment_variable: 'OPENAI_API_KEY'
 openai.max_retries: 2
 openai.timeout: 65
 
-# How many entries to store in the history file.  Entries can be
-# messages from the assistant, user, or attached files.  There is no
-# guarantee that the cut-off doesn't split a message, such as
+# When true, titles are automatically generated for sessions
+session.auto_generate_titles.enabled: True
+# By default, title auto-generation is performed with the current model. Settings this allows a
+# separate model to be used. Currently, this can only change the model name requested. The model
+# must come from the same session provider.
+session.auto_generate_titles.model: __null_str
+# The temperature to use when generating titles
+session.auto_generate_titles.temperature: 0.2
+# The system prompt to use for title auto-generation
+session.auto_generate_titles.template: |-
+  You will be provided a brief excerpt of a conversation which may be truncated.
+  Using the messages provided, create a short title for this conversation.
+  - Titles must be just a few words (~ 2 to 6 words) and short
+  - Titles must describe what the conversation is about
+  - Respond with ONLY the title -- Do not place it in quotes or tags. -- Only the title! Nothing else!
+# How many entries to store in the history file.  Entries can be messages from the assistant, user,
+# or attached files.  There is no guarantee that the cut-off doesn't split a message, such as
 # providing a file attachment without the query about it.
 session.max_history_length: __null_int
 # The system prompt to use. This is a Jinja2 template, which allows for conditional behavior.
@@ -289,15 +303,14 @@ tools.enabled: false
 # must have Docker access. It will pull down and run the image specified in
 # tools.python.docker_image.
 tools.python.enabled: false
-# Docker image to run scripts inside of. The default is an official image,
-# but it could be worth building a custom one with other libraries available.
+# Docker image to run scripts inside of. The default is an official image, but it could be worth
+# building a custom one with other libraries available.
 tools.python.docker_image: 'python:latest'
 # Comma delimited list of extra modules to advertise as being available.
 # This is intended to be used with custom images to provide functionality such as numpy and requests.
 tools.python.extra_modules: ''
-# Number of seconds until a python script's execution times out
-# This includes the full time of the 'docker run', including pulling images (if necessary,) creating
-# containers, and script runtime.
+# Number of seconds until a python script's execution times out.  This includes the full time of the
+# 'docker run', including pulling images (if necessary,) creating containers, and script runtime.
 tools.python.timeout: 30.0
 
 # The search tool uses DuckDuckGo to perform web and news searches. It scrapes content from sites

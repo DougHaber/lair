@@ -336,12 +336,13 @@ class ChatInterfaceCommands():
                     'active': '*' if details['id'] == current_session_id else '',
                     'id': details['id'],
                     'alias': details['alias'],
+                    'title': details['title'],
                     'model': details['session']['fixed_model_name'],
                     'num_messages': len(details['history']),
                 })
 
             self.reporting.table_from_dicts_system(rows,
-                                                   column_names=['active', 'id', 'alias', 'model', 'num_messages'])
+                                                   column_names=['active', 'id', 'alias', 'model', 'title', 'num_messages'])
         elif len(arguments) == 1:
             id_or_alias = arguments[0]
             self.session_manager.switch_to_session(id_or_alias, self.chat_session)

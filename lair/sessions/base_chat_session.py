@@ -31,6 +31,7 @@ class BaseChatSession(abc.ABC):
 
         self.session_id = None  # Id for session management, provided by SessionManager()
         self.session_alias = None  # Alias string for session management purposes
+        self.session_title = None  # Short title for the session
 
         self.history = history or ChatHistory()
         self.enable_chat_output = enable_chat_output
@@ -96,7 +97,35 @@ class BaseChatSession(abc.ABC):
         self.history.add_message('assistant', answer)
         self.history.commit()
 
+        if self.session_title is None and lair.config.get('session.auto_generate_titles.enabled'):
+            self.auto_generate_title()
+
         return answer
+
+    def auto_generate_title(self):
+        if self.history.num_messages() < 2 or not lair.config.get('session.auto_generate_titles.enabled'):
+            return None
+
+        messages = self.history.get_messages()[:2]
+        message = self.invoke(
+            disable_system_prompt=True,
+            model=lair.config.get('session.auto_generate_titles.model'),
+            temperature=lair.config.get('session.auto_generate_titles.temperature'),
+            messages=[
+                {
+                    'role': 'system',
+                    'content': lair.util.prompt_template.fill(lair.config.get('session.auto_generate_titles.template')),
+                },
+                {
+                    'role': 'user',
+                    'content': f'USER\n{messages[0]['content'][:128]}\n\nASSISTANT\n{messages[1]['content'][:128]}',
+                }
+            ]
+        )
+
+        logger.debug(f"auto_generate_title(): session={self.session_id}, title={message}")
+        self.session_title = message
+        return message
 
     def get_system_prompt(self):
         return lair.util.prompt_template.fill(lair.config.get('session.system_prompt_template'))
