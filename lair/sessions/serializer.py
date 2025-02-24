@@ -21,7 +21,7 @@ def session_to_dict(chat_session):
 
 def save(chat_session, filename):
     with open(filename, 'w') as state_file:
-        state = to_dict(chat_session)
+        state = session_to_dict(chat_session)
         state_file.write(json.dumps(state))
 
 

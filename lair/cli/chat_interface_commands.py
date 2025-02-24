@@ -379,7 +379,7 @@ class ChatInterfaceCommands():
 
             try:
                 self.session_manager.get_session_id(self.chat_session.session_id)
-            except lair.sessions.session_manager.UnknownSessionException: # Current session was deleted
+            except lair.sessions.session_manager.UnknownSessionException:  # Current session was deleted
                 self.chat_session.new_session()
 
     def command_session_title(self, command, arguments, arguments_str):
