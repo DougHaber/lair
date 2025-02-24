@@ -178,10 +178,12 @@ comfy.upscale.model_name: 'RealESRGAN_x2.pth'
 # undesirable.
 comfy.upscale.output_filename: '{basename}-upscaled.png'
 
-# The sesssion's database in an LMDB storing session state The size of the file. This can only be
-# modified safely before launch. When starting up, if the value has changed, the file will be
-# resized.
-database.sessions.size: 104857600
+# Sesssions are stored using in an LMDB database on the local filesystem.
+# The maximum size of the file. This can only be modified safely before launch. When starting up, if
+# the value has changed, the file will be resized. Sessions in other processes will not be using the
+# same DB temporarily after resize, so it is recommended to exit all other Lair processes before
+# resizing. The default below is 512MB.
+database.sessions.size: 536870912
 # The name of the LMDB database path to use. Changing this is not completely supported. If run with
 # a configuration with an independent value, everything will work, but modifying this value within a
 # session or having different conversations within a session use different settings has an undefined
