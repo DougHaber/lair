@@ -68,17 +68,27 @@ class ChatInterface(ChatInterfaceCommands):
         )
 
     def _get_shortcut_details(self):
+        def format_key(name):
+            return lair.config.get(f'chat.keys.{name}') \
+                .replace('escape ', 'ESC-') \
+                .replace('c-', 'C-')
+
         return {  # shortcut ->  description
-            'ESC-B': 'Toggle bottom toolbar',
-            'ESC-L': 'Toggle multi-line input',
-            'ESC-M': 'Toggle markdown rendering',
-            'ESC-T': 'Toggle tools',
-            'ESC-V': 'Toggle verbose output',
-            'ESC-W': 'Toggle word wrapping',
+            format_key('session.new'): 'Create a new session',
+            format_key('session.next'): 'Cycle to the next session',
+            format_key('session.previous'): 'Cycle to the previous session',
+            format_key('session.reset'): 'Reset the current session',
+            format_key('toggle_markdown'): 'Toggle markdown rendering',
+            format_key('toggle_multiline_input'): 'Toggle multi-line input',
+            format_key('toggle_toolbar'): 'Toggle bottom toolbar',
+            format_key('toggle_tools'): 'Toggle tools',
+            format_key('toggle_verbose'): 'Toggle verbose output',
+            format_key('toggle_word_wrap'): 'Toggle word wrapping',
         }
 
     def _get_keybindings(self):
         key_bindings = prompt_toolkit.key_binding.KeyBindings()
+        get_key = lambda name: lair.config.get(f'chat.keys.{name}').split(' ')
 
         @key_bindings.add("enter", filter=prompt_toolkit.filters.completion_is_selected)
         def enter_key_on_selected_completion(event):
@@ -86,7 +96,7 @@ class ChatInterface(ChatInterfaceCommands):
             current_buffer.insert_text(' ')
             current_buffer.cancel_completion()
 
-        @key_bindings.add('escape', 'b')
+        @key_bindings.add(*get_key('toggle_toolbar'), eager=True)
         def toggle_toolbar(event):
             if lair.config.active['chat.enable_toolbar']:
                 lair.config.set('chat.enable_toolbar', 'false')
@@ -95,7 +105,7 @@ class ChatInterface(ChatInterfaceCommands):
                 lair.config.set('chat.enable_toolbar', 'true')
                 self._flash("Enabling bottom toolbar")
 
-        @key_bindings.add('escape', 'l')
+        @key_bindings.add(*get_key('toggle_multiline_input'), eager=True)
         def toggle_multiline(event):
             if lair.config.active['chat.multiline_input']:
                 lair.config.set('chat.multiline_input', 'false')
@@ -104,7 +114,7 @@ class ChatInterface(ChatInterfaceCommands):
                 lair.config.set('chat.multiline_input', 'true')
                 self._flash("Enabling multi-line input")
 
-        @key_bindings.add('escape', 'm')
+        @key_bindings.add(*get_key('toggle_markdown'), eager=True)
         def toggle_markdown(event):
             if lair.config.active['style.render_markdown']:
                 lair.config.set('style.render_markdown', 'false')
@@ -113,7 +123,7 @@ class ChatInterface(ChatInterfaceCommands):
                 lair.config.set('style.render_markdown', 'true')
                 self._flash("Enabling markdown rendering")
 
-        @key_bindings.add('escape', 't')
+        @key_bindings.add(*get_key('toggle_tools'), eager=True)
         def toggle_tools(event):
             if lair.config.active['tools.enabled']:
                 lair.config.set('tools.enabled', 'false')
@@ -122,7 +132,7 @@ class ChatInterface(ChatInterfaceCommands):
                 lair.config.set('tools.enabled', 'true')
                 self._flash("Enabling tools")
 
-        @key_bindings.add('escape', 'v')
+        @key_bindings.add(*get_key('toggle_verbose'), eager=True)
         def toggle_verbose(event):
             if lair.config.active['chat.verbose']:
                 lair.config.set('chat.verbose', 'false')
@@ -131,7 +141,7 @@ class ChatInterface(ChatInterfaceCommands):
                 lair.config.set('chat.verbose', 'true')
                 self._flash("Enabling verbose output")
 
-        @key_bindings.add('escape', 'w')
+        @key_bindings.add(*get_key('toggle_word_wrap'), eager=True)
         def toggle_word_wrap(event):
             if lair.config.active['style.word_wrap']:
                 lair.config.set('style.word_wrap', 'false')
@@ -140,17 +150,22 @@ class ChatInterface(ChatInterfaceCommands):
                 lair.config.set('style.word_wrap', 'true')
                 self._flash("Enabling word wrapping")
 
-        @key_bindings.add('c-x', 'n')
+        @key_bindings.add(*get_key('session.new'), eager=True)
+        def new_session(event):
+            print("NEW")  # TODO
+
+        @key_bindings.add(*get_key('session.next'), eager=True)
         def next_session(event):
             print("NEXT")  # TODO
 
-        @key_bindings.add('c-x', 'p')
+        @key_bindings.add(*get_key('session.reset'), eager=True)
+        def reset_session(event):
+            self.chat_session.new_session()
+            self._flash("Session reset")
+
+        @key_bindings.add(*get_key('session.previous'), eager=True)
         def previous_session(event):
             print("PREV")  # TODO
-
-        @key_bindings.add('c-x', 's')
-        def show_session(event):
-            print("SHOW")  # TODO
 
         return key_bindings
 

@@ -22,6 +22,16 @@ chat.enable_toolbar: true
 # The history file to use in the chat interface for readline history.
 # When set to an empty string, there is no history file
 chat.history_file: '~/.lair/history'
+chat.keys.session.new: 'c-x n'
+chat.keys.session.next: 'c-x space'
+chat.keys.session.previous: 'c-x p'
+chat.keys.session.reset: 'c-x r'
+chat.keys.toggle_markdown: 'escape m'
+chat.keys.toggle_multiline_input: 'escape l'
+chat.keys.toggle_toolbar: 'escape b'
+chat.keys.toggle_tools: 'escape t'
+chat.keys.toggle_verbose: 'escape v'
+chat.keys.toggle_word_wrap: 'escape w'
 # When displaying fields in the toolbar, use this style for enabled flags
 chat.flag_off_style: 'bg:#006f6f'
 # When displaying fields in the toolbar, use this style for disabled flags
