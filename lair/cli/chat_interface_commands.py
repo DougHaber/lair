@@ -362,6 +362,6 @@ class ChatInterfaceCommands():
             key = arguments[0]
             value = '' if len(arguments) == 1 else arguments_str[len(arguments[0]) + 1:]
             if key not in lair.config.active:
-                self.reporting.user_error("ERROR Unknown key: %s" % key)
+                self.reporting.user_error("ERROR: Unknown key: %s" % key)
             else:
                 lair.config.set(key, value)

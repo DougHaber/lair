@@ -176,6 +176,10 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         def session_status(event):
             prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
 
+        @key_bindings.add(*get_key('session.switch'), eager=True)
+        def session_switch(event):
+            prompt_toolkit.application.run_in_terminal(self._handle_session_switch)
+
         @key_bindings.add(*get_key('show_help'), eager=True)
         def show_help(event):
             prompt_toolkit.application.run_in_terminal(self.print_help)
@@ -189,6 +193,18 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             prompt_toolkit.application.run_in_terminal(self.print_tools_report)
 
         return key_bindings
+
+    def _handle_session_switch(self):
+        try:
+            id_or_alias = prompt_toolkit.prompt('Switch to session: ', in_thread=True).strip()
+        except (KeyboardInterrupt, EOFError):
+            return
+
+        if id_or_alias:
+            try:
+                self.session_manager.switch_to_session(id_or_alias, self.chat_session)
+            except lair.sessions.UnknownSessionException:
+                self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
 
     def _handle_request_command(self, request):
         """Handle slash commands."""
@@ -326,7 +342,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.is_reading_prompt = True
 
         request = self.prompt_session.prompt(
-            self._generate_prompt(),
+            self._generate_prompt,
             multiline=prompt_toolkit.filters.Condition(lambda: lair.config.active['chat.multiline_input']),
             style=prompt_toolkit.styles.Style.from_dict({
                 'bottom-toolbar': lair.config.active['chat.toolbar_style'],
