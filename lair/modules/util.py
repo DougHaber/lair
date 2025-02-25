@@ -38,22 +38,18 @@ class Util():
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
         parser.add_argument('-s', '--session', type=str,
-                            help='Use existing session from provided id or alias (default is a new session)')
+                            help='Id or alias of an existing session to use')
         parser.add_argument('-t', '--enable-tools', action='store_true',
                             help='Allow the model to call tools')
 
     def call_llm(self, chat_session, *, instructions, user_messages, enable_tools=True):
         messages = [
-            lair.util.get_message('system', chat_session.get_system_prompt()),
             lair.util.get_message('user', instructions),
             *user_messages,
         ]
 
-        if enable_tools:
-            lair.config.set('tools.enabled', True)
-            response, _ = chat_session.invoke_with_tools(messages)
-        else:
-            response = chat_session.invoke(messages)
+        lair.config.set('tools.enabled', enable_tools)
+        response = chat_session.chat(messages)
 
         return response
 
@@ -121,6 +117,7 @@ class Util():
 
     def _init_session_manager(self, chat_session, arguments):
         if not (arguments.session or arguments.new_session):
+            chat_session.session_title = 'N/A'  # Prevent wasteful auto-title generation
             return None
 
         session_manager = lair.sessions.SessionManager()
@@ -132,6 +129,7 @@ class Util():
                 sys.exit(1)
         elif arguments.new_session:
             session_manager.add_from_chat_session(chat_session)
+            chat_session.session_alias = arguments.new_session
 
         return session_manager
 
