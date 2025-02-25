@@ -22,14 +22,17 @@ import prompt_toolkit.styles
 
 class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
-    def __init__(self):
+    def __init__(self, *, starting_session_id_or_alias=None):
         self.chat_session = lair.sessions.get_chat_session(
             lair.config.get('session.type'),
             enable_chat_output=True
         )
         self.session_manager = lair.sessions.SessionManager()
-        self.session_manager.add_from_chat_session(self.chat_session)
-        self.last_used_session_id = None
+        if starting_session_id_or_alias:
+            self._switch_to_session(starting_session_id_or_alias)
+        else:
+            self.session_manager.add_from_chat_session(self.chat_session)
+            self.last_used_session_id = None
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
