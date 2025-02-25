@@ -326,10 +326,13 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         if command in self.commands:
             try:
                 self.commands[command]['callback'](command, arguments, arguments_str)
+                return True
             except Exception as error:
                 self.reporting.error("Command failed: %s" % error)
+                return False
         else:
             self.reporting.user_error("Unknown command")
+            return False
 
     def _handle_request_chat(self, request):
         """Handle chat with the current chain."""
@@ -355,17 +358,25 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         response = self.chat_session.chat()
         self.reporting.llm_output(response)
+        return True
 
     def _handle_request(self, request):
+        """
+        Process a request, calling the necessary command or model.
+
+        Returns:
+          bool: True if a request was properly handled, otherwise False
+        """
         try:
             if request == '':
-                return
+                return False
             elif request.startswith('/'):
-                self._handle_request_command(request)
+                return self._handle_request_command(request)
             else:
-                self._handle_request_chat(request)
+                return self._handle_request_chat(request)
         except Exception as error:
             self.reporting.error("Chat failed: %s" % error)
+            return False
 
     def startup_message(self):
         self.reporting.system_message('Welcome to the LAIR')
@@ -469,11 +480,12 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 'bottom-toolbar.off': 'fg:black bg:white',
                 'flag.off': lair.config.active['chat.flag_off_style'],
                 'flag.on': lair.config.active['chat.flag_on_style'],
-            }))
+            })).strip()
 
         self.is_reading_prompt = False
-        self._handle_request(request.strip())
-        self.session_manager.refresh_from_chat_session(self.chat_session)
+        success = self._handle_request(request)
+        if success:
+            self.session_manager.refresh_from_chat_session(self.chat_session)
 
     def start(self):
         self.startup_message()
