@@ -40,7 +40,12 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.is_reading_prompt = False
 
         self.history = None
-        self.session_switch_history = prompt_toolkit.history.InMemoryHistory()
+        self.sub_prompt_history = {  # Prompt history for each sub-prompt type
+            'session_set_alias': prompt_toolkit.history.InMemoryHistory(),
+            'session_set_title': prompt_toolkit.history.InMemoryHistory(),
+            'session_switch': prompt_toolkit.history.InMemoryHistory(),
+        }
+
         self.prompt_session = None
         self._on_config_update()  # Trigger the initial state updates
 
@@ -84,6 +89,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             format_key('session.next'): 'Cycle to the next session',
             format_key('session.previous'): 'Cycle to the previous session',
             format_key('session.reset'): 'Reset the current session',
+            format_key('session.set_alias'): 'Set an alias for the current session',
+            format_key('session.set_title'): 'set a title for the current session',
             format_key('session.show'): 'Display all sessions',
             format_key('session.switch'): 'Fast switch to a different session',
             format_key('show_help'): 'Show keys and shortcuts',
@@ -195,6 +202,14 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             if session_id is not None:
                 self._switch_to_session(session_id)
 
+        @key_bindings.add(*get_key('session.set_alias'), eager=True)
+        def session_set_alias(event):
+            prompt_toolkit.application.run_in_terminal(self._handle_session_set_alias)
+
+        @key_bindings.add(*get_key('session.set_title'), eager=True)
+        def session_set_title(event):
+            prompt_toolkit.application.run_in_terminal(self._handle_session_set_title)
+
         @key_bindings.add(*get_key('session.show'), eager=True)
         def session_status(event):
             prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
@@ -265,7 +280,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         try:
             id_or_alias = prompt_toolkit.prompt(f'Switch to session (default {default_session_id}): ',
-                                                history=self.session_switch_history,
+                                                history=self.sub_prompt_history['session_switch'],
                                                 in_thread=True).strip()
         except (KeyboardInterrupt, EOFError):
             return
@@ -276,6 +291,30 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             self._switch_to_session(id_or_alias)
         except lair.sessions.UnknownSessionException:
             self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
+
+    def _handle_session_set_alias(self):
+        session_id = self.chat_session.session_id
+
+        try:
+            new_alias = prompt_toolkit.prompt(f'Alias for session {session_id}: ',
+                                              history=self.sub_prompt_history['session_set_alias'],
+                                              in_thread=True).strip()
+        except (KeyboardInterrupt, EOFError):
+            return
+
+        self.session_manager.set_alias(session_id, new_alias or None)
+
+    def _handle_session_set_title(self):
+        session_id = self.chat_session.session_id
+
+        try:
+            new_title = prompt_toolkit.prompt(f'Title for session {session_id}: ',
+                                              history=self.sub_prompt_history['session_set_title'],
+                                              in_thread=True).strip()
+        except (KeyboardInterrupt, EOFError):
+            return
+
+        self.session_manager.set_title(session_id, new_title or None)
 
     def _handle_request_command(self, request):
         """Handle slash commands."""
