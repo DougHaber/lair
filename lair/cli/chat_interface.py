@@ -52,7 +52,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.prompt_session = None
         self._on_config_update()  # Trigger the initial state updates
 
-        lair.events.subscribe('config.update', lambda d: self._on_config_update())
+        lair.events.subscribe('config.update', lambda d: self._on_config_update(), instance=self)
         lair.events.fire('chat.init', self)
 
     def _on_config_update(self):
@@ -483,8 +483,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             })).strip()
 
         self.is_reading_prompt = False
-        success = self._handle_request(request)
-        if success:
+        if self._handle_request(request):
             self.session_manager.refresh_from_chat_session(self.chat_session)
 
     def start(self):

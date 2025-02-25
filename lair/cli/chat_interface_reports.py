@@ -56,6 +56,7 @@ class ChatInterfaceReports():
                 'id': details['id'],
                 'alias': details['alias'],
                 'title': details['title'],
+                'mode': details['session']['mode'],
                 'model': details['session']['model_name'],
                 'num_messages': len(details['history']),
             })
@@ -64,8 +65,8 @@ class ChatInterfaceReports():
             self.reporting.system_message('No sessions found.')
         else:
             self.reporting.table_from_dicts_system(rows,
-                                                   column_names=['active', 'id', 'alias', 'model',
-                                                                 'title', 'num_messages'])
+                                                   column_names=['active', 'id', 'alias', 'mode',
+                                                                 'model', 'title', 'num_messages'])
 
     def print_tools_report(self):
         tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: m['name'])

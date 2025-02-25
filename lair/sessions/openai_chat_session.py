@@ -21,7 +21,7 @@ class OpenAIChatSession(BaseChatSession):
         self.openai = None
         self.recreate_openai_client()
 
-        lair.events.subscribe('config.update', lambda d: self.recreate_openai_client())
+        lair.events.subscribe('config.update', lambda d: self.recreate_openai_client(), instance=self)
 
     def _get_openai_client(self):
         logger.debug("Create OpenAI() client: base_url=%s" % lair.config.get('openai.api_base'))

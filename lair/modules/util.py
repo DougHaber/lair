@@ -33,8 +33,12 @@ class Util():
                             help='Filename containing instructions for the request')
         parser.add_argument('-m', '--markdown', action='store_true',
                             help='Enable markdown output')
+        parser.add_argument('-n', '--new-session', type=str,
+                            help='Create a new session with provided alias')
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
+        parser.add_argument('-s', '--session', type=str,
+                            help='Use existing session from provided id or alias (default is a new session)')
         parser.add_argument('-t', '--enable-tools', action='store_true',
                             help='Allow the model to call tools')
 
@@ -110,19 +114,46 @@ class Util():
 
         return messages
 
+    def _validate_arguments(self, arguments):
+        if arguments.session and arguments.new_session:
+            logger.error(f"The --session and --new-sesion arguments can not be used together.")
+            sys.exit(1)
+
+    def _init_session_manager(self, chat_session, arguments):
+        if not (arguments.session or arguments.new_session):
+            return None
+
+        session_manager = lair.sessions.SessionManager()
+        if arguments.session:
+            try:
+                session_manager.switch_to_session(arguments.session, chat_session)
+            except lair.sessions.UnknownSessionException:
+                logger.error(f"Unknown session: {arguments.session}")
+                sys.exit(1)
+        elif arguments.new_session:
+            session_manager.add_from_chat_session(chat_session)
+
+        return session_manager
+
     def run(self, arguments):
-        util_prompt_template = lair.config.get('util.system_prompt_template')
-        lair.config.set('session.system_prompt_template', util_prompt_template)
+        self._validate_arguments(arguments)
 
-        lair.config.set('style.render_markdown', arguments.markdown)
-
+        print(f"1 model={lair.config.get('model.name')}")
         chat_session = lair.sessions.get_chat_session(
             session_type=lair.config.get('session.type'),
         )
+        session_manager = self._init_session_manager(chat_session, arguments)
+        config_backup = lair.config.active.copy()
+        util_prompt_template = lair.config.get('util.system_prompt_template')
+        if arguments.model:
+            lair.config.set('model.name', arguments.model)
+        lair.config.set('session.system_prompt_template', util_prompt_template)
+        lair.config.set('style.render_markdown', arguments.markdown)
 
         if arguments.include_filenames is not None:
             lair.config.set('misc.provide_attachment_filenames', arguments.include_filenames)
 
+        print(f"2 model={lair.config.get('model.name')}")
         instructions = self._get_instructions(arguments)
         user_messages = self._get_user_messages(arguments)
 
@@ -131,6 +162,13 @@ class Util():
                                  enable_tools=arguments.enable_tools,
                                  user_messages=user_messages)
         response = self.clean_response(response)
+
+        if session_manager is not None:
+            # The original configuration is restored so that there are no configuration changes.
+            # It might be nice to add a more proper way of doing this.
+            lair.config.active = config_backup
+            print(f"3 model={lair.config.get('model.name')}")
+            session_manager.refresh_from_chat_session(chat_session)
 
         if arguments.markdown:
             reporting = lair.reporting.Reporting()

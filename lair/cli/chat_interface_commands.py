@@ -119,6 +119,7 @@ class ChatInterfaceCommands():
             self.reporting.user_error("ERROR: /clear takes no arguments")
         else:
             self.chat_session.history.clear()
+            self.chat_session.session_title = None
 
     def command_debug(self, command, arguments, arguments_str):
         if len(arguments) != 0:

@@ -40,7 +40,7 @@ class Comfy():
         self._add_argparse_ltxv_prompt(sub_parser)
         self._add_argparse_upscale(sub_parser)
 
-        lair.events.subscribe('chat.init', lambda d: self._on_chat_init(d))
+        lair.events.subscribe('chat.init', lambda d: self._on_chat_init(d), instance=self)
 
     def _add_argparse_image(self, sub_parser):
         command_parser = sub_parser.add_parser('image', help='Basic image creation workflow')

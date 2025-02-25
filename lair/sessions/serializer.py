@@ -11,6 +11,7 @@ def session_to_dict(chat_session):
         'alias': chat_session.session_alias,
         'title': chat_session.session_title,
         'session': {
+            'mode': lair.config.active_mode,
             'model_name': lair.config.get('model.name'),
             'last_prompt': chat_session.last_prompt,
             'last_response': chat_session.last_response,
@@ -26,6 +27,7 @@ def save(chat_session, filename):
 
 
 def _load__v0_2(chat_session, state):
+    lair.config.change_mode(state['session']['mode'])
     lair.config.update(state['settings'])
     chat_session.last_prompt = state['session']['last_prompt']
     chat_session.last_response = state['session']['last_response']
