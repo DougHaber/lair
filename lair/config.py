@@ -42,7 +42,7 @@ class Configuration():
         default_mode = self.modes['_default']
 
         # Track the valid types, supporting overrides for null
-        null_str_types = {
+        null_types = {
             '__null_float': float,
             '__null_int': int,
             '__null_str': str,
@@ -51,8 +51,8 @@ class Configuration():
         for key, value in default_mode.items():
             if not isinstance(value, str):
                 self.types[key] = type(value)
-            elif value in null_str_types:
-                self.types[key] = null_str_types[value]
+            elif value in null_types:
+                self.types[key] = null_types[value]
                 default_mode[key] = None
             else:
                 self.types[key] = type(value)
