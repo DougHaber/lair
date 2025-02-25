@@ -138,13 +138,13 @@ class Util():
     def run(self, arguments):
         self._validate_arguments(arguments)
 
-        print(f"1 model={lair.config.get('model.name')}")
         chat_session = lair.sessions.get_chat_session(
             session_type=lair.config.get('session.type'),
         )
         session_manager = self._init_session_manager(chat_session, arguments)
         config_backup = lair.config.active.copy()
         util_prompt_template = lair.config.get('util.system_prompt_template')
+
         if arguments.model:
             lair.config.set('model.name', arguments.model)
         lair.config.set('session.system_prompt_template', util_prompt_template)
@@ -153,7 +153,6 @@ class Util():
         if arguments.include_filenames is not None:
             lair.config.set('misc.provide_attachment_filenames', arguments.include_filenames)
 
-        print(f"2 model={lair.config.get('model.name')}")
         instructions = self._get_instructions(arguments)
         user_messages = self._get_user_messages(arguments)
 
@@ -165,9 +164,7 @@ class Util():
 
         if session_manager is not None:
             # The original configuration is restored so that there are no configuration changes.
-            # It might be nice to add a more proper way of doing this.
-            lair.config.active = config_backup
-            print(f"3 model={lair.config.get('model.name')}")
+            lair.config.update(config_backup)
             session_manager.refresh_from_chat_session(chat_session)
 
         if arguments.markdown:
