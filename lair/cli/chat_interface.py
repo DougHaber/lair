@@ -29,7 +29,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         )
         self.session_manager = lair.sessions.SessionManager()
         self.session_manager.add_from_chat_session(self.chat_session)
-        self.previous_session_id = None
+        self.last_used_session_id = None
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
@@ -217,23 +217,38 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         return key_bindings
 
     def _switch_to_session(self, id_or_alias):
-        previous_session_id = self.chat_session.session_id
+        last_used_session_id = self.chat_session.session_id
         self.session_manager.switch_to_session(id_or_alias, self.chat_session)
-        self.previous_session_id = previous_session_id
+        self.last_used_session_id = last_used_session_id
+
+    def _get_default_switch_session_id(self):
+        """
+        Return a session id to default to for quick-switch
+        This will be either the last used session id or the next session_id
+        """
+        if self.last_used_session_id is not None and \
+           self.session_manager.get_session_id(self.last_used_session_id):
+            # If the last_used_session_id is still valid, return that
+            return self.last_used_session_id
+        else:
+            return self.session_manager.get_next_session_id(self.chat_session.session_id)
 
     def _handle_session_switch(self):
+        default_session_id = self._get_default_switch_session_id()
+
         try:
-            id_or_alias = prompt_toolkit.prompt('Switch to session: ',
+            id_or_alias = prompt_toolkit.prompt(f'Switch to session (default {default_session_id}): ',
                                                 history=self.session_switch_history,
                                                 in_thread=True).strip()
         except (KeyboardInterrupt, EOFError):
             return
 
-        if id_or_alias:
-            try:
-                self._switch_to_session(id_or_alias)
-            except lair.sessions.UnknownSessionException:
-                self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
+        id_or_alias = id_or_alias or default_session_id
+
+        try:
+            self._switch_to_session(id_or_alias)
+        except lair.sessions.UnknownSessionException:
+            self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
 
     def _handle_request_command(self, request):
         """Handle slash commands."""
