@@ -60,8 +60,12 @@ class ChatInterfaceReports():
                 'num_messages': len(details['history']),
             })
 
-        self.reporting.table_from_dicts_system(rows,
-                                               column_names=['active', 'id', 'alias', 'model', 'title', 'num_messages'])
+        if len(rows) == 0:
+            self.reporting.system_message('No sessions found.')
+        else:
+            self.reporting.table_from_dicts_system(rows,
+                                                   column_names=['active', 'id', 'alias', 'model',
+                                                                 'title', 'num_messages'])
 
     def print_tools_report(self):
         tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: m['name'])

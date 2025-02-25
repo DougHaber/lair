@@ -320,7 +320,7 @@ class ChatInterfaceCommands():
             self.print_sessions_report()
         elif len(arguments) == 1:
             id_or_alias = arguments[0]
-            self.session_manager.switch_to_session(id_or_alias, self.chat_session)
+            self._switch_to_session(id_or_alias)
         else:
             self.reporting.user_error("ERROR: USAGE: /session [session_id|alias?]")
 

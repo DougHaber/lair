@@ -29,6 +29,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         )
         self.session_manager = lair.sessions.SessionManager()
         self.session_manager.add_from_chat_session(self.chat_session)
+        self.previous_session_id = None
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
@@ -80,6 +81,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             format_key('session.previous'): 'Cycle to the previous session',
             format_key('session.reset'): 'Reset the current session',
             format_key('session.show'): 'Display all sessions',
+            format_key('session.switch'): 'Fast switch to a different session',
             format_key('show_help'): 'Show keys and shortcuts',
             format_key('list_models'): 'Show all available models',
             format_key('list_tools'): 'Show all available tools',
@@ -161,7 +163,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         @key_bindings.add(*get_key('session.next'), eager=True)
         def session_next(event):
-            print("NEXT")  # TODO
+            session_id = self.session_manager.get_next_session_id(self.chat_session.session_id)
+            if session_id is not None:
+                self._switch_to_section(session_id)
 
         @key_bindings.add(*get_key('session.reset'), eager=True)
         def session_reset(event):
@@ -194,6 +198,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         return key_bindings
 
+    def _switch_to_section(self, id_or_alias):
+        previous_session_id = self.chat_session.session_id
+        self.session_manager.switch_to_session(id_or_alias, self.chat_session)
+        self.previous_session_id = previous_session_id
+
     def _handle_session_switch(self):
         try:
             id_or_alias = prompt_toolkit.prompt('Switch to session: ', in_thread=True).strip()
@@ -202,7 +211,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         if id_or_alias:
             try:
-                self.session_manager.switch_to_session(id_or_alias, self.chat_session)
+                self._switch_to_session(id_or_alias)
             except lair.sessions.UnknownSessionException:
                 self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
 
@@ -354,8 +363,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             }))
 
         self.is_reading_prompt = False
-        self.session_manager.refresh_from_chat_session(self.chat_session)
         self._handle_request(request.strip())
+        self.session_manager.refresh_from_chat_session(self.chat_session)
 
     def start(self):
         self.startup_message()
