@@ -118,55 +118,55 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         def toggle_toolbar(event):
             if lair.config.active['chat.enable_toolbar']:
                 lair.config.set('chat.enable_toolbar', 'false')
-                self._prompt_handler_system_message("Disabling bottom toolbar")
+                self._prompt_handler_system_message("Bottom toolbar disabled")
             else:
                 lair.config.set('chat.enable_toolbar', 'true')
-                self._prompt_handler_system_message("Enabling bottom toolbar")
+                self._prompt_handler_system_message("Bottom toolbar enabled")
 
         @key_bindings.add(*get_key('toggle_multiline_input'), eager=True)
         def toggle_multiline(event):
             if lair.config.active['chat.multiline_input']:
                 lair.config.set('chat.multiline_input', 'false')
-                self._prompt_handler_system_message("Disabling multi-line input")
+                self._prompt_handler_system_message("Multi-line input disabled")
             else:
                 lair.config.set('chat.multiline_input', 'true')
-                self._prompt_handler_system_message("Enabling multi-line input")
+                self._prompt_handler_system_message("Multi-line input enabled")
 
         @key_bindings.add(*get_key('toggle_markdown'), eager=True)
         def toggle_markdown(event):
             if lair.config.active['style.render_markdown']:
                 lair.config.set('style.render_markdown', 'false')
-                self._prompt_handler_system_message("Disabling markdown rendering")
+                self._prompt_handler_system_message("Markdown rendering disabled")
             else:
                 lair.config.set('style.render_markdown', 'true')
-                self._prompt_handler_system_message("Enabling markdown rendering")
+                self._prompt_handler_system_message("Markdown rendering enabled")
 
         @key_bindings.add(*get_key('toggle_tools'), eager=True)
         def toggle_tools(event):
             if lair.config.active['tools.enabled']:
                 lair.config.set('tools.enabled', 'false')
-                self._prompt_handler_system_message("Disabling tools")
+                self._prompt_handler_system_message("Tools disabled")
             else:
                 lair.config.set('tools.enabled', 'true')
-                self._prompt_handler_system_message("Enabling tools")
+                self._prompt_handler_system_message("Tools enabled")
 
         @key_bindings.add(*get_key('toggle_verbose'), eager=True)
         def toggle_verbose(event):
             if lair.config.active['chat.verbose']:
                 lair.config.set('chat.verbose', 'false')
-                self._prompt_handler_system_message("Disabling verbose output")
+                self._prompt_handler_system_message("Verbose output disabled")
             else:
                 lair.config.set('chat.verbose', 'true')
-                self._prompt_handler_system_message("Enabling verbose output")
+                self._prompt_handler_system_message("Verbose output enabled")
 
         @key_bindings.add(*get_key('toggle_word_wrap'), eager=True)
         def toggle_word_wrap(event):
             if lair.config.active['style.word_wrap']:
                 lair.config.set('style.word_wrap', 'false')
-                self._prompt_handler_system_message("Disabling word wrapping")
+                self._prompt_handler_system_message("Word wrap disabled")
             else:
                 lair.config.set('style.word_wrap', 'true')
-                self._prompt_handler_system_message("Enabling word wrapping")
+                self._prompt_handler_system_message("Word wrap enabled")
 
         @key_bindings.add(*get_key('session.new'), eager=True)
         def session_new(event):
