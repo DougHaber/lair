@@ -11,9 +11,9 @@ def session_to_dict(chat_session):
         'alias': chat_session.session_alias,
         'title': chat_session.session_title,
         'session': {
+            'model_name': lair.config.get('model.name'),
             'last_prompt': chat_session.last_prompt,
             'last_response': chat_session.last_response,
-            'fixed_model_name': chat_session.fixed_model_name or chat_session.model_name,
         },
         'history': chat_session.history.get_messages(),
     }
@@ -29,7 +29,6 @@ def _load__v0_2(chat_session, state):
     lair.config.update(state['settings'])
     chat_session.last_prompt = state['session']['last_prompt']
     chat_session.last_response = state['session']['last_response']
-    chat_session.fixed_model_name = state['session']['fixed_model_name']
     chat_session.session_id = state['id']
     chat_session.session_alias = state['alias']
     chat_session.session_title = state['title']

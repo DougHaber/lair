@@ -248,7 +248,6 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             else:
                 logger.error(f"Unknown session: {id_or_alias}")
 
-
     def _get_default_switch_session_id(self):
         """
         Return a session id to default to for quick-switch
@@ -368,7 +367,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         return {
             'flags': self._generate_toolbar_template_flags(),
             'mode': lair.config.active_mode,
-            'model': self.chat_session.fixed_model_name or self.chat_session.model_name,
+            'model': lair.config.get('model.name'),
             'session_id': self.chat_session.session_id,
             'session_alias': self.chat_session.session_alias or '',
         }

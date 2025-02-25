@@ -14,11 +14,9 @@ import openai
 
 class OpenAIChatSession(BaseChatSession):
 
-    def __init__(self, *, history=None, model_name: str = None,
-                 tool_set: lair.components.tools.ToolSet = None,
+    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None,
                  enable_chat_output: bool = False):
         super().__init__(history=history,
-                         model_name=model_name,
                          enable_chat_output=enable_chat_output)
         self.openai = None
         self.recreate_openai_client()
@@ -33,13 +31,8 @@ class OpenAIChatSession(BaseChatSession):
         )
 
     def recreate_openai_client(self):
-        self.model_name = self.fixed_model_name or lair.config.get('model.name')
-        logger.debug("OpenAIChatSession(): Rebuild model (model_name=%s)" % self.model_name)
+        logger.debug("OpenAIChatSession(): Rebuild model (model_name=%s)" % lair.config.get('model.name'))
         self._get_openai_client()
-
-    def use_model(self, model_name: str):
-        self.fixed_model_name = model_name
-        self.recreate_openai_client()
 
     def invoke(self, messages: list = None, disable_system_prompt=False, model=None, temperature=None):
         '''
@@ -56,7 +49,7 @@ class OpenAIChatSession(BaseChatSession):
         messages_str = self.reporting.messages_to_str(messages)
         self.last_prompt = messages_str
 
-        model_name = model or self.fixed_model_name or self.model_name
+        model_name = lair.config.get('model.name')
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
         answer = self.openai.chat.completions.create(
             messages=messages,
@@ -88,10 +81,13 @@ class OpenAIChatSession(BaseChatSession):
 
         cycle = 0
         while True:
-            logger.debug("OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d" % (self.model_name, len(messages), cycle))
+            logger.debug("OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d" % (
+                lair.config.get('model.name'),
+                len(messages),
+                cycle))
             answer = self.openai.chat.completions.create(
                 messages=messages,
-                model=self.model_name,
+                model=lair.config.get('model.name'),
                 temperature=lair.config.get('model.temperature'),
                 max_completion_tokens=lair.config.get('model.max_tokens'),
                 tools=self.tool_set.get_definitions(),

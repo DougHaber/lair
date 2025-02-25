@@ -56,7 +56,7 @@ class ChatInterfaceReports():
                 'id': details['id'],
                 'alias': details['alias'],
                 'title': details['title'],
-                'model': details['session']['fixed_model_name'],
+                'model': details['session']['model_name'],
                 'num_messages': len(details['history']),
             })
 
@@ -74,7 +74,7 @@ class ChatInterfaceReports():
     def print_current_model_report(self):
         active_config = lair.config.active
         self.reporting.table_system([
-            ['Name', self.chat_session.fixed_model_name or active_config.get('model.name')],
+            ['Name', active_config.get('model.name')],
             ['Temperature', str(active_config.get('model.temperature'))],
             ['OpenAI API Base', str(active_config.get('openai.api_base'))],
             ['Max Tokens', str(active_config.get('model.max_tokens'))],
