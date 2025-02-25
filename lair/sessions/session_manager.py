@@ -25,7 +25,7 @@ class SessionManager:
         self.env = lmdb.open(self.database_path,
                              map_size=lair.config.get('database.sessions.size'))
         self.ensure_correct_map_size()
-        self.prune_empty()  # TODO: refresh must repopulate or we can't remove open ones
+        self.prune_empty()
 
     def ensure_correct_map_size(self):
         configured_size = lair.config.get('database.sessions.size')
@@ -114,8 +114,13 @@ class SessionManager:
             return None  # No sessions found
 
     def refresh_from_chat_session(self, chat_session):
+        if not chat_session.session_id:
+            self.add_from_chat_session(chat_session)
+            return
+
         session = lair.sessions.serializer.session_to_dict(chat_session)
         session_id = session['id']
+        logger.debug(f"SessionManager(): refresh_from_chat_session({session_id})")
         with self.env.begin() as txn:
             prev_session_data = txn.get(f'session:{session_id:08d}'.encode())
             if not prev_session_data:  # If the session doesn't exist, create it

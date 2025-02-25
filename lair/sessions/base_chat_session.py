@@ -170,3 +170,16 @@ class BaseChatSession(abc.ABC):
         self.last_prompt = None
         self.last_response = None
         self.history.clear()
+
+    def import_state(self, chat_session):
+        """
+        Import state from another chat session.
+        This is used when switching session types.
+        """
+        self.session_alias = chat_session.session_alias
+        self.session_title = chat_session.session_title
+        self.last_prompt = chat_session.last_prompt
+        self.last_response = chat_session.last_response
+
+        self.history = chat_session.history
+        self.tool_set = chat_session.tool_set
