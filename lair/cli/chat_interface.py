@@ -109,64 +109,64 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         def toggle_debug(event):
             if lair.util.is_debug_enabled():
                 logger.setLevel('INFO')
-                self._flash("Debugging disabled")
+                self._prompt_handler_system_message("Debugging disabled")
             else:
                 logger.setLevel('DEBUG')
-                self._flash("Debugging enabled")
+                self._prompt_handler_system_message("Debugging enabled")
 
         @key_bindings.add(*get_key('toggle_toolbar'), eager=True)
         def toggle_toolbar(event):
             if lair.config.active['chat.enable_toolbar']:
                 lair.config.set('chat.enable_toolbar', 'false')
-                self._flash("Disabling bottom toolbar")
+                self._prompt_handler_system_message("Disabling bottom toolbar")
             else:
                 lair.config.set('chat.enable_toolbar', 'true')
-                self._flash("Enabling bottom toolbar")
+                self._prompt_handler_system_message("Enabling bottom toolbar")
 
         @key_bindings.add(*get_key('toggle_multiline_input'), eager=True)
         def toggle_multiline(event):
             if lair.config.active['chat.multiline_input']:
                 lair.config.set('chat.multiline_input', 'false')
-                self._flash("Disabling multi-line input")
+                self._prompt_handler_system_message("Disabling multi-line input")
             else:
                 lair.config.set('chat.multiline_input', 'true')
-                self._flash("Enabling multi-line input")
+                self._prompt_handler_system_message("Enabling multi-line input")
 
         @key_bindings.add(*get_key('toggle_markdown'), eager=True)
         def toggle_markdown(event):
             if lair.config.active['style.render_markdown']:
                 lair.config.set('style.render_markdown', 'false')
-                self._flash("Disabling markdown rendering")
+                self._prompt_handler_system_message("Disabling markdown rendering")
             else:
                 lair.config.set('style.render_markdown', 'true')
-                self._flash("Enabling markdown rendering")
+                self._prompt_handler_system_message("Enabling markdown rendering")
 
         @key_bindings.add(*get_key('toggle_tools'), eager=True)
         def toggle_tools(event):
             if lair.config.active['tools.enabled']:
                 lair.config.set('tools.enabled', 'false')
-                self._flash("Disabling tools")
+                self._prompt_handler_system_message("Disabling tools")
             else:
                 lair.config.set('tools.enabled', 'true')
-                self._flash("Enabling tools")
+                self._prompt_handler_system_message("Enabling tools")
 
         @key_bindings.add(*get_key('toggle_verbose'), eager=True)
         def toggle_verbose(event):
             if lair.config.active['chat.verbose']:
                 lair.config.set('chat.verbose', 'false')
-                self._flash("Disabling verbose output")
+                self._prompt_handler_system_message("Disabling verbose output")
             else:
                 lair.config.set('chat.verbose', 'true')
-                self._flash("Enabling verbose output")
+                self._prompt_handler_system_message("Enabling verbose output")
 
         @key_bindings.add(*get_key('toggle_word_wrap'), eager=True)
         def toggle_word_wrap(event):
             if lair.config.active['style.word_wrap']:
                 lair.config.set('style.word_wrap', 'false')
-                self._flash("Disabling word wrapping")
+                self._prompt_handler_system_message("Disabling word wrapping")
             else:
                 lair.config.set('style.word_wrap', 'true')
-                self._flash("Enabling word wrapping")
+                self._prompt_handler_system_message("Enabling word wrapping")
 
         @key_bindings.add(*get_key('session.new'), eager=True)
         def session_new(event):
@@ -174,7 +174,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             self.chat_session.session_id = None
             self.session_manager.add_from_chat_session(self.chat_session)
             self._switch_to_session(self.chat_session.session_id)
-            prompt_toolkit.application.run_in_terminal(lambda: self.reporting.system_message('New session created'))
+            self._prompt_handler_system_message('New session created')
 
         @key_bindings.add(*get_key('session.next'), eager=True)
         def session_next(event):
@@ -186,7 +186,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         def session_reset(event):
             self.chat_session.new_session()
             self.session_manager.refresh_from_chat_session(self.chat_session)
-            prompt_toolkit.application.run_in_terminal(lambda: self.reporting.system_message('Session reset'))
+            self._prompt_handler_system_message('Session reset')
 
         @key_bindings.add(*get_key('session.previous'), eager=True)
         def session_previous(event):
@@ -299,6 +299,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         self.flash_message = message
         self.flash_message_expiration = time.time() + duration
+
+    def _prompt_handler_system_message(self, message):
+        prompt_toolkit.application.run_in_terminal(
+            lambda: self.reporting.system_message(message)
+        )
 
     def _get_embedded_response(self, message, position):
         regex = lair.config.get('chat.embedded_syntax_regex')
