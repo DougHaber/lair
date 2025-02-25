@@ -77,6 +77,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 .replace('c-', 'C-')
 
         return {  # shortcut ->  description
+            'F1 - F12': 'Switch to session 1-12',
+            format_key('list_models'): 'Show all available models',
+            format_key('list_tools'): 'Show all available tools',
             format_key('session.new'): 'Create a new session',
             format_key('session.next'): 'Cycle to the next session',
             format_key('session.previous'): 'Cycle to the previous session',
@@ -84,8 +87,6 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             format_key('session.show'): 'Display all sessions',
             format_key('session.switch'): 'Fast switch to a different session',
             format_key('show_help'): 'Show keys and shortcuts',
-            format_key('list_models'): 'Show all available models',
-            format_key('list_tools'): 'Show all available tools',
             format_key('toggle_debug'): 'Toggle debugging output',
             format_key('toggle_markdown'): 'Toggle markdown rendering',
             format_key('toggle_multiline_input'): 'Toggle multi-line input',
@@ -214,12 +215,39 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         def list_tools(event):
             prompt_toolkit.application.run_in_terminal(self.print_tools_report)
 
+        # F1 through F12
+        def f_key(event):
+            session_id = int(event.key_sequence[0].key[1:])
+            prompt_toolkit.application.run_in_terminal(lambda: self._switch_to_session(session_id, raise_exceptions=False))
+
+        for i in range(1, 13):
+            key_bindings.add(f'f{i}', eager=True)(lambda event: f_key(event))
+
         return key_bindings
 
-    def _switch_to_session(self, id_or_alias):
-        last_used_session_id = self.chat_session.session_id
-        self.session_manager.switch_to_session(id_or_alias, self.chat_session)
-        self.last_used_session_id = last_used_session_id
+    def _switch_to_session(self, id_or_alias, raise_exceptions=True):
+        """
+        Switch to a new session.
+
+        Arguments:
+          id_or_alias: Either a session ID or session alias to switch to.
+          raise_exceptions: When True, an unknown session ID raises an exception.
+                            When False, it logs an error instead.
+
+        Raises:
+          lair.sessions.UnknownSessionException: If the session ID is unknown
+                                                 and `raise_exceptions` is True.
+        """
+        try:
+            last_used_session_id = self.chat_session.session_id
+            self.session_manager.switch_to_session(id_or_alias, self.chat_session)
+            self.last_used_session_id = last_used_session_id
+        except lair.sessions.UnknownSessionException:
+            if raise_exceptions:
+                raise
+            else:
+                logger.error(f"Unknown session: {id_or_alias}")
+
 
     def _get_default_switch_session_id(self):
         """
