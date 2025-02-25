@@ -40,6 +40,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.is_reading_prompt = False
 
         self.history = None
+        self.session_switch_history = prompt_toolkit.history.InMemoryHistory()
         self.prompt_session = None
         self._on_config_update()  # Trigger the initial state updates
 
@@ -85,6 +86,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             format_key('show_help'): 'Show keys and shortcuts',
             format_key('list_models'): 'Show all available models',
             format_key('list_tools'): 'Show all available tools',
+            format_key('toggle_debug'): 'Toggle debugging output',
             format_key('toggle_markdown'): 'Toggle markdown rendering',
             format_key('toggle_multiline_input'): 'Toggle multi-line input',
             format_key('toggle_toolbar'): 'Toggle bottom toolbar',
@@ -102,6 +104,15 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             current_buffer = event.app.current_buffer
             current_buffer.insert_text(' ')
             current_buffer.cancel_completion()
+
+        @key_bindings.add(*get_key('toggle_debug'), eager=True)
+        def toggle_debug(event):
+            if lair.util.is_debug_enabled():
+                logger.setLevel('INFO')
+                self._flash("Debugging disabled")
+            else:
+                logger.setLevel('DEBUG')
+                self._flash("Debugging enabled")
 
         @key_bindings.add(*get_key('toggle_toolbar'), eager=True)
         def toggle_toolbar(event):
@@ -212,7 +223,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _handle_session_switch(self):
         try:
-            id_or_alias = prompt_toolkit.prompt('Switch to session: ', in_thread=True).strip()
+            id_or_alias = prompt_toolkit.prompt('Switch to session: ',
+                                                history=self.session_switch_history,
+                                                in_thread=True).strip()
         except (KeyboardInterrupt, EOFError):
             return
 
