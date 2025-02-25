@@ -102,6 +102,17 @@ class SessionManager:
         else:
             return None  # No sessions found
 
+    def get_previous_session_id(self, session_id):
+        sessions = list(self.all_sessions())
+        if len(sessions) > 0:
+            for i, session in enumerate(sessions):
+                if session['id'] == session_id:
+                    return sessions[(i - 1) % len(sessions)]['id']
+
+            return sessions[0]['id']
+        else:
+            return None  # No sessions found
+
     def refresh_from_chat_session(self, chat_session):
         session = lair.sessions.serializer.session_to_dict(chat_session)
         session_id = session['id']

@@ -159,22 +159,29 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         @key_bindings.add(*get_key('session.new'), eager=True)
         def session_new(event):
-            print("NEW")  # TODO
+            self.chat_session.new_session()
+            self.chat_session.session_id = None
+            self.session_manager.add_from_chat_session(self.chat_session)
+            self._switch_to_session(self.chat_session.session_id)
+            prompt_toolkit.application.run_in_terminal(lambda: self.reporting.system_message('New session created'))
 
         @key_bindings.add(*get_key('session.next'), eager=True)
         def session_next(event):
             session_id = self.session_manager.get_next_session_id(self.chat_session.session_id)
             if session_id is not None:
-                self._switch_to_section(session_id)
+                self._switch_to_session(session_id)
 
         @key_bindings.add(*get_key('session.reset'), eager=True)
         def session_reset(event):
             self.chat_session.new_session()
-            self._flash("Session reset")
+            self.session_manager.refresh_from_chat_session(self.chat_session)
+            prompt_toolkit.application.run_in_terminal(lambda: self.reporting.system_message('Session reset'))
 
         @key_bindings.add(*get_key('session.previous'), eager=True)
         def session_previous(event):
-            print("PREV")  # TODO
+            session_id = self.session_manager.get_previous_session_id(self.chat_session.session_id)
+            if session_id is not None:
+                self._switch_to_session(session_id)
 
         @key_bindings.add(*get_key('session.show'), eager=True)
         def session_status(event):
@@ -198,7 +205,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         return key_bindings
 
-    def _switch_to_section(self, id_or_alias):
+    def _switch_to_session(self, id_or_alias):
         previous_session_id = self.chat_session.session_id
         self.session_manager.switch_to_session(id_or_alias, self.chat_session)
         self.previous_session_id = previous_session_id
