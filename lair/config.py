@@ -76,70 +76,57 @@ class Configuration():
 
                 # If there is an `_inherit` section, copy each mode's settings in order
                 for inherit_from_mode in mode_config.get('_inherit', []):
-                    self.update(self.modes[inherit_from_mode], mode=mode)
+                    self.modes[mode].update(self.modes[inherit_from_mode])
 
                 # Finally, give precedence to the mode's own settings
-                self.update(mode_config, mode=mode)
+                self.modes[mode].update(mode_config)
 
         if default_mode is None:
             return
         elif default_mode not in self.modes:
             sys.exit("ERROR: Configuration file's default_mode is not found: %s" % default_mode)
         else:
-            self.active = self.modes[default_mode]
-            self.active_mode = default_mode
+            self.change_mode(default_mode)
 
     def change_mode(self, mode):
         if mode not in self.modes:
             raise Exception(f"Unknown mode: {mode}")
 
-        self.active = self.modes[mode]
+        # Reset `_active` to a fresh copy of the selected mode
+        self.modes['_active'] = self.modes[mode].copy()
+        self.active = self.modes['_active']
         self.active_mode = mode
 
         lair.events.fire('config.change_mode')
         lair.events.fire('config.update')
 
-    def update(self, entries, *, force=False, mode=None):
-        mode = mode or self.active_mode
-
-        if force is True:
-            self.modes[mode].update(entries)
+    def update(self, entries, *, force=False):
+        """
+        Updates only apply to the active runtime configuration.
+        """
+        if force:
+            self.active.update(entries)
         else:
             for key, value in entries.items():
-                self.set(key, value, mode=mode, no_event=True)
+                self.set(key, value, no_event=True)
 
         lair.events.fire('config.update')
 
-    def get(self, *args, mode=None, allow_not_found=False, **kwargs):
-        '''
-        Retrieve a value, failing if it is undefined.
-        All arguments are forwarded to dict.get() call, except 'mode' and `allow_not_found`
-
-        Arguments:
-          mode: The config mode to get the key from. Default is the active mode.
-          allow_not_found: When false, unknown keys raise a ValueError(). When true, standard dict get() behavior is used, including specifying defaults. Default is false.
-        '''
-        mode = mode or self.active_mode
-
-        if allow_not_found or args[0] in self.modes[mode]:
-            return self.modes[mode].get(*args, **kwargs)
+    def get(self, key, allow_not_found=False, default=None):
+        """
+        Retrieve a value from the active mode, failing if undefined unless `allow_not_found` is True.
+        """
+        if allow_not_found:
+            return self.active.get(key, default)
+        elif key in self.active:
+            return self.active[key]
         else:
-            raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {args[0]}")
+            raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {key}")
 
-    def is_known_key(self, key, mode=None):
-        return key in self.modes[mode or self.active_mode]
-
-    def set(self, key, value, *, force=False, mode=None, no_event=False):
+    def set(self, key, value, *, force=False, no_event=False):
         """Only allow setting to the existing type."""
-        mode = mode or self.active_mode
-        if force is True:
-            self.modes[mode][key] = value
-            if not no_event:
-                lair.events.fire('config.update')
-            return
-
         if key == '_inherit':
-            self.modes[mode][key] = value
+            self.active[key] = value
             return
         elif key not in self.modes['_default']:
             raise ConfigUnknownKeyException("Unknown Key: %s" % key)
@@ -147,12 +134,12 @@ class Configuration():
         no_cast = False
         current_type = self.types[key]
         if current_type is bool:
-            if value is True or value == 'true' or value == 'True':
+            if value in {True, 'true', 'True'}:
                 value = True
-            elif value is False or value == 'false' or value == 'False':
+            elif value in {False, 'false', 'False'}:
                 value = False
             else:
-                raise ConfigInvalidType("value '%s' can not be cast as '%s' [key=%s]" % (value, current_type, key))
+                raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
         elif value is None and current_type is str:
             value = ''
         elif (value == '' or value is None) and current_type in {bool, int, float}:
@@ -162,13 +149,14 @@ class Configuration():
         try:
             if not no_cast and value is not None:
                 value = current_type(value)
-            self.modes[mode][key] = value
+            self.active[key] = value
             if not no_event:
                 lair.events.fire('config.update')
         except ValueError:
-            raise ConfigInvalidType("value '%s' can not be cast as '%s'" % (value, current_type))
+            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}'")
 
     def reload(self):
+        """Ensure `_active` is properly reset instead of modifying mode definitions."""
         active_mode = self.active_mode
 
         self.modes = {}
@@ -178,6 +166,7 @@ class Configuration():
         if active_mode not in self.modes:
             active_mode = '_default'
 
+        # Always start with a fresh copy for `_active`
         self.modes['_active'] = self.modes[active_mode].copy()
         self.active = self.modes['_active']
         self.active_mode = active_mode
@@ -188,6 +177,6 @@ class Configuration():
 
     def get_modified_config(self):
         """
-        Return a dictionary of the active configuration's settings that don't match the defaults
+        Return a dictionary of the active configuration's settings that don't match the defaults.
         """
         return {k: v for k, v in self.active.items() if self.default_settings.get(k) != v}
