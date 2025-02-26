@@ -195,6 +195,9 @@ class SessionManager:
             lair.sessions.serializer.update_session_from_dict(chat_session, session)
 
     def is_alias_available(self, alias):
+        if isinstance(lair.util.safe_int(alias), int):
+            return False
+
         try:
             if self.get_session_id(alias):
                 return False

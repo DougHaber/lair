@@ -333,8 +333,10 @@ class ChatInterfaceCommands():
                 if self.chat_session.session_id == session_id:
                     self.chat_session.session_alias = new_alias
                 self.session_manager.set_alias(session_id, new_alias)
+            elif isinstance(lair.util.safe_int(new_alias), int):
+                self.reporting.user_error("ERROR: Aliases may not be integers")
             else:
-                self.reporting.user_error("ERROR: Alias conflict: That alias is already in use")
+                self.reporting.user_error("ERROR: That alias is unavailable")
 
     def command_session_delete(self, command, arguments, arguments_str):
         if len(arguments) == 0:

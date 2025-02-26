@@ -308,8 +308,10 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         if self.session_manager.is_alias_available(new_alias):
             self.chat_session.session_alias = new_alias
             self.session_manager.set_alias(session_id, new_alias)
+        elif isinstance(lair.util.safe_int(new_alias), int):
+            self.reporting.user_error("ERROR: Aliases may not be integers")
         else:
-            self.reporting.user_error("ERROR: Alias conflict: That alias is already in use")
+            self.reporting.user_error("ERROR: That alias is unavailable")
 
     def _handle_session_set_title(self):
         session_id = self.chat_session.session_id

@@ -1,4 +1,5 @@
 import abc
+import copy
 from typing import Union, List, Dict, Any, Optional
 
 import lair
@@ -184,5 +185,5 @@ class BaseChatSession(abc.ABC):
         self.last_prompt = chat_session.last_prompt
         self.last_response = chat_session.last_response
 
-        self.history = chat_session.history
-        self.tool_set = chat_session.tool_set
+        self.history = copy.deepcopy(chat_session.history)
+        self.tool_set = copy.deepcopy(chat_session.tool_set)
