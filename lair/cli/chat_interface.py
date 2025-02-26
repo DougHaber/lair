@@ -305,7 +305,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         except (KeyboardInterrupt, EOFError):
             return
 
-        self.session_manager.set_alias(session_id, new_alias or None)
+        if self.session_manager.is_alias_available(new_alias):
+            self.chat_session.session_alias = new_alias
+            self.session_manager.set_alias(session_id, new_alias)
+        else:
+            self.reporting.user_error("ERROR: Alias conflict: That alias is already in use")
 
     def _handle_session_set_title(self):
         session_id = self.chat_session.session_id

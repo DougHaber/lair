@@ -194,7 +194,17 @@ class SessionManager:
             session = json.loads(session_data.decode())
             lair.sessions.serializer.update_session_from_dict(chat_session, session)
 
+    def is_alias_available(self, alias):
+        try:
+            if self.get_session_id(alias):
+                return False
+        except UnknownSessionException:
+            return True
+
     def set_alias(self, id_or_alias, new_alias):
+        if not self.is_alias_available(new_alias):
+            raise ValueError("SessionManager(): set_alias(): Alias conflict: Unable to set alias")
+
         session_id = self.get_session_id(id_or_alias)
 
         with self.env.begin(write=True) as txn:

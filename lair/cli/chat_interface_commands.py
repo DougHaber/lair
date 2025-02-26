@@ -329,9 +329,12 @@ class ChatInterfaceCommands():
         else:
             session_id = self.session_manager.get_session_id(arguments[0])
             new_alias = arguments[1] if len(arguments) == 2 else None
-            if self.chat_session.session_id == session_id:
-                self.chat_session.session_alias = new_alias
-            self.session_manager.set_alias(session_id, new_alias)
+            if self.session_manager.is_alias_available(new_alias):
+                if self.chat_session.session_id == session_id:
+                    self.chat_session.session_alias = new_alias
+                self.session_manager.set_alias(session_id, new_alias)
+            else:
+                self.reporting.user_error("ERROR: Alias conflict: That alias is already in use")
 
     def command_session_delete(self, command, arguments, arguments_str):
         if len(arguments) == 0:

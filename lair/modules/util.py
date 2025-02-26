@@ -129,6 +129,9 @@ class Util():
                 sys.exit(1)
         elif arguments.new_session:
             session_manager.add_from_chat_session(chat_session)
+            if not session_manager.is_alias_available(arguments.new_session):
+                logger.error(f"Failed to create new session. Alias is already used.")
+                sys.exit(1)
             chat_session.session_alias = arguments.new_session
 
         return session_manager
