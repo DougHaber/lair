@@ -1,6 +1,8 @@
 import itertools
 import weakref
 
+from lair.logging import logger
+
 
 _event_handlers = {}  # event_name -> {handler, ...}
 _subscriptions = {}  # subscription_id -> (event_name, handler)
@@ -53,6 +55,7 @@ def unsubscribe(subscription_id):
 
 def fire(event_name, data={}):
     """Triggers an event, calling all subscribed handlers."""
+    logger.debug(f"events: fire(): {event_name}, data: {data}")
     if event_name in _event_handlers:
         for handler in list(_event_handlers[event_name]):  # Iterate over a copy to avoid modification issues
             if callable(handler):
