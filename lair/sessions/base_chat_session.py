@@ -169,6 +169,7 @@ class BaseChatSession(abc.ABC):
         pass
 
     def new_session(self):
+        self.session_id = None
         self.session_alias = None
         self.session_title = None
         self.last_prompt = None
@@ -180,10 +181,14 @@ class BaseChatSession(abc.ABC):
         Import state from another chat session.
         This is used when switching session types.
         """
+        self.session_id = chat_session.session_id
         self.session_alias = chat_session.session_alias
         self.session_title = chat_session.session_title
         self.last_prompt = chat_session.last_prompt
         self.last_response = chat_session.last_response
 
         self.history = copy.deepcopy(chat_session.history)
-        self.tool_set = copy.deepcopy(chat_session.tool_set)
+        # NOTE: Currently the old sessions tool_set is used instead of a copy.
+        #     This might need to be adjusted in the future. The toolset can have multiple
+        #     tools and tools can be stateful, so generating a new toolset is non-trivial.
+        self.tool_set = chat_session.tool_set

@@ -256,6 +256,7 @@ class ChatInterfaceCommands():
     def command_load(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
         self.chat_session.load_from_file(filename)
+        self._rebuild_chat_session()
         self.reporting.system_message(f"Session loaded from {filename}")
 
     def command_messages(self, command, arguments, arguments_str):
@@ -347,7 +348,7 @@ class ChatInterfaceCommands():
             try:
                 self.session_manager.get_session_id(self.chat_session.session_id)
             except lair.sessions.session_manager.UnknownSessionException:  # Current session was deleted
-                self.chat_session.new_session()
+                self._new_chat_session()
 
     def command_session_title(self, command, arguments, arguments_str):
         if len(arguments) == 0:

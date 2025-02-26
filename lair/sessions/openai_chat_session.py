@@ -31,7 +31,6 @@ class OpenAIChatSession(BaseChatSession):
         )
 
     def recreate_openai_client(self):
-        logger.debug("OpenAIChatSession(): Rebuild model (model_name=%s)" % lair.config.get('model.name'))
         self._get_openai_client()
 
     def invoke(self, messages: list = None, disable_system_prompt=False, model=None, temperature=None):

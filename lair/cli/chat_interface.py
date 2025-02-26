@@ -32,7 +32,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             self._switch_to_session(starting_session_id_or_alias)
         else:
             self.session_manager.add_from_chat_session(self.chat_session)
-            self.last_used_session_id = None
+
+        self.last_used_session_id = None
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
@@ -58,6 +59,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
     def _on_config_update(self):
         self._init_history()
         self._init_prompt_session()
+        self._rebuild_chat_session()
         self._models = self.chat_session.list_models(ignore_errors=True)
 
     def _init_history(self):
@@ -181,10 +183,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         @key_bindings.add(*get_key('session.new'), eager=True)
         def session_new(event):
-            self.chat_session.new_session()
-            self.chat_session.session_id = None
-            self.session_manager.add_from_chat_session(self.chat_session)
-            self._switch_to_session(self.chat_session.session_id)
+            self._new_chat_session()
             self._prompt_handler_system_message('New session created')
 
         @key_bindings.add(*get_key('session.next'), eager=True)
@@ -243,6 +242,19 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         return key_bindings
 
+    def _new_chat_session(self):
+        self.chat_session.new_session()
+        self.session_manager.add_from_chat_session(self.chat_session)
+
+    def _rebuild_chat_session(self):
+        """
+        Regenerate the current chat session
+        This is necessary, since changes to session.type can alter the chat session class used
+        """
+        old_chat_session = self.chat_session
+        self.chat_session = lair.sessions.get_chat_session(lair.config.get('session.type'))
+        self.chat_session.import_state(old_chat_session)
+
     def _switch_to_session(self, id_or_alias, raise_exceptions=True):
         """
         Switch to a new session.
@@ -257,9 +269,12 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                                                  and `raise_exceptions` is True.
         """
         try:
-            last_used_session_id = self.chat_session.session_id
-            self.session_manager.switch_to_session(id_or_alias, self.chat_session)
-            self.last_used_session_id = last_used_session_id
+            with lair.events.defer_events():
+                old_session_id = self.chat_session.session_id
+                self.session_manager.switch_to_session(id_or_alias, self.chat_session)
+                self._rebuild_chat_session()
+                if old_session_id != self.chat_session.session_id:
+                    self.last_used_session_id = old_session_id
         except lair.sessions.UnknownSessionException:
             if raise_exceptions:
                 raise
