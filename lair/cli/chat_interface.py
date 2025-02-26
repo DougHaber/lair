@@ -244,6 +244,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _new_chat_session(self):
         self.chat_session.new_session()
+        lair.config.change_mode(lair.config.active_mode)  # Reset the config to the default mode config
         self.session_manager.add_from_chat_session(self.chat_session)
 
     def _rebuild_chat_session(self):
