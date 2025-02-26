@@ -255,9 +255,12 @@ class ChatInterfaceCommands():
 
     def command_load(self, command, arguments, arguments_str):
         filename = 'chat_session.json' if len(arguments) == 0 else os.path.expanduser(arguments[0])
-        self.chat_session.load_from_file(filename)
-        self._rebuild_chat_session()
-        self.reporting.system_message(f"Session loaded from {filename}")
+        with lair.events.defer_events():
+            current_session_id = self.chat_session.session_id  # Preserve to overwrite the current session
+            self.chat_session.load_from_file(filename)
+            self.chat_session.session_id = current_session_id
+            self._rebuild_chat_session()
+            self.reporting.system_message(f"Session loaded from {filename}")
 
     def command_messages(self, command, arguments, arguments_str):
         if len(arguments) > 1:

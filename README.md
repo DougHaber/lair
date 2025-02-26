@@ -29,6 +29,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Commands](#commands)
     - [Shortcut Keys](#shortcut-keys)
     - [Markdown Rendering](#markdown-rendering)
+    - [Session Management](#session-management)
     - [Reasoning Models](#reasoning-models)
     - [Chat Examples](#chat-examples)
       - [Attaching Files](#attaching-files)
@@ -39,7 +40,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Extracting Embedded Responses](#extracting-embedded-responses)
       - [Modifying Chat History](#modifying-chat-history)
     - [Model Settings](#model-settings)
-    - [Session Management](#session-management)
+    - [File Based Session Management](#file-based-session-management)
     - [Calling Comfy Workflows](#calling-comfy-workflows)
   - [Comfy](#comfy)
     - [Workflows and Dependencies](#workflows-and-dependencies)
@@ -61,15 +62,15 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 
 ## Overview
 
-Lair is a collection of utilities and tools for working with generative AI. This repository contains an open-source version of Lair, which currently provides general-purpose functionality, including a command-line chat interface and a one-off utility command.
+Lair is a command-line toolkit for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Designed with AI developers in mind, Lair simplifies the process of scripting AI-powered workflows and includes tools for prompt experimentation and testing.
 
-The full Lair repository includes additional features, such as an agent framework, tools for evolutionary programming with LLMs, and a utility for creating non-temporal videos from image diffusion models. While some remnants of these features may still be present in the code, many modules are not included in the open-source version. Additional functionality from the full version may be added to the open-source repository in the future.
+The open-source version of Lair is a partial rewrite of the original closed-source project. The original included additional features such as an agent framework, evolutionary programming tools for LLMs, and a utility for generating non-temporal videos from image diffusion models. While some traces of these features may still exist in the code, many are not currently included in the open-source release. Future updates may reintroduce select functionality from the original version.
 
 ## Features
 
 * **chat**: Command line chat interface
   * Rich interface w/ auto-complete, commands, shortcuts, etc
-  * File based session management
+  * Session management and persistent sessions
   * Support for image, PDF, and text attachments
   * Markdown rendering & syntax highlighting
   * Customizable styling for reasoning model output
@@ -135,7 +136,7 @@ The following flags are supported when using the `lair` command. They must be pr
   --version                Display the current version and exit
 ```
 
-The `--mode` / `-M` flag allows changing the mode (and with it, any configuration at startup.)
+The `--mode` / `-M` flag allows setting the mode as well as any associated configuration at startup.
 
 Individual settings may be overridden with the `--set` / `-s` flag. For example `lair -s 'style.error=bold red' -s ui.multline_input=true chat`.
 
@@ -170,19 +171,19 @@ The `/last-prompt` command in the chat interface displays the full last prompt, 
 
 ### Chat - Command Line Chat Interface
 
-The `chat` command provides a rich command-line interface for interacting with large language models.
+The `chat` command provides a rich command-line interface for interacting with large language models, as well as some experimental support for diffusion models.
 
 Much of the interface is customizable through overriding `chat.*` & `style.*` settings. See [here](lair/files/settings.yaml) for a full reference for those settings.
 
 The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled show with capital letters and brighter colors. The current flags are:
 
-| Flag | Meaning            | Shortcut Key |
-|------|--------------------|--------------|
-| L    | Multi-line input   | ESC-L        |
-| M    | Markdown rendering | ESC-M        |
-| T    | Tools              | ESC-T        |
-| V    | Verbose Output     | ESC-V        |
-| W    | Word-wrapping      | ESC-W        |
+| Flag | Meaning            | Default Shortcut Key |
+|------|--------------------|----------------------|
+| L    | Multi-line input   | ESC-L                |
+| M    | Markdown rendering | ESC-M                |
+| T    | Tools              | ESC-T                |
+| V    | Verbose Output     | ESC-V                |
+| W    | Word-wrapping      | ESC-W                |
 
 When Verbose output is enabled tool calls and responses are displayed.
 
@@ -216,16 +217,29 @@ The prompt and toolbar can be customized via `chat.*` settings.
 
 In addition to all the standard GNU-readline style key combinations, the following shortcuts are provided.
 
-| Shortcut Key | Action                    |
-|--------------|---------------------------|
-| ESC-B        | Toggle bottom toolbar     |
-| ESC-L        | Toggle multi-line input   |
-| ESC-M        | Toggle markdown rendering |
-| ESC-T        | Toggle Tools              |
-| ESC-V        | Toggle verbose output     |
-| ESC-W        | Toggle word wrapping      |
+| Shortcut Key | Action                               |
+|--------------|--------------------------------------|
+| C-x ?        | Show keys and shortcuts              |
+| C-x C-a      | Set an alias for the current session |
+| C-x C-t      | set a title for the current session  |
+| C-x C-x      | Fast switch to a different session   |
+| C-x m        | Show all available models            |
+| C-x n        | Create a new session                 |
+| C-x p        | Cycle to the previous session        |
+| C-x r        | Reset the current session            |
+| C-x s        | Display all sessions                 |
+| C-x space    | Cycle to the next session            |
+| C-x t        | Show all available tools             |
+| ESC-b        | Toggle bottom toolbar                |
+| ESC-d        | Toggle debugging output              |
+| ESC-l        | Toggle multi-line input              |
+| ESC-m        | Toggle markdown rendering            |
+| ESC-t        | Toggle tools                         |
+| ESC-v        | Toggle verbose output (tool calls)   |
+| ESC-w        | Toggle word wrapping                 |
+| F1 - F12     | Switch to session 1-12               |
 
-When Verbose output is enabled tool calls and responses are displayed. It is enabled by default.
+Keyboard shortcuts can be modified through `chat.keys.*`.
 
 #### Markdown Rendering
 
@@ -250,6 +264,20 @@ Pressing `ESC-M` and trying again shows the literal response without Markdown re
 crocodile> /last-response
 &lt;
 ```
+
+#### Session Management
+
+A "session" in Lair is a combination of the current chat history, configuration, and some other active state.
+
+Lair has built in support for sessions which are persisted into a database. Sessions can also be serialized to JSON files with the `/save` and `/load` commands. See [File Based Session Management](#file-based-session-management) for examples of file based session management.
+
+The database-based session management is a new feature and may evolve further over time.
+
+When starting Lair, a new session is a created. Any sessions with `0` messages are automatically deleted on startup.
+
+
+
+
 
 #### Reasoning Models
 
@@ -586,11 +614,13 @@ crocodile> ducks
 Why did the duck go to art school? To learn how to draw its life!
 ```
 
-#### Session Management
+#### File Based Session Management
 
-The `/save` and `/load` commands can be used for session management.
+This section provides examples of using file based session management. For a more general overview of sessions in Lair and the database-based session management, see [Session Management](#session-management).
 
-The `/save` command creates a session file, including the current active configuration, chat history, and some other active state, such as the system prompt.
+File based session management allows for saving and loading a single serialized session to and from a JSON file. This is helpful for preserving exact sessions states, sharing sessions, quickly rolling back, etc.
+
+The `/save` and `/load` commands are used for session management.
 
 ```
 # Start a new session
@@ -625,9 +655,9 @@ ASSISTANT: Find purpose and joy.
 USER: In 3 words or less, how do I do that?
 ```
 
-Session files include the full active configuration. If any sensitive values are stored in the settings, they will also be in the session files.
+Session files include the full active configuration. Loaded sessions will restore all the active settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
 
-Loaded sessions will restore all the active settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
+When using `/load`, the current active session replaced with the loaded session. To load the session into a new session slot, first create a new one (such as with `C-X n`,) and then use `/load`.
 
 #### Calling Comfy Workflows
 
