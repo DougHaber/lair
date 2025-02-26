@@ -1,5 +1,6 @@
 import itertools
 import weakref
+from contextlib import contextmanager
 
 from lair.logging import logger
 
@@ -8,6 +9,10 @@ _event_handlers = {}  # event_name -> {handler, ...}
 _subscriptions = {}  # subscription_id -> (event_name, handler)
 _next_subscription_id = itertools.count(1)  # Thread-safe ID generator
 _instance_subscriptions = weakref.WeakKeyDictionary()  # Tracks subscriptions by object
+
+_deferring = False
+_deferred_events = []
+_squash_duplicates = True
 
 
 def subscribe(event_name, handler, instance=None):
@@ -55,9 +60,34 @@ def unsubscribe(subscription_id):
 
 def fire(event_name, data={}):
     """Triggers an event, calling all subscribed handlers."""
+    global _deferring
+    if _deferring:
+        if _squash_duplicates and any(event[0] == event_name and event[1] == data for event in _deferred_events):
+            return  # Skip duplicate events
+        _deferred_events.append((event_name, data))
+        return
+
     logger.debug(f"events: fire(): {event_name}, data: {data}")
     if event_name in _event_handlers:
         for handler in list(_event_handlers[event_name]):  # Iterate over a copy to avoid modification issues
             if callable(handler):
                 handler(data)
     return True
+
+
+@contextmanager
+def defer_events(squash_duplicates=True):
+    """Context manager to defer and optionally deduplicate events until the context exits."""
+    global _deferring, _squash_duplicates, _deferred_events
+    _deferring = True
+    _squash_duplicates = squash_duplicates
+    _deferred_events = []
+    try:
+        yield
+    finally:
+        _deferring = False
+        logger.debug("events: Starting to fire deferred events")
+        for event_name, data in _deferred_events:
+            fire(event_name, data)
+        _deferred_events.clear()
+        logger.debug("events: Finished firing deferred events")
