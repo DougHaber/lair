@@ -263,6 +263,10 @@ class ChatInterfaceCommands():
             current_session_id = self.chat_session.session_id  # Preserve to overwrite the current session
             self.chat_session.load_from_file(filename)
             self.chat_session.session_id = current_session_id
+            if self.chat_session.session_alias is not None and \
+               not self.session_manager.is_alias_available(self.chat_session.session_alias):
+                logger.warn("Session loaded without alias. The alias is already in use")
+                self.chat_session.session_alias = None
             self._rebuild_chat_session()
             self.reporting.system_message(f"Session loaded from {filename}")
 
@@ -359,7 +363,7 @@ class ChatInterfaceCommands():
 
     def command_session_new(self, command, arguments, arguments_str):
         if len(arguments) != 0:
-            self.reporting.user_error("ERROR: Invalid arguments: /sesssion-new does not take arguments")
+            self.reporting.user_error("ERROR: Invalid arguments: /session-new does not take arguments")
         else:
             self._new_chat_session()
             self.reporting.system_message('New session created')
