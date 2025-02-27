@@ -30,6 +30,9 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Shortcut Keys](#shortcut-keys)
     - [Markdown Rendering](#markdown-rendering)
     - [Session Management](#session-management)
+      - [Session Database](#session-database)
+      - [Session Management Commands and Shortcuts](#session-management-commands-and-shortcuts)
+      - [Session Titles](#session-titles)
     - [Reasoning Models](#reasoning-models)
     - [Chat Examples](#chat-examples)
       - [Attaching Files](#attaching-files)
@@ -56,6 +59,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Providing Input Content](#providing-input-content)
       - [Attaching Files](#attaching-files-1)
       - [Using Tools](#using-tools)
+      - [Using Sessions](#using-sessions)
 
 <!-- markdown-toc end -->
 
@@ -70,7 +74,7 @@ The open-source version of Lair is a partial rewrite of the original closed-sour
 
 * **chat**: Command line chat interface
   * Rich interface w/ auto-complete, commands, shortcuts, etc
-  * Session management and persistent sessions
+  * Session management, fast session switching, and persistent sessions
   * Support for image, PDF, and text attachments
   * Markdown rendering & syntax highlighting
   * Customizable styling for reasoning model output
@@ -221,7 +225,11 @@ The prompt and toolbar can be customized via `chat.*` settings.
 
 #### Shortcut Keys
 
-In addition to all the standard GNU-readline style key combinations, the following shortcuts are provided.
+Lair's chat interface offers numerous keyboard shortcuts to enhance usability. Pressing `C-x ?` displays a list of all available shortcuts along with their current bindings.
+
+For those unfamiliar, `C-x ?` means pressing the `Control` key and the `x` key simultaneously, releasing both, and then pressing the `?` key. In contrast, shortcuts like `C-x C-x` indicate that the `Control` key should remain held down while pressing the second key.
+
+In addition to standard GNU Readline-style key combinations, the following shortcuts are provided with these default bindings:
 
 | Shortcut Key | Action                                           |
 |--------------|--------------------------------------------------|
@@ -275,17 +283,62 @@ crocodile> /last-response
 
 #### Session Management
 
-A "session" in Lair is a combination of the current chat history, configuration, and some other active state.
+A **session** in Lair represents the current chat history, configuration, and other active state.
 
-Lair has built in support for sessions which are persisted into a database. Sessions can also be serialized to JSON files with the `/save` and `/load` commands. See [File Based Session Management](#file-based-session-management) for examples of file based session management.
+Lair provides built-in support for session management, with sessions stored in a database. Additionally, sessions can be serialized to JSON files using the `/save` and `/load` commands. For details on file-based session management, see [File-Based Session Management](#file-based-session-management).
 
-The database-based session management is a new feature and may evolve further over time.
+Database-based session management is a newer feature and may evolve over time.
 
-When starting Lair, a new session is a created. Any sessions with `0` messages are automatically deleted on startup.
+Sessions are identified by either an **ID** (an integer) or an **alias** (a string). However, aliases cannot be purely numeric to avoid conflicts with session IDs.
 
+When Lair starts, any sessions without messages are automatically removed from the database.
 
+By default, a new session is created on startup unless a session is specified via the `--session` / `-s` flag. This flag accepts either a session ID or alias and switches to that session. If the `--allow-create-session` / `-S` flag is also provided, Lair will create the session if it does not exist and assign it the specified alias.
 
+##### Session Database
 
+Sessions in Lair are stored in an LMDB (Lightning Memory-Mapped Database) located at `~/.lair/sessions` by default. The database size is controlled by the `database.sessions.size` setting, which defaults to 512MB.
+
+If there are many sessions or large attachments, this limit may be reached. When modifying the size limit, Lair will resize the database on startup. However, if other processes are using the database during a resize, they may end up working with an independent version of the database, potentially leading to data loss. To prevent this, it is recommended to exit all Lair processes before resizing.
+
+To delete all sessions quickly, the LMDB directory (with a default of `~/.lair/sessions`) can be safely removed. Lair will automatically recreate it upon the next startup.
+
+##### Session Management Commands and Shortcuts
+
+Lair offers various commands and keyboard shortcuts for managing sessions. These can be customized via the `chat.keys.*` settings.
+
+- **Listing Sessions**
+  Running `/session` without arguments displays all available sessions. This can also be accessed with `C-x s`.
+
+- **Switching Sessions**
+  - Use `/session [id|alias]` to switch sessions.
+  - The `C-x C-x` shortcut opens a fast switch prompt. At the prompt, entering a session ID or alias switches to that session. Pressing Enter without input switches to the last used session.
+  - The **F1–F12** keys allow fast switching between sessions **1–12**.
+
+- **Creating a New Session**
+  - Use `/session-new` or `C-x n` to create a new session.
+
+- **Deleting Sessions**
+  - Use `/session-delete [id|alias]` to delete one or more sessions.
+  - Example: `/session-delete 1 2 3` deletes sessions **1, 2, and 3**.
+
+- **Setting Session Aliases**
+  - Use `/session-alias [id|alias] [new_alias]` to assign an alias.
+  - The alias for the current session can be set with `C-x C-a`.
+
+For a full list of commands and shortcuts, use `C-x ?`.
+
+##### Session Titles
+
+Sessions can have **titles** to help identify conversations. Titles may be generated automatically using a truncated version of the first message and response.
+
+Automatic title generation is configurable via `session.auto_generated_titles.*`, allowing customization the model to use, temperature, and prompt template, as well as toggling the feature on or off.
+
+Although different models can be used, they must be accessed through the same provider. For example, if an Ollama endpoint is used, an alternative model name can be specified, but it must be available via the same endpoint.
+
+To set a session title:
+- Use `/session-title [id|alias] [new_title]`
+- For the current session, use `C-x C-t`.
 
 #### Reasoning Models
 
@@ -1198,3 +1251,70 @@ $ lair util -i 'Use Python to GET whatismyip.akamai.com, and return the IP' -t
 *Note:* The IP address shown above is a placeholder. The actual output has been replaced for privacy reasons.
 
 The `--debug` flag can be added before `util` to enable detailed output, displaying all requests and responses. In the Python tool example, a common behavior is for the model to first attempt using the `requests` library. If `requests` is not installed, it encounters an error and retries using `urllib`. This additional cycle can be avoided by explicitly specifying `urllib` in the instructions or by using a custom Docker image that includes `requests` pre-installed.
+
+##### Using Sessions
+
+The `util` command fully supports sessions from the session database used by the `chat` command. For a more complete overview of sessions, see the [Session Management](#session-management) section.
+
+The `--session` / `-s` flag allows specifying a session ID or alias. For example, if session `1` contains a discussion about naming a metasyntactic variable, we can retrieve that information like this:
+
+```sh
+$ lair util -s 1 -i 'What was the variable name we decided on?'
+foobar
+```
+
+The `--allow-create-session` / `-S` flag modifies session behavior by automatically creating a new session if the specified ID or alias does not exist. The given value then becomes the alias for the new session. This makes it easy to maintain persistent command-line conversations.
+
+```sh
+$ lair util -S -s fizzbuzz -i "Let's play fizzbuzz. Please respond with the first number"
+1
+$ lair util -S -s fizzbuzz -i "Next number please"
+2
+$ lair util -S -s fizzbuzz -i "Next number please"
+Fizz
+$ lair util -S -s fizzbuzz -i "Next number please"
+4
+$ lair util -S -s fizzbuzz -i "Next number please"
+Buzz
+```
+
+Sessions created this way are also accessible in the chat interface:
+
+```sh
+$ lair chat -s fizzbuzz
+Welcome to the LAIR
+crocodile:2> /session
+┏━━━━━━━━┳━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ active ┃ id ┃ alias    ┃ mode      ┃ model             ┃ title                ┃ num_messages ┃
+┡━━━━━━━━╇━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│        │ 1  │          │ crocodile │ qwen2.5-coder:32b │ Variable Naming Help │ 6            │
+│ *      │ 2  │ fizzbuzz │ crocodile │ qwen2.5-coder:32b │ FizzBuzz Game Start  │ 10           │
+└────────┴────┴──────────┴───────────┴───────────────────┴──────────────────────┴──────────────┘
+crocodile:2> /last-response
+Buzz
+```
+
+By default, session history appends new queries and responses. If you want to query a session without modifying it, use the `--read-only-session` / `-r` flag.
+
+For example, let’s create a new session named `cnn-demodulation` and attach a [paper](https://arxiv.org/abs/2502.19097) from arXiv:
+
+```sh
+$ lair \
+    -m llama3.2:3b-ctx0 \
+    util \
+    --allow-create-session \
+    --session cnn-demodulation \
+    -a ~/2502.19097v1.pdf \
+    -i 'Please summarize the conclusions of this paper briefly'
+The use of a convolutional neural network (CNN) for demodulating weak JT65A signals achieves acceptable performance, with the interference immunity being about 1.5 dB less than the theoretical limit for non-coherent demodulation of orthogonal MFSK signals.
+```
+
+Now, we can use `--read-only-session` (`-r`) to ask further questions without modifying the session. Since the paper is already in context, this avoids unnecessary additions to the session history.
+
+⚠️ **Do not include the `--attach-file` / `-a` flag in follow-up queries**, as this would re-upload the same content.
+
+```sh
+$ lair -m llama3.2:3b-ctx0 util -S -s cnn-demodulation -r \
+    -i 'Please summarize the conclusions of this paper briefly'
+The proposed method achieved an error rate of 10^-2 or lower, indicating high accuracy in demodulating JT65A signals. The symbol error rate against SNR showed that the proposed method outperformed the theoretical limit of non-coherent demodulation of orthogonal FSK signals for 1.5 dB.
+```
