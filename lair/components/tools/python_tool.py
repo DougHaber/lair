@@ -14,7 +14,7 @@ class PythonTool():
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='run_python',
-            flag='tools.python.enabled',
+            flags=['tools.python.enabled'],
             definition_handler=lambda: self._generate_definition(),
             handler=lambda *args, **kwargs: self.run_python(*args, **kwargs)
         )

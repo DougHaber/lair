@@ -39,6 +39,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Tools](#tools)
         - [Python Tool](#python-tool)
         - [Search Tool](#search-tool)
+        - [File Tool](#file-tool)
       - [One-off Chat](#one-off-chat)
       - [Extracting Embedded Responses](#extracting-embedded-responses)
       - [Modifying Chat History](#modifying-chat-history)
@@ -92,6 +93,7 @@ The open-source version of Lair is a partial rewrite of the original closed-sour
   * Works in the chat interface and the util command
   * Search Tool: Search the web or news with DuckDuckGo
   * Python Tool: Run python code inside of a container
+  * File Tool: Read and write files in a local path (**Experimental**)
 
 ## Future
 
@@ -487,7 +489,6 @@ The `tools.python.docker_image` setting specifies which Docker image to use. By 
 
 ```Dockerfile
 FROM python:latest
-
 RUN pip install numpy pandas requests
 ```
 
@@ -521,6 +522,22 @@ Web requests to retrieved URLs are subject to a timeout, which is configurable v
 Search results can be large. To manage this, content extracted from each page is truncated based on the `tools.search.max_length` parameter. Additionally, the number of pages from which content is extracted is controlled by `tools.search.max_results`, which defaults to `5`.
 
 The total amount of retrieved content can be as large as `max_results * max_length`, potentially exceeding the default context window of a language model. For users utilizing Ollama, the default context size is set to 2048 tokens. If this limit is exceeded, truncation may occur, leading to incomplete or inaccurate responses. To mitigate this, adjust the `num_ctx` parameter within Ollama as needed.
+
+###### File Tool
+
+The File Tool provides access to read and write files and directories on the local file system. This feature is **disabled by default** due to its potential risks.
+
+⚠️ **DANGER:** This is an experimental feature. **Back up your files!** Running in a chroot environment or within Docker is strongly recommended to minimize risk. While some safeguards exist, they have not been thoroughly tested.
+
+File access is limited to the path specified in `tools.file.path`. It is recommended to set this to a controlled directory containing only the files that should be accessible. Additionally, maintaining a separate full backup of this directory is advised.
+
+To enable the File Tool, multiple configuration options must be set:
+- `tools.allow_dangerous_tools` – Required to acknowledge the experimental and untested nature of this feature.
+- `tools.file.enabled` – Enables basic read-only operations via `read_file` and `list_directory`.
+- `tools.enable_deletes` – Enables file and directory deletion using `delete_file` and `remove_directory`.
+- `tools.enable_writes` – Grants write access through `write_file` and `make_directory`.
+
+Use caution when enabling these options, as they can modify or delete critical files.
 
 ##### One-off Chat
 

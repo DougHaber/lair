@@ -53,14 +53,14 @@ class SearchTool:
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='search_web',
-            flag='tools.search.enabled',
+            flags=['tools.search.enabled'],
             definition=self.SEARCH_WEB_DEFINITION,
             handler=self.search_web
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='search_news',
-            flag='tools.search.enabled',
+            flags=['tools.search.enabled'],
             definition=self.SEARCH_NEWS_DEFINITION,
             handler=self.search_news
         )

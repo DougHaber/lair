@@ -30,11 +30,12 @@ class ToolSet():
         """
         self._init_tools(tools)
 
-    def add_tool(self, *, name, flag, definition=None, definition_handler=None, handler, class_name):
+    def add_tool(self, *, name, flags, definition=None, definition_handler=None, handler, class_name):
         """
         Register a new tool
 
         Arguments:
+          flags: A list of config keys, each of which must be true for the tool to be enabled
           definition: The structured definition of the function and its parameter in OpenAI API format
           definition_handler: A function that returns a definition, allowing for dynamic definitions.
               When provided, definition_handler takes precedence over definition
@@ -48,7 +49,7 @@ class ToolSet():
             'class_name': class_name,
             'definition': definition,
             'definition_handler': definition_handler,
-            'flag': flag,
+            'flags': flags,
             'handler': handler,
             'name': name,
         }
@@ -59,12 +60,19 @@ class ToolSet():
 
         enabled_tools = []
         for tool in self.tools.values():
-            if lair.config.get(tool['flag']) is not True:
+            if lair.config.get(tool['flags']) is not True:
                 continue
 
             enabled_tools.append(tool)
 
         return enabled_tools
+
+    def all_flags_enabled(self, flags):
+        for flag in flags:
+            if not lair.config.get(flag):
+                return False
+
+        return True
 
     def get_all_tools(self):
         """
@@ -72,7 +80,7 @@ class ToolSet():
         """
         all_tools = []
         for tool in self.tools.values():
-            tool['enabled'] = lair.config.get('tools.enabled') and lair.config.get(tool['flag']) is True
+            tool['enabled'] = lair.config.get('tools.enabled') and self.all_flags_enabled(tool['flags']) is True
             all_tools.append(tool)
 
         return all_tools or None

@@ -325,6 +325,25 @@ style.word_wrap: true
 # Enabling tools with models that don't support tools may cause errors.
 tools.enabled: false
 
+# Some tools will not enable unless this flag is also enabled. There are good reasons for that,
+# so please read the documentation and exercise caution.
+tools.allow_dangerous_tools: false
+
+# File Tools allow access to work with the filesystem. This currently also requires
+# tools.allow_dangerous_tools to be enabled.
+tools.file.enabled: false
+# When enabled, the delete_file and remove_directory tools are provided
+# DANGER: This is experimental and allows writes to the filesystem. It might not be the best idea
+#         outside of Docker. Make sure your files are backed up.
+tools.file.enable_deletes: false
+# When enabled, the write_file and make_directory tools are provided
+# DANGER: This is experimental and allows writes to the filesystem. It might not be the best idea
+#         outside of Docker. Make sure your files are backed up.
+tools.file.enable_writes: false
+# The base path that is accessible. The intent is that only files within this path are accessible.
+# CAUTION: This is only lightly tested. It is best to run in Docker with extra controls.
+tools.file.path: /home/example/files_accessible_by_ai
+
 # The python tool runs python scripts within a docker container. This can be dangerous as it allows
 # for code execution, and so it is disabled by default. In order for this feature to work, the user
 # must have Docker access. It will pull down and run the image specified in
