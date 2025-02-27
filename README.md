@@ -537,6 +537,8 @@ To enable the File Tool, multiple configuration options must be set:
 - `tools.enable_deletes` – Enables file and directory deletion using `delete_file` and `remove_directory`.
 - `tools.enable_writes` – Grants write access through `write_file` and `make_directory`.
 
+The `tools.file.path` setting must also be configured with the path that should be made accessible.
+
 Use caution when enabling these options, as they can modify or delete critical files.
 
 ##### One-off Chat
