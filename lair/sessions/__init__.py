@@ -1,7 +1,8 @@
 from .openai_chat_session import OpenAIChatSession
+from .session_manager import SessionManager, UnknownSessionException
 
 
-def get_session(session_type, *args, **kwargs):
+def get_chat_session(session_type, *args, **kwargs):
     if session_type == 'openai_chat':
         return OpenAIChatSession(*args, **kwargs)
     else:

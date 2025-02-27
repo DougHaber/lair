@@ -45,7 +45,7 @@ class ComfyCaller():
         self._init_workflows()
 
         # If the config changes, update all defaults
-        lair.events.subscribe('config.update', lambda d: self._init_defaults())
+        lair.events.subscribe('config.update', lambda d: self._init_defaults(), instance=self)
 
     def _monkey_patch_comfy_script(self):
         '''

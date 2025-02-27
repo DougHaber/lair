@@ -1,3 +1,4 @@
+import copy
 import json
 
 import lair
@@ -5,7 +6,7 @@ import lair.components.history.schema
 from lair.logging import logger
 
 
-class ChatHistory():
+class ChatHistory:
     ALLOWED_ROLES = {'assistant', 'system', 'tool', 'user'}
 
     def __init__(self):
@@ -19,9 +20,21 @@ class ChatHistory():
         # index.
         self.finalized_index = None
 
-        lair.events.subscribe('config.update', lambda d: self._validate_config())
+        lair.events.subscribe('config.update', lambda d: self._validate_config(), instance=self)
 
         self._validate_config()
+
+    def __copy__(self):
+        new_chat_history = ChatHistory()
+        new_chat_history._history = copy.copy(self._history)
+        new_chat_history.finalized_index = self.finalized_index
+        return new_chat_history
+
+    def __deepcopy__(self, memo):
+        new_chat_history = ChatHistory()
+        new_chat_history._history = copy.deepcopy(self._history, memo)
+        new_chat_history.finalized_index = self.finalized_index
+        return new_chat_history
 
     def _validate_config(self):
         max_length = lair.config.get('session.max_history_length')

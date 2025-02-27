@@ -35,21 +35,23 @@ class Util():
                             help='Enable markdown output')
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
+        parser.add_argument('-r', '--read-only-session', action='store_true',
+                            help='Do not modify the session used')
+        parser.add_argument('-s', '--session', type=str,
+                            help='Session id or alias to use.')
+        parser.add_argument('-S', '--allow-create-session', action='store_true',
+                            help='If an alias provided via --session is not found, create it')
         parser.add_argument('-t', '--enable-tools', action='store_true',
                             help='Allow the model to call tools')
 
     def call_llm(self, chat_session, *, instructions, user_messages, enable_tools=True):
         messages = [
-            lair.util.get_message('system', chat_session.get_system_prompt()),
             lair.util.get_message('user', instructions),
             *user_messages,
         ]
 
-        if enable_tools:
-            lair.config.set('tools.enabled', True)
-            response, _ = chat_session.invoke_with_tools(messages)
-        else:
-            response = chat_session.invoke(messages)
+        lair.config.set('tools.enabled', enable_tools)
+        response = chat_session.chat(messages)
 
         return response
 
@@ -110,15 +112,47 @@ class Util():
 
         return messages
 
+    def _init_session_manager(self, chat_session, arguments):
+        if not arguments.session:
+            chat_session.session_title = 'N/A'  # Prevent wasteful auto-title generation
+            return None
+
+        session_manager = lair.sessions.SessionManager()
+        if arguments.session:
+            try:
+                session_manager.switch_to_session(arguments.session, chat_session)
+            except lair.sessions.UnknownSessionException:
+                if arguments.allow_create_session:
+                    if arguments.read_only_session:
+                        logger.error(f"Unable to create a new session with the --read-only-session flag.")
+                        sys.exit(1)
+                    elif not session_manager.is_alias_available(arguments.session):
+                        if isinstance(lair.util.safe_int(arguments.session), int):
+                            logger.error(f"Failed to create new session. Session aliases may not be integers.")
+                        else:
+                            logger.error(f"Failed to create new session. Alias is already used.")
+                        sys.exit(1)
+
+                    chat_session.session_alias = arguments.session
+                    session_manager.add_from_chat_session(chat_session)
+                else:
+                    logger.error(f"Unknown session: {arguments.session}")
+                    sys.exit(1)
+
+        return session_manager
+
     def run(self, arguments):
-        util_prompt_template = lair.config.get('util.system_prompt_template')
-        lair.config.set('session.system_prompt_template', util_prompt_template)
-
-        lair.config.set('style.render_markdown', arguments.markdown)
-
-        chat_session = lair.sessions.get_session(
+        chat_session = lair.sessions.get_chat_session(
             session_type=lair.config.get('session.type'),
         )
+        session_manager = self._init_session_manager(chat_session, arguments)
+        config_backup = lair.config.active.copy()
+        util_prompt_template = lair.config.get('util.system_prompt_template')
+
+        if arguments.model:
+            lair.config.set('model.name', arguments.model)
+        lair.config.set('session.system_prompt_template', util_prompt_template)
+        lair.config.set('style.render_markdown', arguments.markdown)
 
         if arguments.include_filenames is not None:
             lair.config.set('misc.provide_attachment_filenames', arguments.include_filenames)
@@ -131,6 +165,11 @@ class Util():
                                  enable_tools=arguments.enable_tools,
                                  user_messages=user_messages)
         response = self.clean_response(response)
+
+        if session_manager is not None and not arguments.read_only_session:
+            # The original configuration is restored so that there are no configuration changes.
+            lair.config.update(config_backup)
+            session_manager.refresh_from_chat_session(chat_session)
 
         if arguments.markdown:
             reporting = lair.reporting.Reporting()

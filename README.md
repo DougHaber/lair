@@ -29,6 +29,10 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [Commands](#commands)
     - [Shortcut Keys](#shortcut-keys)
     - [Markdown Rendering](#markdown-rendering)
+    - [Session Management](#session-management)
+      - [Session Database](#session-database)
+      - [Session Management Commands and Shortcuts](#session-management-commands-and-shortcuts)
+      - [Session Titles](#session-titles)
     - [Reasoning Models](#reasoning-models)
     - [Chat Examples](#chat-examples)
       - [Attaching Files](#attaching-files)
@@ -39,7 +43,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Extracting Embedded Responses](#extracting-embedded-responses)
       - [Modifying Chat History](#modifying-chat-history)
     - [Model Settings](#model-settings)
-    - [Session Management](#session-management)
+    - [File Based Session Management](#file-based-session-management)
     - [Calling Comfy Workflows](#calling-comfy-workflows)
   - [Comfy](#comfy)
     - [Workflows and Dependencies](#workflows-and-dependencies)
@@ -55,21 +59,22 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Providing Input Content](#providing-input-content)
       - [Attaching Files](#attaching-files-1)
       - [Using Tools](#using-tools)
+      - [Using Sessions](#using-sessions)
 
 <!-- markdown-toc end -->
 
 
 ## Overview
 
-Lair is a collection of utilities and tools for working with generative AI. This repository contains an open-source version of Lair, which currently provides general-purpose functionality, including a command-line chat interface and a one-off utility command.
+Lair is a command-line toolkit for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Designed with AI developers in mind, Lair simplifies the process of scripting AI-powered workflows and includes tools for prompt experimentation and testing.
 
-The full Lair repository includes additional features, such as an agent framework, tools for evolutionary programming with LLMs, and a utility for creating non-temporal videos from image diffusion models. While some remnants of these features may still be present in the code, many modules are not included in the open-source version. Additional functionality from the full version may be added to the open-source repository in the future.
+The open-source version of Lair is a partial rewrite of the original closed-source project. The original included additional features such as an agent framework, evolutionary programming tools for LLMs, and a utility for generating non-temporal videos from image diffusion models. While some traces of these features may still exist in the code, many are not currently included in the open-source release. Future updates may reintroduce select functionality from the original version.
 
 ## Features
 
 * **chat**: Command line chat interface
   * Rich interface w/ auto-complete, commands, shortcuts, etc
-  * File based session management
+  * Session management, fast session switching, and persistent sessions
   * Support for image, PDF, and text attachments
   * Markdown rendering & syntax highlighting
   * Customizable styling for reasoning model output
@@ -135,7 +140,7 @@ The following flags are supported when using the `lair` command. They must be pr
   --version                Display the current version and exit
 ```
 
-The `--mode` / `-M` flag allows changing the mode (and with it, any configuration at startup.)
+The `--mode` / `-M` flag allows setting the mode as well as any associated configuration at startup.
 
 Individual settings may be overridden with the `--set` / `-s` flag. For example `lair -s 'style.error=bold red' -s ui.multline_input=true chat`.
 
@@ -170,60 +175,87 @@ The `/last-prompt` command in the chat interface displays the full last prompt, 
 
 ### Chat - Command Line Chat Interface
 
-The `chat` command provides a rich command-line interface for interacting with large language models.
+The `chat` command provides a rich command-line interface for interacting with large language models, as well as some experimental support for diffusion models.
 
 Much of the interface is customizable through overriding `chat.*` & `style.*` settings. See [here](lair/files/settings.yaml) for a full reference for those settings.
 
 The bottom-toolbar by default shows flags like `[lMvW]`. Flags that are enabled show with capital letters and brighter colors. The current flags are:
 
-| Flag | Meaning            | Shortcut Key |
-|------|--------------------|--------------|
-| L    | Multi-line input   | ESC-L        |
-| M    | Markdown rendering | ESC-M        |
-| T    | Tools              | ESC-T        |
-| V    | Verbose Output     | ESC-V        |
-| W    | Word-wrapping      | ESC-W        |
+| Flag | Meaning            | Default Shortcut Key |
+|------|--------------------|----------------------|
+| L    | Multi-line input   | ESC-L                |
+| M    | Markdown rendering | ESC-M                |
+| T    | Tools              | ESC-T                |
+| V    | Verbose Output     | ESC-V                |
+| W    | Word-wrapping      | ESC-W                |
 
 When Verbose output is enabled tool calls and responses are displayed.
 
+The prompt and toolbar can be customized via `chat.*` settings.
+
 #### Commands
 
-| Command          | Description                                                                                                            |
-|------------------|------------------------------------------------------------------------------------------------------------------------|
-| /clear           | Clear the conversation history                                                                                         |
-| /comfy           | Call ComfyUI workflows                                                                                                 |
-| /debug           | Toggle debugging                                                                                                       |
-| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                                      |
-| /help            | Show available commands and shortcuts                                                                                  |
-| /history         | Show current conversation                                                                                              |
-| /history-edit    | Modify the history JSONL in an external editor                                                                         |
-| /history-slice   | Modify the history with a Python style slice string (usage: `/history-slice [slice]`, slice format: `start:stop:step`) |
-| /last-prompt     | Display or save the most recently used prompt  (usage: `/last-prompt [filename?]`)                                     |
-| /last-response   | Display or save the most recently seen response  (usage: `/last-response [filename?]`)                                 |
-| /list-models     | Display a list of available models for the current session                                                             |
-| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                     |
-| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                      |
-| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                        |
-| /model           | Show or set a model  (usage: `/model [name?]`)                                                                         |
-| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                                            |
-| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                    |
-| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)              |
-| /set             | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)               |
+| Command          | Description                                                                                                             |
+|------------------|-------------------------------------------------------------------------------------------------------------------------|
+| /clear           | Clear the conversation history                                                                                          |
+| /comfy           | Call ComfyUI workflows                                                                                                  |
+| /debug           | Toggle debugging                                                                                                        |
+| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                                       |
+| /help            | Show available commands and shortcuts                                                                                   |
+| /history         | Show current conversation                                                                                               |
+| /history-edit    | Modify the history JSONL in an external editor                                                                          |
+| /history-slice   | Modify the history with a Python style slice string  (usage: `/history-slice [slice]`, Slice format: `start:stop:step`) |
+| /last-prompt     | Display the most recently used prompt                                                                                   |
+| /last-response   | Display or save the most recently seen response  (usage: `/last-response [filename?]`)                                  |
+| /list-models     | Display a list of available models for the current session                                                              |
+| /list-tools      | Show tools and their status                                                                                             |
+| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                       |
+| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                      |
+| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                         |
+| /model           | Show or set a model  (usage: `/model [name?]`)                                                                          |
+| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                                             |
+| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                     |
+| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)               |
+| /session         | List or switch sessions  (usage: `/session [session_id|alias?]`)                                                        |
+| /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id|alias?] [new_alias?]`)                               |
+| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias?]...`)                                                    |
+| /session-new     | Create a new session                                                                                                    |
+| /session-title   | Set or remove a session title  (usage: `/session-title [session_id|alias?] [new_title?]`)                               |
+| /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key?] [value?]`)                  |
 
 #### Shortcut Keys
 
-In addition to all the standard GNU-readline style key combinations, the following shortcuts are provided.
+Lair's chat interface offers numerous keyboard shortcuts to enhance usability. Pressing `C-x ?` displays a list of all available shortcuts along with their current bindings.
 
-| Shortcut Key | Action                    |
-|--------------|---------------------------|
-| ESC-B        | Toggle bottom toolbar     |
-| ESC-L        | Toggle multi-line input   |
-| ESC-M        | Toggle markdown rendering |
-| ESC-T        | Toggle Tools              |
-| ESC-V        | Toggle verbose output     |
-| ESC-W        | Toggle word wrapping      |
+For those unfamiliar, `C-x ?` means pressing the `Control` key and the `x` key simultaneously, releasing both, and then pressing the `?` key. In contrast, shortcuts like `C-x C-x` indicate that the `Control` key should remain held down while pressing the second key.
 
-When Verbose output is enabled tool calls and responses are displayed. It is enabled by default.
+In addition to standard GNU Readline-style key combinations, the following shortcuts are provided with these default bindings:
+
+| Shortcut Key | Action                                           |
+|--------------|--------------------------------------------------|
+| C-x ?        | Show keys and shortcuts                          |
+| C-x C-a      | Set an alias for the current session             |
+| C-x C-h      | Show the full chat history                       |
+| C-x C-t      | set a title for the current session              |
+| C-x C-x      | Fast switch to a different session               |
+| C-x h        | Show the last two messages from the chat history |
+| C-x m        | Show all available models                        |
+| C-x n        | Create a new session                             |
+| C-x p        | Cycle to the previous session                    |
+| C-x r        | Reset the current session                        |
+| C-x s        | Display all sessions                             |
+| C-x space    | Cycle to the next session                        |
+| C-x t        | Show all available tools                         |
+| ESC-b        | Toggle bottom toolbar                            |
+| ESC-d        | Toggle debugging output                          |
+| ESC-l        | Toggle multi-line input                          |
+| ESC-m        | Toggle markdown rendering                        |
+| ESC-t        | Toggle tools                                     |
+| ESC-v        | Toggle verbose output (tool calls)               |
+| ESC-w        | Toggle word wrapping                             |
+| F1 - F12     | Switch to session 1-12                           |
+
+Keyboard shortcuts can be modified through `chat.keys.*`.
 
 #### Markdown Rendering
 
@@ -248,6 +280,65 @@ Pressing `ESC-M` and trying again shows the literal response without Markdown re
 crocodile> /last-response
 &lt;
 ```
+
+#### Session Management
+
+A **session** in Lair represents the current chat history, configuration, and other active state.
+
+Lair provides built-in support for session management, with sessions stored in a database. Additionally, sessions can be serialized to JSON files using the `/save` and `/load` commands. For details on file-based session management, see [File-Based Session Management](#file-based-session-management).
+
+Database-based session management is a newer feature and may evolve over time.
+
+Sessions are identified by either an **ID** (an integer) or an **alias** (a string). However, aliases cannot be purely numeric to avoid conflicts with session IDs.
+
+When Lair starts, any sessions without messages are automatically removed from the database.
+
+By default, a new session is created on startup unless a session is specified via the `--session` / `-s` flag. This flag accepts either a session ID or alias and switches to that session. If the `--allow-create-session` / `-S` flag is also provided, Lair will create the session if it does not exist and assign it the specified alias.
+
+##### Session Database
+
+Sessions in Lair are stored in an LMDB (Lightning Memory-Mapped Database) located at `~/.lair/sessions` by default. The database size is controlled by the `database.sessions.size` setting, which defaults to 512MB.
+
+If there are many sessions or large attachments, this limit may be reached. When modifying the size limit, Lair will resize the database on startup. However, if other processes are using the database during a resize, they may end up working with an independent version of the database, potentially leading to data loss. To prevent this, it is recommended to exit all Lair processes before resizing.
+
+To delete all sessions quickly, the LMDB directory (with a default of `~/.lair/sessions`) can be safely removed. Lair will automatically recreate it upon the next startup.
+
+##### Session Management Commands and Shortcuts
+
+Lair offers various commands and keyboard shortcuts for managing sessions. These can be customized via the `chat.keys.*` settings.
+
+- **Listing Sessions**
+  Running `/session` without arguments displays all available sessions. This can also be accessed with `C-x s`.
+
+- **Switching Sessions**
+  - Use `/session [id|alias]` to switch sessions.
+  - The `C-x C-x` shortcut opens a fast switch prompt. At the prompt, entering a session ID or alias switches to that session. Pressing Enter without input switches to the last used session.
+  - The **F1–F12** keys allow fast switching between sessions **1–12**.
+
+- **Creating a New Session**
+  - Use `/session-new` or `C-x n` to create a new session.
+
+- **Deleting Sessions**
+  - Use `/session-delete [id|alias]` to delete one or more sessions.
+  - Example: `/session-delete 1 2 3` deletes sessions **1, 2, and 3**.
+
+- **Setting Session Aliases**
+  - Use `/session-alias [id|alias] [new_alias]` to assign an alias.
+  - The alias for the current session can be set with `C-x C-a`.
+
+For a full list of commands and shortcuts, use `C-x ?`.
+
+##### Session Titles
+
+Sessions can have **titles** to help identify conversations. Titles may be generated automatically using a truncated version of the first message and response.
+
+Automatic title generation is configurable via `session.auto_generated_titles.*`, allowing customization the model to use, temperature, and prompt template, as well as toggling the feature on or off.
+
+Although different models can be used, they must be accessed through the same provider. For example, if an Ollama endpoint is used, an alternative model name can be specified, but it must be available via the same endpoint.
+
+To set a session title:
+- Use `/session-title [id|alias] [new_title]`
+- For the current session, use `C-x C-t`.
 
 #### Reasoning Models
 
@@ -584,11 +675,13 @@ crocodile> ducks
 Why did the duck go to art school? To learn how to draw its life!
 ```
 
-#### Session Management
+#### File Based Session Management
 
-The `/save` and `/load` commands can be used for session management.
+This section provides examples of using file based session management. For a more general overview of sessions in Lair and the database-based session management, see [Session Management](#session-management).
 
-The `/save` command creates a session file, including the current active configuration, chat history, and some other active state, such as the system prompt.
+File based session management allows for saving and loading a single serialized session to and from a JSON file. This is helpful for preserving exact sessions states, sharing sessions, quickly rolling back, etc.
+
+The `/save` and `/load` commands are used for session management.
 
 ```
 # Start a new session
@@ -623,9 +716,9 @@ ASSISTANT: Find purpose and joy.
 USER: In 3 words or less, how do I do that?
 ```
 
-Session files include the full active configuration. If any sensitive values are stored in the settings, they will also be in the session files.
+Session files include the full active configuration. Loaded sessions will restore all the active settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
 
-Loaded sessions will restore all the active settings. If this is undesirable, `/mode` or `/reload-settings` can be used after `/load` to change to different configuration.
+When using `/load`, the current active session replaced with the loaded session. To load the session into a new session slot, first create a new one (such as with `C-X n`,) and then use `/load`.
 
 #### Calling Comfy Workflows
 
@@ -1158,3 +1251,70 @@ $ lair util -i 'Use Python to GET whatismyip.akamai.com, and return the IP' -t
 *Note:* The IP address shown above is a placeholder. The actual output has been replaced for privacy reasons.
 
 The `--debug` flag can be added before `util` to enable detailed output, displaying all requests and responses. In the Python tool example, a common behavior is for the model to first attempt using the `requests` library. If `requests` is not installed, it encounters an error and retries using `urllib`. This additional cycle can be avoided by explicitly specifying `urllib` in the instructions or by using a custom Docker image that includes `requests` pre-installed.
+
+##### Using Sessions
+
+The `util` command fully supports sessions from the session database used by the `chat` command. For a more complete overview of sessions, see the [Session Management](#session-management) section.
+
+The `--session` / `-s` flag allows specifying a session ID or alias. For example, if session `1` contains a discussion about naming a metasyntactic variable, we can retrieve that information like this:
+
+```sh
+$ lair util -s 1 -i 'What was the variable name we decided on?'
+foobar
+```
+
+The `--allow-create-session` / `-S` flag modifies session behavior by automatically creating a new session if the specified ID or alias does not exist. The given value then becomes the alias for the new session. This makes it easy to maintain persistent command-line conversations.
+
+```sh
+$ lair util -S -s fizzbuzz -i "Let's play fizzbuzz. Please respond with the first number"
+1
+$ lair util -S -s fizzbuzz -i "Next number please"
+2
+$ lair util -S -s fizzbuzz -i "Next number please"
+Fizz
+$ lair util -S -s fizzbuzz -i "Next number please"
+4
+$ lair util -S -s fizzbuzz -i "Next number please"
+Buzz
+```
+
+Sessions created this way are also accessible in the chat interface:
+
+```sh
+$ lair chat -s fizzbuzz
+Welcome to the LAIR
+crocodile:2> /session
+┏━━━━━━━━┳━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ active ┃ id ┃ alias    ┃ mode      ┃ model             ┃ title                ┃ num_messages ┃
+┡━━━━━━━━╇━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│        │ 1  │          │ crocodile │ qwen2.5-coder:32b │ Variable Naming Help │ 6            │
+│ *      │ 2  │ fizzbuzz │ crocodile │ qwen2.5-coder:32b │ FizzBuzz Game Start  │ 10           │
+└────────┴────┴──────────┴───────────┴───────────────────┴──────────────────────┴──────────────┘
+crocodile:2> /last-response
+Buzz
+```
+
+By default, session history appends new queries and responses. If you want to query a session without modifying it, use the `--read-only-session` / `-r` flag.
+
+For example, let’s create a new session named `cnn-demodulation` and attach a [paper](https://arxiv.org/abs/2502.19097) from arXiv:
+
+```sh
+$ lair \
+    -m llama3.2:3b-ctx0 \
+    util \
+    --allow-create-session \
+    --session cnn-demodulation \
+    -a ~/2502.19097v1.pdf \
+    -i 'Please summarize the conclusions of this paper briefly'
+The use of a convolutional neural network (CNN) for demodulating weak JT65A signals achieves acceptable performance, with the interference immunity being about 1.5 dB less than the theoretical limit for non-coherent demodulation of orthogonal MFSK signals.
+```
+
+Now, we can use `--read-only-session` (`-r`) to ask further questions without modifying the session. Since the paper is already in context, this avoids unnecessary additions to the session history.
+
+⚠️ **Do not include the `--attach-file` / `-a` flag in follow-up queries**, as this would re-upload the same content.
+
+```sh
+$ lair -m llama3.2:3b-ctx0 util -S -s cnn-demodulation -r \
+    -i 'Please summarize the conclusions of this paper briefly'
+The proposed method achieved an error rate of 10^-2 or lower, indicating high accuracy in demodulating JT65A signals. The symbol error rate against SNR showed that the proposed method outperformed the theoretical limit of non-coherent demodulation of orthogonal FSK signals for 1.5 dB.
+```

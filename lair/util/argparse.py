@@ -5,6 +5,7 @@ class ArgumentParserExitException(Exception):
     """Custom Exception for argparse to throw on exit, instead of actually exiting"""
     pass
 
+
 class ArgumentParserHelpException(Exception):
     pass
 
