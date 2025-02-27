@@ -93,13 +93,17 @@ class ChatInterfaceCommands():
                 'callback': lambda command, arguments, arguments_str: self.command_session_delete(command, arguments, arguments_str),
                 'description': 'Delete session(s)  (usage: /session-delete [session_id|alias?]...)'
             },
+            '/session-new': {
+                'callback': lambda command, arguments, arguments_str: self.command_session_new(command, arguments, arguments_str),
+                'description': 'Create a new session'
+            },
             '/session-title': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_title(command, arguments, arguments_str),
                 'description': 'Set or remove a session title  (usage: /session-title [session_id|alias?] [new_title?])'
             },
             '/set': {
                 'callback': lambda command, arguments, arguments_str: self.command_set(command, arguments, arguments_str),
-                'description': 'Show configuration or set a configuration value for the current mode  (usage: /set ([key?] [value?])?'
+                'description': 'Show configuration or set a configuration value for the current mode  (usage: /set ([key?] [value?])'
             },
         }
 
@@ -352,6 +356,13 @@ class ChatInterfaceCommands():
                 self.session_manager.get_session_id(self.chat_session.session_id)
             except lair.sessions.session_manager.UnknownSessionException:  # Current session was deleted
                 self._new_chat_session()
+
+    def command_session_new(self, command, arguments, arguments_str):
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: Invalid arguments: /sesssion-new does not take arguments")
+        else:
+            self._new_chat_session()
+            self.reporting.system_message('New session created')
 
     def command_session_title(self, command, arguments, arguments_str):
         if len(arguments) == 0:
