@@ -168,9 +168,12 @@ class BaseChatSession(abc.ABC):
         """
         pass
 
-    def new_session(self):
-        self.session_id = None
-        self.session_alias = None
+    def new_session(self, preserve_alias=False, preserve_id=False):
+        if not preserve_id:
+            self.session_id = None
+        if not preserve_alias:
+            self.session_alias = None
+
         self.session_title = None
         self.last_prompt = None
         self.last_response = None

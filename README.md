@@ -238,11 +238,11 @@ In addition to standard GNU Readline-style key combinations, the following short
 | C-x C-h      | Show the full chat history                       |
 | C-x C-t      | set a title for the current session              |
 | C-x C-x      | Fast switch to a different session               |
+| C-x c        | Clear the current session's history              |
 | C-x h        | Show the last two messages from the chat history |
 | C-x m        | Show all available models                        |
 | C-x n        | Create a new session                             |
 | C-x p        | Cycle to the previous session                    |
-| C-x r        | Reset the current session                        |
 | C-x s        | Display all sessions                             |
 | C-x space    | Cycle to the next session                        |
 | C-x t        | Show all available tools                         |

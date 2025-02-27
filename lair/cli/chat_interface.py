@@ -110,10 +110,10 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             format_key('show_recent_history'): 'Show the last two messages from the chat history',
             format_key('list_models'): 'Show all available models',
             format_key('list_tools'): 'Show all available tools',
+            format_key('session.clear'): 'Clear the current session\'s history',
             format_key('session.new'): 'Create a new session',
             format_key('session.next'): 'Cycle to the next session',
             format_key('session.previous'): 'Cycle to the previous session',
-            format_key('session.reset'): 'Reset the current session',
             format_key('session.set_alias'): 'Set an alias for the current session',
             format_key('session.set_title'): 'set a title for the current session',
             format_key('session.show'): 'Display all sessions',
@@ -212,11 +212,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             if session_id is not None:
                 self._switch_to_session(session_id)
 
-        @key_bindings.add(*get_key('session.reset'), eager=True)
-        def session_reset(event):
-            self.chat_session.new_session()
+        @key_bindings.add(*get_key('session.clear'), eager=True)
+        def session_clear(event):
+            self.chat_session.new_session(preserve_alias=True, preserve_id=True)
             self.session_manager.refresh_from_chat_session(self.chat_session)
-            self._prompt_handler_system_message('Session reset')
+            self._prompt_handler_system_message('Conversation history cleared')
 
         @key_bindings.add(*get_key('session.previous'), eager=True)
         def session_previous(event):

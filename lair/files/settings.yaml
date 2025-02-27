@@ -27,10 +27,10 @@ chat.history_file: '~/.lair/history'
 # NOTE: Modifying these within a session can get confusing. It is recommended to only have one
 #       global version of the key bindings for consistency. Modifying these variables is possible
 #       within the chat interface, but changes may not take effect until Lair is restarted.
+chat.keys.session.clear: 'c-x c'
 chat.keys.session.new: 'c-x n'
 chat.keys.session.next: 'c-x space'
 chat.keys.session.previous: 'c-x p'
-chat.keys.session.reset: 'c-x r'
 chat.keys.session.show: 'c-x s'
 chat.keys.session.switch: 'c-x c-x'
 chat.keys.session.set_alias: 'c-x c-a'
