@@ -191,53 +191,61 @@ The prompt and toolbar can be customized via `chat.*` settings.
 
 #### Commands
 
-| Command          | Description                                                                                                            |
-|------------------|------------------------------------------------------------------------------------------------------------------------|
-| /clear           | Clear the conversation history                                                                                         |
-| /comfy           | Call ComfyUI workflows                                                                                                 |
-| /debug           | Toggle debugging                                                                                                       |
-| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                                      |
-| /help            | Show available commands and shortcuts                                                                                  |
-| /history         | Show current conversation                                                                                              |
-| /history-edit    | Modify the history JSONL in an external editor                                                                         |
-| /history-slice   | Modify the history with a Python style slice string (usage: `/history-slice [slice]`, slice format: `start:stop:step`) |
-| /last-prompt     | Display or save the most recently used prompt  (usage: `/last-prompt [filename?]`)                                     |
-| /last-response   | Display or save the most recently seen response  (usage: `/last-response [filename?]`)                                 |
-| /list-models     | Display a list of available models for the current session                                                             |
-| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                     |
-| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                      |
-| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                        |
-| /model           | Show or set a model  (usage: `/model [name?]`)                                                                         |
-| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                                            |
-| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                    |
-| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)              |
-| /set             | Show configuration or set a configuration value for the current mode  (usage: `/set ([key?] [value?])?`)               |
+| Command          | Description                                                                                                             |
+|------------------|-------------------------------------------------------------------------------------------------------------------------|
+| /clear           | Clear the conversation history                                                                                          |
+| /comfy           | Call ComfyUI workflows                                                                                                  |
+| /debug           | Toggle debugging                                                                                                        |
+| /extract         | Display or save an embedded response  (usage: `/extract [position?] [filename?]`)                                       |
+| /help            | Show available commands and shortcuts                                                                                   |
+| /history         | Show current conversation                                                                                               |
+| /history-edit    | Modify the history JSONL in an external editor                                                                          |
+| /history-slice   | Modify the history with a Python style slice string  (usage: `/history-slice [slice]`, Slice format: `start:stop:step`) |
+| /last-prompt     | Display the most recently used prompt                                                                                   |
+| /last-response   | Display or save the most recently seen response  (usage: `/last-response [filename?]`)                                  |
+| /list-models     | Display a list of available models for the current session                                                              |
+| /list-tools      | Show tools and their status                                                                                             |
+| /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                       |
+| /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                      |
+| /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                         |
+| /model           | Show or set a model  (usage: `/model [name?]`)                                                                          |
+| /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                                             |
+| /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                     |
+| /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)               |
+| /session         | List or switch sessions  (usage: `/session [session_id|alias?]`)                                                        |
+| /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id|alias?] [new_alias?]`)                               |
+| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias?]...`)                                                    |
+| /session-new     | Create a new session                                                                                                    |
+| /session-title   | Set or remove a session title  (usage: `/session-title [session_id|alias?] [new_title?]`)                               |
+| /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key?] [value?]`)                  |
 
 #### Shortcut Keys
 
 In addition to all the standard GNU-readline style key combinations, the following shortcuts are provided.
 
-| Shortcut Key | Action                               |
-|--------------|--------------------------------------|
-| C-x ?        | Show keys and shortcuts              |
-| C-x C-a      | Set an alias for the current session |
-| C-x C-t      | set a title for the current session  |
-| C-x C-x      | Fast switch to a different session   |
-| C-x m        | Show all available models            |
-| C-x n        | Create a new session                 |
-| C-x p        | Cycle to the previous session        |
-| C-x r        | Reset the current session            |
-| C-x s        | Display all sessions                 |
-| C-x space    | Cycle to the next session            |
-| C-x t        | Show all available tools             |
-| ESC-b        | Toggle bottom toolbar                |
-| ESC-d        | Toggle debugging output              |
-| ESC-l        | Toggle multi-line input              |
-| ESC-m        | Toggle markdown rendering            |
-| ESC-t        | Toggle tools                         |
-| ESC-v        | Toggle verbose output (tool calls)   |
-| ESC-w        | Toggle word wrapping                 |
-| F1 - F12     | Switch to session 1-12               |
+| Shortcut Key | Action                                           |
+|--------------|--------------------------------------------------|
+| C-x ?        | Show keys and shortcuts                          |
+| C-x C-a      | Set an alias for the current session             |
+| C-x C-h      | Show the full chat history                       |
+| C-x C-t      | set a title for the current session              |
+| C-x C-x      | Fast switch to a different session               |
+| C-x h        | Show the last two messages from the chat history |
+| C-x m        | Show all available models                        |
+| C-x n        | Create a new session                             |
+| C-x p        | Cycle to the previous session                    |
+| C-x r        | Reset the current session                        |
+| C-x s        | Display all sessions                             |
+| C-x space    | Cycle to the next session                        |
+| C-x t        | Show all available tools                         |
+| ESC-b        | Toggle bottom toolbar                            |
+| ESC-d        | Toggle debugging output                          |
+| ESC-l        | Toggle multi-line input                          |
+| ESC-m        | Toggle markdown rendering                        |
+| ESC-t        | Toggle tools                                     |
+| ESC-v        | Toggle verbose output (tool calls)               |
+| ESC-w        | Toggle word wrapping                             |
+| F1 - F12     | Switch to session 1-12                           |
 
 Keyboard shortcuts can be modified through `chat.keys.*`.
 
