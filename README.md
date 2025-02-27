@@ -1315,6 +1315,6 @@ Now, we can use `--read-only-session` (`-r`) to ask further questions without mo
 
 ```sh
 $ lair -m llama3.2:3b-ctx0 util -S -s cnn-demodulation -r \
-    -i 'Please summarize the conclusions of this paper briefly'
+    -i 'What is the accuracy of this technique'
 The proposed method achieved an error rate of 10^-2 or lower, indicating high accuracy in demodulating JT65A signals. The symbol error rate against SNR showed that the proposed method outperformed the theoretical limit of non-coherent demodulation of orthogonal FSK signals for 1.5 dB.
 ```
