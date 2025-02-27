@@ -22,16 +22,13 @@ import prompt_toolkit.styles
 
 class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
-    def __init__(self, *, starting_session_id_or_alias=None):
+    def __init__(self, *, starting_session_id_or_alias=None, create_session_if_missing=False):
         self.chat_session = lair.sessions.get_chat_session(
             lair.config.get('session.type'),
             enable_chat_output=True
         )
         self.session_manager = lair.sessions.SessionManager()
-        if starting_session_id_or_alias:
-            self._switch_to_session(starting_session_id_or_alias)
-        else:
-            self.session_manager.add_from_chat_session(self.chat_session)
+        self._init_starting_session(starting_session_id_or_alias, create_session_if_missing)
 
         self.last_used_session_id = None
 
@@ -79,6 +76,27 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             key_bindings=self._get_keybindings(),
             refresh_interval=0.2,
         )
+
+    def _init_starting_session(self, id_or_alias, create_session_if_missing):
+        if id_or_alias:
+            try:
+                self._switch_to_session(id_or_alias)
+            except lair.sessions.UnknownSessionException:
+                if create_session_if_missing:
+                    if not self.session_manager.is_alias_available(id_or_alias):
+                        if isinstance(lair.util.safe_int(id_or_alias), int):
+                            logger.error(f"Failed to create new session. Session aliases may not be integers.")
+                        else:
+                            logger.error(f"Failed to create new session. Alias is already used.")
+                        sys.exit(1)
+
+                    self.chat_session.session_alias = id_or_alias
+                    self.session_manager.add_from_chat_session(self.chat_session)
+                else:
+                    logger.error(f"Unknown session: {id_or_alias}")
+                    sys.exit(1)
+        else:
+            self.session_manager.add_from_chat_session(self.chat_session)
 
     def _get_shortcut_details(self):
         def format_key(name):

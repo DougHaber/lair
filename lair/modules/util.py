@@ -33,12 +33,12 @@ class Util():
                             help='Filename containing instructions for the request')
         parser.add_argument('-m', '--markdown', action='store_true',
                             help='Enable markdown output')
-        parser.add_argument('-n', '--new-session', type=str,
-                            help='Create a new session with provided alias')
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
         parser.add_argument('-s', '--session', type=str,
-                            help='Id or alias of an existing session to use')
+                            help='Session id or alias to use.')
+        parser.add_argument('-S', '--allow-create-session', action='store_true',
+                            help='If an alias provided via --session is not found, create it')
         parser.add_argument('-t', '--enable-tools', action='store_true',
                             help='Allow the model to call tools')
 
@@ -110,13 +110,8 @@ class Util():
 
         return messages
 
-    def _validate_arguments(self, arguments):
-        if arguments.session and arguments.new_session:
-            logger.error(f"The --session and --new-sesion arguments can not be used together.")
-            sys.exit(1)
-
     def _init_session_manager(self, chat_session, arguments):
-        if not (arguments.session or arguments.new_session):
+        if not arguments.session:
             chat_session.session_title = 'N/A'  # Prevent wasteful auto-title generation
             return None
 
@@ -125,20 +120,23 @@ class Util():
             try:
                 session_manager.switch_to_session(arguments.session, chat_session)
             except lair.sessions.UnknownSessionException:
-                logger.error(f"Unknown session: {arguments.session}")
-                sys.exit(1)
-        elif arguments.new_session:
-            session_manager.add_from_chat_session(chat_session)
-            if not session_manager.is_alias_available(arguments.new_session):
-                logger.error(f"Failed to create new session. Alias is already used.")
-                sys.exit(1)
-            chat_session.session_alias = arguments.new_session
+                if arguments.allow_create_session:
+                    if not session_manager.is_alias_available(arguments.session):
+                        if isinstance(lair.util.safe_int(arguments.session), int):
+                            logger.error(f"Failed to create new session. Session aliases may not be integers.")
+                        else:
+                            logger.error(f"Failed to create new session. Alias is already used.")
+                        sys.exit(1)
+
+                    chat_session.session_alias = arguments.session
+                    session_manager.add_from_chat_session(chat_session)
+                else:
+                    logger.error(f"Unknown session: {arguments.session}")
+                    sys.exit(1)
 
         return session_manager
 
     def run(self, arguments):
-        self._validate_arguments(arguments)
-
         chat_session = lair.sessions.get_chat_session(
             session_type=lair.config.get('session.type'),
         )
