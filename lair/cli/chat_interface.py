@@ -88,6 +88,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         return {  # shortcut ->  description
             'F1 - F12': 'Switch to session 1-12',
+            format_key('show_history'): 'Show the full chat history',
+            format_key('show_recent_history'): 'Show the last two messages from the chat history',
             format_key('list_models'): 'Show all available models',
             format_key('list_tools'): 'Show all available tools',
             format_key('session.new'): 'Create a new session',
@@ -223,6 +225,14 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         @key_bindings.add(*get_key('show_help'), eager=True)
         def show_help(event):
             prompt_toolkit.application.run_in_terminal(self.print_help)
+
+        @key_bindings.add(*get_key('show_history'), eager=True)
+        def show_history(event):
+            prompt_toolkit.application.run_in_terminal(self.print_history)
+
+        @key_bindings.add(*get_key('show_recent_history'), eager=True)
+        def show_recent_history(event):
+            prompt_toolkit.application.run_in_terminal(lambda: self.print_history(num_messages=2))
 
         @key_bindings.add(*get_key('list_models'), eager=True)
         def list_models(event):

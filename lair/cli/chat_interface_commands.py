@@ -172,13 +172,7 @@ class ChatInterfaceCommands():
         if len(arguments) != 0:
             self.reporting.user_error("ERROR: /history takes no arguments")
         else:
-            messages = self.chat_session.history.get_messages()
-
-            if not messages:
-                return
-            else:
-                for message in messages:
-                    self.reporting.message(message)
+            self.print_history()
 
     def command_history_edit(self, command, arguments, arguments_str):
         if len(arguments) != 0:
@@ -363,7 +357,7 @@ class ChatInterfaceCommands():
 
     def command_session_new(self, command, arguments, arguments_str):
         if len(arguments) != 0:
-            self.reporting.user_error("ERROR: Invalid arguments: /session-new does not take arguments")
+            self.reporting.user_error("ERROR: /session-new takes no arguments")
         else:
             self._new_chat_session()
             self.reporting.system_message('New session created')
