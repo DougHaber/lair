@@ -13,13 +13,11 @@ from lair.logging import logger  # noqa
 class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
-    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None,
-                 enable_chat_output: bool = False):
+    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
         """
         Arguments:
            history: History class to provide. Defaults to a new ChatHistory()
            tool_set: ToolSet to use. Defaults to a new ToolSet()
-           enable_chat_output: When true, send verbose mode output. Must also be enabled via chat.verbose.
         """
         self.reporting = lair.reporting.Reporting()
         self.last_prompt = None
@@ -30,7 +28,6 @@ class BaseChatSession(abc.ABC):
         self.session_title = None  # Short title for the session
 
         self.history = history or ChatHistory()
-        self.enable_chat_output = enable_chat_output
         self.tool_set = tool_set or lair.components.tools.ToolSet()
 
     @abc.abstractmethod

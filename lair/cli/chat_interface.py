@@ -23,10 +23,7 @@ import prompt_toolkit.styles
 class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def __init__(self, *, starting_session_id_or_alias=None, create_session_if_missing=False):
-        self.chat_session = lair.sessions.get_chat_session(
-            lair.config.get('session.type'),
-            enable_chat_output=True
-        )
+        self.chat_session = lair.sessions.get_chat_session(lair.config.get('session.type'))
         self.session_manager = lair.sessions.SessionManager()
         self._init_starting_session(starting_session_id_or_alias, create_session_if_missing)
 
