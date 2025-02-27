@@ -35,6 +35,8 @@ class Util():
                             help='Enable markdown output')
         parser.add_argument('-p', '--pipe', action='store_true',
                             help='Read content from stdin')
+        parser.add_argument('-r', '--read-only-session', action='store_true',
+                            help='Do not modify the session used')
         parser.add_argument('-s', '--session', type=str,
                             help='Session id or alias to use.')
         parser.add_argument('-S', '--allow-create-session', action='store_true',
@@ -121,7 +123,10 @@ class Util():
                 session_manager.switch_to_session(arguments.session, chat_session)
             except lair.sessions.UnknownSessionException:
                 if arguments.allow_create_session:
-                    if not session_manager.is_alias_available(arguments.session):
+                    if arguments.read_only_session:
+                        logger.error(f"Unable to create a new session with the --read-only-session flag.")
+                        sys.exit(1)
+                    elif not session_manager.is_alias_available(arguments.session):
                         if isinstance(lair.util.safe_int(arguments.session), int):
                             logger.error(f"Failed to create new session. Session aliases may not be integers.")
                         else:
@@ -161,7 +166,7 @@ class Util():
                                  user_messages=user_messages)
         response = self.clean_response(response)
 
-        if session_manager is not None:
+        if session_manager is not None and not arguments.read_only_session:
             # The original configuration is restored so that there are no configuration changes.
             lair.config.update(config_backup)
             session_manager.refresh_from_chat_session(chat_session)
