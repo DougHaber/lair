@@ -12,6 +12,8 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 [Comfy](#comfy) |
 [Util](#util)
 
+[Changelog](CHANGELOG.md)
+
 </div>
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
