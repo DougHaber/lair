@@ -57,7 +57,12 @@ class ChatInterfaceReports():
         models = sorted(self.chat_session.list_models(), key=lambda m: m['id'])
         if update_cache:  # Update the cached list of models with the latest results
             self._models = models
-        self.reporting.table_from_dicts_system(models)
+
+        column_formatters = {
+            'id': lambda v: self.reporting.plain(v, style='bright_cyan' if v == lair.config.get('model.name') else '')
+        }
+        self.reporting.table_from_dicts_system(models,
+                                               column_formatters=column_formatters)
 
     def print_modes_report(self):
         rows = []
