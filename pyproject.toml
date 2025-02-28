@@ -21,6 +21,7 @@ pdfplumber = "^0.11.5"
 duckduckgo-search = "^7.3.0"
 trafilatura = "^2.0.0"
 jinja2 = "^3.1.5"
+lmdb = "^1.6.2"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.1.0"
