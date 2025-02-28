@@ -1,10 +1,11 @@
 # (WIP) v0.6.2+dev -
 
 ### Changes
+- chat: Add colors and better sorting to Tools report
 - chat: Highlight active model in list-models report
 - chat: Improve sorting in modes report and highlight active instead of using a `*`
 - chat: Remove sessions report active column and highlight active id
-- chat: Add colors and better sorting to Tools report
+- chat: Show `0` messages with a dark gray color
 
 ### Internal
 - internal: Rename reportings plain() to style() for clarity

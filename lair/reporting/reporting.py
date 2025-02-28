@@ -352,13 +352,13 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         return styles[round(len(styles) * index_percent)]
 
-    def color_gt_lt(self, value, *, center=0):
+    def color_gt_lt(self, value, *, center=0, gt_style='green', lt_style='red', eq_style='gray'):
         if value > center:
-            return 'green'
+            return gt_style
         elif value < center:
-            return 'red'
+            return lt_style
         else:
-            return 'gray'
+            return eq_style
 
     def color_bool(self, value, true_str='true', false_str='false', true_style='bold green', false_style='dim red'):
         if value:

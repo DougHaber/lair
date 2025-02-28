@@ -93,7 +93,8 @@ class ChatInterfaceReports():
             self.reporting.system_message('No sessions found.')
         else:
             column_formatters = {
-                'id': lambda v: self.reporting.style(str(v), style='bright_cyan') if v == current_session_id else str(v),
+                'id': lambda v: self.reporting.style(str(v), style='bright_cyan' if v == current_session_id else None),
+                'num_messages': lambda v: self.reporting.style(str(v), style='gray39' if v == 0 else None),
             }
             self.reporting.table_from_dicts_system(rows,
                                                    column_formatters=column_formatters,
