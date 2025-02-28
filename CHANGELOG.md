@@ -1,4 +1,4 @@
-# WIP: v0.6.0 - Session Management, Keyboard Shortcuts, FileTool, History Editing
+# v0.6.0 - Session Management, Keyboard Shortcuts, FileTool, History Editing
 
 ### New Features
 - chat: Add support for editing history via slices
