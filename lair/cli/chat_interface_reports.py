@@ -72,7 +72,6 @@ class ChatInterfaceReports():
         rows = []
         for details in sorted(self.session_manager.all_sessions(), key=lambda s: s['id']):
             rows.append({
-                'active': '*' if details['id'] == current_session_id else '',
                 'id': details['id'],
                 'alias': details['alias'],
                 'title': details['title'],
@@ -84,9 +83,12 @@ class ChatInterfaceReports():
         if len(rows) == 0:
             self.reporting.system_message('No sessions found.')
         else:
+            column_formatters = {
+                'id': lambda v: self.reporting.plain(str(v), style='bright_cyan') if v == current_session_id else str(v),
+            }
             self.reporting.table_from_dicts_system(rows,
-                                                   column_names=['active', 'id', 'alias', 'mode',
-                                                                 'model', 'title', 'num_messages'])
+                                                   column_formatters=column_formatters,
+                                                   column_names=['id', 'alias', 'mode', 'model', 'title', 'num_messages'])
 
     def print_tools_report(self):
         tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: (m['class_name'], m['name']))
