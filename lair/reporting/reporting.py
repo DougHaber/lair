@@ -63,7 +63,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         return new_rows
 
-    def table_from_dicts(self, rows_of_dicts, *, column_names=None,
+    def table_from_dicts(self, rows_of_dicts, *, column_names=None, column_formatters=None,
                          automatic_column_names=True, style=None, markup=False):
         if not rows_of_dicts:
             return
@@ -82,6 +82,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         self.table(table_rows,
                    column_names=column_names,
+                   column_formatters=column_formatters,
                    style=style,
                    markup=markup)
 
@@ -95,23 +96,49 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         else:
             return value
 
-    def table(self, rows, *, column_names=None, style=None, markup=False):
+    def table(self, rows, *, column_names=None, column_formatters=None, style=None, markup=False):
+        """
+        Display a table from a 2-dimensional array.
+
+        Args:
+            rows (Iterable): A 2-dimensional array of row data.
+            column_names (Optional[List[str]]): A list of names for the columns. When provided, these names are used in the header,
+                and also as keys for column_formatters if specified.
+            column_formatters (Optional[Dict[str, Callable]]): A dictionary mapping column names to formatter functions.
+                For any cell in a column with an associated formatter, the cell value is passed to the formatter,
+                and its return value is used directly (without applying self.plain()).
+                Note: This option only takes effect if column_names is provided.
+            style (Optional[str]): Base rich style to apply to the table.
+            markup (bool): If False, all column names and row data (except those formatted via column_formatters)
+                are converted to plain text using self.plain(self.format_value(...)). If True, values are used as-is
+                unless a formatter is defined.
+
+        Returns:
+            None
+        """
         if rows is None:
             return
 
-        table = rich.table.Table(style=style,
-                                 show_header=column_names is not None)
+        table = rich.table.Table(style=style, show_header=column_names is not None)
 
         if column_names:
             for column_name in column_names:
                 table.add_column(column_name if markup else self.plain(column_name))
 
         for row in rows:
-            if not markup:
-                row = [i if isinstance(i, rich.text.Text)
-                       else self.plain(self.format_value(i))
-                       for i in row]
-            table.add_row(*row)
+            new_row = []
+            for idx, cell in enumerate(row):
+                # If column_names and column_formatters are provided and a formatter exists for this column,
+                # use it. Do not strip markup from its output.
+                if column_names and column_formatters and idx < len(column_names) and column_names[idx] in column_formatters:
+                    formatted_cell = column_formatters[column_names[idx]](cell)
+                else:
+                    if not markup:
+                        formatted_cell = cell if isinstance(cell, rich.text.Text) else self.plain(self.format_value(cell))
+                    else:
+                        formatted_cell = cell
+                new_row.append(formatted_cell)
+            table.add_row(*new_row)
 
         self.print_rich(table)
 
@@ -331,3 +358,9 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             return 'red'
         else:
             return 'gray'
+
+    def color_bool(self, value, true_str='true', false_str='false', true_style='bold green', false_style='dim red'):
+        if value:
+            return rich.text.Text(true_str, style=true_style)
+        else:
+            return rich.text.Text(false_str, style=false_style)

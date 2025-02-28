@@ -89,5 +89,10 @@ class ChatInterfaceReports():
                                                                  'model', 'title', 'num_messages'])
 
     def print_tools_report(self):
-        tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: m['name'])
-        self.reporting.table_from_dicts_system(tools, column_names=['class_name', 'name', 'enabled'])
+        tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: (m['class_name'], m['name']))
+        column_formatters = {
+            'enabled': lambda v: self.reporting.color_bool(v, true_str='yes', false_str='-', false_style='dim'),
+        }
+        self.reporting.table_from_dicts_system(tools,
+                                               column_names=['class_name', 'name', 'enabled'],
+                                               column_formatters=column_formatters)
