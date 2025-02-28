@@ -10,6 +10,8 @@
 - chat: F1 through F12 quick-switch to sessions 1 through 12
 - chat: Key toggles display system messages instead of flashing the toolbar
 - chat: Multi-session support
+- chat: New commands for managing sessions
+- chat: New template variables: `session_id`, `session_alias`
 - sessions are now persisted into an LMDB
 - support automatic title generation for sessions (configured via session.auto_generate_titles.*)
 - tools: Add in new File Tool for working with files on the local filesystem
@@ -22,16 +24,14 @@
 - documentation: Many cleanups
 
 ### Bugfixes
-- Fix invalid openai max retries and timeout values
-- Fix issue where SSL verification was performed even when disabled in ComfyScript
-- Fix issue where template variable model could ignore overrides
-- Fixed issue where model overrides could be ignored
-- Probably a lot of others!
+- fix invalid openai max retries and timeout values
+- fix issue where SSL verification was performed even when disabled in ComfyScript
+- fix issue where template variable model could ignore overrides
+- fix issue where model overrides could be ignored
+- probably a lot of others!
 
 ### Internal
-- Add new v0.2 serialization format
-- chat: New commands for managing sessions
-- chat: New template variables: `session_id`, `session_alias`
+- add new v0.2 serialization format
 - overhauled config, removing mode parameters and making mode defaults immutable to simplify
 - overhauled events system and added support for event deferment and automatic deregistration
 
@@ -88,7 +88,7 @@
 - config: Add `_inherit` property, allowing config sections to inherit from other sections
 
 ### Changes
-- README.md: Many cleanups, fixes, and refactors
+- docs: Many cleanups, fixes, and refactors
 
 
 # v0.2.0 - Support for Comfy Workflows
@@ -100,14 +100,14 @@
 - comfy: Add workflow `ltxv-i2v` for LTX Video image to video
 - comfy: Add workflow `ltxv-prompt` for creating video prompts from Florence2
 - config files now support an _inherit attribute which contains a list of other modes to inherit from (experimental)
-- New `comfy` sub-command for running ComfyUI workflows
+- new `comfy` sub-command for running ComfyUI workflows
 
 ### Changes
 - chat file attachment syntax now uses doubled angle brackets `<<~/file.png>>`
 - config.yaml: Added sdxl and sdxl_lightning example configs (commented by default)
 
 ### Bugfixes
-- Fix debug checks to be for all log levels inclusive of debug, instead of only debug
+- fix debug checks to be for all log levels inclusive of debug, instead of only debug
 
 ### Internal
 - new function: `lair.config.get()`, to simplify retrieving settings without having to specify the active mode
