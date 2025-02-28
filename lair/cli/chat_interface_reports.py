@@ -61,9 +61,13 @@ class ChatInterfaceReports():
 
     def print_modes_report(self):
         rows = []
-        for mode in filter(lambda m: not m.startswith('_'), lair.config.modes.keys()):
-            current = '* ' if mode == lair.config.active_mode else '  '
-            rows.append([current + mode, lair.config.modes[mode].get('_description', '')])
+        for mode in sorted(filter(lambda m: not m.startswith('_'), lair.config.modes.keys())):
+            if mode == lair.config.active_mode:
+                mode_display_value = self.reporting.plain(mode, style='bright_cyan')
+            else:
+                mode_display_value = self.reporting.plain(mode)
+
+            rows.append([mode_display_value, lair.config.modes[mode].get('_description', '')])
 
         self.reporting.table_system(rows)
 
