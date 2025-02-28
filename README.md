@@ -6,13 +6,12 @@ CLI Tools for Working With Generative AI
 
 [Installation](#installation) |
 [Configuration](#configuration) |
-[Features](#features)
+[Features](#features) |
+[Changelog](CHANGELOG.md)
 
 Modules: [Chat](#chat---command-line-chat-interface) |
 [Comfy](#comfy) |
 [Util](#util)
-
-[Changelog](CHANGELOG.md)
 
 </div>
 
