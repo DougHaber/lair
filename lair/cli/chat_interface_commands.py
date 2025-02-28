@@ -220,7 +220,7 @@ class ChatInterfaceCommands():
                     lair.util.save_file(filename, last_prompt + '\n')
                     self.reporting.system_message(f'Last prompt saved  ({len(last_prompt)} bytes)')
                 else:
-                    self.reporting.print_rich(self.reporting.plain(last_prompt))
+                    self.reporting.print_rich(self.reporting.style(last_prompt))
             else:
                 logger.warn("No last prompt found")
 

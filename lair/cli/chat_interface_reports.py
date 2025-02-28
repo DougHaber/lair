@@ -13,9 +13,9 @@ class ChatInterfaceReports():
         for key, value in sorted(lair.config.active.items()):
             if not key.startswith('_'):
                 if value == default_settings.get(key):
-                    display_value = self.reporting.plain(str(value), style=unmodified_style)
+                    display_value = self.reporting.style(str(value), style=unmodified_style)
                 else:
-                    display_value = self.reporting.plain(str(value), style=modified_style)
+                    display_value = self.reporting.style(str(value), style=modified_style)
                 rows.append([key, display_value])
 
         self.reporting.table_system(rows)
@@ -59,7 +59,7 @@ class ChatInterfaceReports():
             self._models = models
 
         column_formatters = {
-            'id': lambda v: self.reporting.plain(v, style='bright_cyan' if v == lair.config.get('model.name') else '')
+            'id': lambda v: self.reporting.style(v, style='bright_cyan' if v == lair.config.get('model.name') else '')
         }
         self.reporting.table_from_dicts_system(models,
                                                column_formatters=column_formatters)
@@ -68,9 +68,9 @@ class ChatInterfaceReports():
         rows = []
         for mode in sorted(filter(lambda m: not m.startswith('_'), lair.config.modes.keys())):
             if mode == lair.config.active_mode:
-                mode_display_value = self.reporting.plain(mode, style='bright_cyan')
+                mode_display_value = self.reporting.style(mode, style='bright_cyan')
             else:
-                mode_display_value = self.reporting.plain(mode)
+                mode_display_value = self.reporting.style(mode)
 
             rows.append([mode_display_value, lair.config.modes[mode].get('_description', '')])
 
@@ -93,7 +93,7 @@ class ChatInterfaceReports():
             self.reporting.system_message('No sessions found.')
         else:
             column_formatters = {
-                'id': lambda v: self.reporting.plain(str(v), style='bright_cyan') if v == current_session_id else str(v),
+                'id': lambda v: self.reporting.style(str(v), style='bright_cyan') if v == current_session_id else str(v),
             }
             self.reporting.table_from_dicts_system(rows,
                                                    column_formatters=column_formatters,

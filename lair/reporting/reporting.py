@@ -52,8 +52,9 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         else:
             print(json_str)
 
-    def plain(self, *args, **kwargs):
-        """Return plain rich string with no Markup."""
+    def style(self, *args, **kwargs):
+        """Style a string using rich.
+        If no style parameter is provided, convert to plaintext so that rich markup isn't processed"""
         return rich.text.Text(*args, **kwargs)
 
     def filter_keys_dict_list(self, rows_of_dicts, allowed_keys):
@@ -106,11 +107,11 @@ class Reporting(metaclass=ReportingSingletoneMeta):
                 and also as keys for column_formatters if specified.
             column_formatters (Optional[Dict[str, Callable]]): A dictionary mapping column names to formatter functions.
                 For any cell in a column with an associated formatter, the cell value is passed to the formatter,
-                and its return value is used directly (without applying self.plain()).
+                and its return value is used directly (without applying self.style()).
                 Note: This option only takes effect if column_names is provided.
             style (Optional[str]): Base rich style to apply to the table.
             markup (bool): If False, all column names and row data (except those formatted via column_formatters)
-                are converted to plain text using self.plain(self.format_value(...)). If True, values are used as-is
+                are converted to plain text using self.style(self.format_value(...)). If True, values are used as-is
                 unless a formatter is defined.
 
         Returns:
@@ -123,7 +124,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         if column_names:
             for column_name in column_names:
-                table.add_column(column_name if markup else self.plain(column_name))
+                table.add_column(column_name if markup else self.style(column_name))
 
         for row in rows:
             new_row = []
@@ -134,7 +135,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
                     formatted_cell = column_formatters[column_names[idx]](cell)
                 else:
                     if not markup:
-                        formatted_cell = cell if isinstance(cell, rich.text.Text) else self.plain(self.format_value(cell))
+                        formatted_cell = cell if isinstance(cell, rich.text.Text) else self.style(self.format_value(cell))
                     else:
                         formatted_cell = cell
                 new_row.append(formatted_cell)
@@ -166,7 +167,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         if show_exception or show_exception is None and lair.util.is_debug_enabled():
             self.exception()
 
-        self.print_rich(self.plain('ERROR: ' + message),
+        self.print_rich(self.style('ERROR: ' + message),
                         style=lair.config.get('style.error'))
 
     def format_json(self, json_str, max_length=None, plain_style=None, enable_highlighting=True):
@@ -239,7 +240,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         self.console.print(' ' * remaining_characters, style=background_style)
 
     def user_error(self, message):
-        self.print_rich(self.plain(message),
+        self.print_rich(self.style(message),
                         style=lair.config.get('style.user_error'))
 
     def system_message(self, message, show_heading=False):
@@ -251,7 +252,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             self.print_rich(rich.markdown.Markdown(message),
                             style=lair.config.get('style.system_message'))
         else:
-            self.print_rich(self.plain(message),
+            self.print_rich(self.style(message),
                             style=lair.config.get('style.system_message'))
 
     def _llm_output__with_thoughts(self, message):
@@ -284,7 +285,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
                 self.print_rich(rich.markdown.Markdown(message),
                                 style=lair.config.get('style.llm_output'))
         else:
-            self.print_rich(self.plain(message),
+            self.print_rich(self.style(message),
                             style=lair.config.get('style.llm_output'))
 
     def format_content_list(self, content_list):
