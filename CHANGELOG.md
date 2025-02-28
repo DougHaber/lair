@@ -56,8 +56,10 @@
 - tools: Added Search tool for searching DuckDuckGo for web or news results
 - util: Added `-t` / `--enable-tools` flag to run utilities with tools
 
-### Bugfixes
+### Changes
 - config: `debug.verbose` is now `chat.verbose`  (previously unused leftover from langchain verbose)
+
+### Bugfixes
 - core: Fix issue where overrides for individual settings overrides weren't propagating to the comfy defaults
 - reporting: Fix issues with table generation when all columns aren't used
 - util: Fix issues when launching without attachments
