@@ -1,6 +1,6 @@
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
 
-#### Bug Fixes
+### Bug Fixes
 - fix missing lmdb dependency
 - tools: Fix config error from flags misuse
 
