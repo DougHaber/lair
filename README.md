@@ -228,7 +228,7 @@ The prompt and toolbar can be customized via `chat.*` settings.
 
 #### Shortcut Keys
 
-Lair's chat interface offers numerous keyboard shortcuts to enhance usability. Pressing `C-x ?` displays a list of all available shortcuts along with their current bindings.
+Lair's chat interface offers numerous keyboard shortcuts to enhance usability. Using `/help` or pressing `C-x ?` displays a list of all available shortcuts along with their current bindings.
 
 For those unfamiliar, `C-x ?` means pressing the `Control` key and the `x` key simultaneously, releasing both, and then pressing the `?` key. In contrast, shortcuts like `C-x C-x` indicate that the `Control` key should remain held down while pressing the second key.
 
@@ -329,7 +329,11 @@ Lair offers various commands and keyboard shortcuts for managing sessions. These
   - Use `/session-alias [id|alias] [new_alias]` to assign an alias.
   - The alias for the current session can be set with `C-x C-a`.
 
-For a full list of commands and shortcuts, use `C-x ?`.
+- **Setting Session Titles**
+  - Use `/session-title [id|alias] [new_alias]` to assign an title.
+  - The alias for the current session can be set with `C-x C-t`.
+
+For a full list of commands and shortcuts, use `/help` or `C-x ?`.
 
 ##### Session Titles
 
