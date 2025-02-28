@@ -60,7 +60,7 @@ class ToolSet():
 
         enabled_tools = []
         for tool in self.tools.values():
-            if lair.config.get(tool['flags']) is not True:
+            if not self.all_flags_enabled(tool['flags']):
                 continue
 
             enabled_tools.append(tool)

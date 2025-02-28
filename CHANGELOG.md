@@ -1,3 +1,10 @@
+# v0.6.1 - Bug Fixes: Dependency & Tools issues
+
+#### Bug Fixes
+- fix missing lmdb dependency
+- tools: Fix config error from flags misuse
+
+
 # v0.6.0 - Session Management, Keyboard Shortcuts, FileTool, History Editing
 
 ### New Features
@@ -23,7 +30,7 @@
 - config: Remove old database.* keys and add new ones for the sessions database
 - documentation: Many cleanups
 
-### Bugfixes
+### Bug Fixes
 - fix invalid openai max retries and timeout values
 - fix issue where SSL verification was performed even when disabled in ComfyScript
 - fix issue where template variable model could ignore overrides
@@ -59,7 +66,7 @@
 ### Changes
 - config: `debug.verbose` is now `chat.verbose`  (previously unused leftover from langchain verbose)
 
-### Bugfixes
+### Bug Fixes
 - core: Fix issue where overrides for individual settings overrides weren't propagating to the comfy defaults
 - reporting: Fix issues with table generation when all columns aren't used
 - util: Fix issues when launching without attachments
@@ -74,7 +81,7 @@
 - add support for PDF and text attachments to `chat` and `util`
 - add support for styling reasoning model thought tag output
 
-### Bugfixes
+### Bug Fixes
 - fix issue where history could be appended to, even on chat failures
 
 
@@ -108,7 +115,7 @@
 - chat file attachment syntax now uses doubled angle brackets `<<~/file.png>>`
 - config.yaml: Added sdxl and sdxl_lightning example configs (commented by default)
 
-### Bugfixes
+### Bug Fixes
 - fix debug checks to be for all log levels inclusive of debug, instead of only debug
 
 ### Internal
