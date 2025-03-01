@@ -95,6 +95,6 @@ class ToolSet():
     def call_tool(self, name, arguments, tool_call_id):
         logger.debug(f"Tool call: {name}({arguments})  [{tool_call_id}]")
         if name not in self.tools:
-            raise ValueError(f"ToolSet().call_tool(): Call to undefined tool: {name}")
+            return {f"error": "Unknown tool: {name}"}
 
         return self.tools[name]['handler'](**arguments)

@@ -12,6 +12,7 @@
 
 ### Bug Fixes
 - chat: Fix error when switching back to a deleted session
+- tools: Fix incorrect response to invalid tool calls
 
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
