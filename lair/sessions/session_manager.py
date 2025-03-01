@@ -66,7 +66,7 @@ class SessionManager:
 
             return session_id
 
-    def get_session_id(self, id_or_alias):
+    def get_session_id(self, id_or_alias, raise_exception=True):
         with self.env.begin() as txn:
             session_id = txn.get(f'alias:{id_or_alias}'.encode())
             if session_id:
@@ -78,7 +78,10 @@ class SessionManager:
                 if session_id:
                     return int(id_or_alias)
 
-        raise UnknownSessionException(f"Unknown session: {id_or_alias}")
+        if raise_exception:
+            raise UnknownSessionException(f"Unknown session: {id_or_alias}")
+        else:
+            return None
 
     def all_sessions(self):
         with self.env.begin() as txn:

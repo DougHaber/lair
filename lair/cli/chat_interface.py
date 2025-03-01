@@ -313,7 +313,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         This will be either the last used session id or the next session_id
         """
         if self.last_used_session_id is not None and \
-           self.session_manager.get_session_id(self.last_used_session_id):
+           self.session_manager.get_session_id(self.last_used_session_id, raise_exception=False):
             # If the last_used_session_id is still valid, return that
             return self.last_used_session_id
         else:

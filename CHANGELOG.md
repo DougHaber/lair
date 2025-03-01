@@ -5,10 +5,13 @@
 - chat: Highlight active model in list-models report
 - chat: Improve sorting in modes report and highlight active instead of using a `*`
 - chat: Remove sessions report active column and highlight active id
-- chat: Show `0` messages with a dark gray color
+- chat: Show `0` messages in the sessions report with a dark gray color
 
 ### Internal
 - internal: Rename reportings plain() to style() for clarity
+
+### Bug Fixes
+- chat: Fix error when switching back to a deleted session
 
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
