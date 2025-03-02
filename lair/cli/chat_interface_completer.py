@@ -66,7 +66,7 @@ class ChatInterfaceCompleter(Completer):
             value = str(value_raw)
 
             if value_raw is None:
-                if not components[2] and lair.config.is_known_key(key):
+                if not components[2]:
                     # If the current value is None, show a <null> choice
                     yield Completion(f'/set {key}',
                                      display='<null>',
