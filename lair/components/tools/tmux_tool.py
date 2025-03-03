@@ -22,7 +22,7 @@ class TmuxTool:
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='run',
-            flags=['tools.tmux.enabled', 'tools.tmux.enable_run'],
+            flags=['tools.tmux.enabled', 'tools.tmux.run.enabled'],
             definition_handler=lambda: self._generate_run_definition(),
             handler=lambda *args, **kwargs: self.run()
         )
