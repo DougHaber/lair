@@ -1333,7 +1333,7 @@ $ lair \
 The use of a convolutional neural network (CNN) for demodulating weak JT65A signals achieves acceptable performance, with the interference immunity being about 1.5 dB less than the theoretical limit for non-coherent demodulation of orthogonal MFSK signals.
 ```
 
-Now, we can use `--read-only-session` (`-r`) to ask further questions without modifying the session. Since the paper is already in context, this avoids unnecessary additions to the session history.
+Now, we can use `--read-only-session` / `-r` to ask further questions without modifying the session. Since the paper is already in context, this avoids unnecessary additions to the session history.
 
 ⚠️ **Do not include the `--attach-file` / `-a` flag in follow-up queries**, as this would re-upload the same content.
 

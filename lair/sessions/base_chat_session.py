@@ -99,6 +99,7 @@ class BaseChatSession(abc.ABC):
             return None
 
         messages = self.history.get_messages()[:2]
+        print("_____ M _____=%s" % messages)
         message = self.invoke(
             disable_system_prompt=True,
             model=lair.config.get('session.auto_generate_titles.model'),

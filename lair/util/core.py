@@ -87,7 +87,7 @@ def is_debug_enabled():
 
 
 def strip_escape_codes(content):
-    return re.sub(r'\033\[\d+(;\d+)*m', '', content)
+    return re.sub(r'\033\[[0-9;?]*[a-zA-Z]', '', content)
 
 
 def get_message(role, message):
