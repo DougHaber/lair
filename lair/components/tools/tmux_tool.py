@@ -18,7 +18,7 @@ class TmuxTool:
 
         self.log_files = {}    # Mapping from pane_id to log file path
         self.log_offsets = {}  # Mapping from pane_id to current file read offset
-        return
+
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='run',
