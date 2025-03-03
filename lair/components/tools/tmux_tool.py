@@ -183,7 +183,11 @@ class TmuxTool:
                         "enter": {"type": "boolean", "description": "Whether to send Enter after keys.", "default": True},
                         "literal": {"type": "boolean", "description": "Send keys literally if true.", "default": True},
                         "return_mode": {"type": "string", "description": "Output mode: 'new' or 'full'.", "default": "new"},
-                        "delay": {"type": "number", "description": "Delay (in seconds) before capturing output.", "default": 0.2}
+                        "delay": {
+                            "type": "number",
+                            "description": "Delay (in seconds) before capturing output. Set longer for long-running commands.",
+                            "default": 0.2
+                        }
                     },
                     "required": ["keys"]
                 }
