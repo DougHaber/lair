@@ -91,7 +91,7 @@ class ChatInterfaceCommands():
             },
             '/session-delete': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_delete(command, arguments, arguments_str),
-                'description': 'Delete session(s)  (usage: /session-delete [session_id|alias?]...)'
+                'description': 'Delete session(s)  (usage: /session-delete [session_id|alias?]..., provide "all" to remove all sessions)'
             },
             '/session-new': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_new(command, arguments, arguments_str),
@@ -350,9 +350,10 @@ class ChatInterfaceCommands():
         else:
             self.session_manager.delete_sessions(arguments)
 
+            # If the current session was deleted, recreate it
             try:
                 self.session_manager.get_session_id(self.chat_session.session_id)
-            except lair.sessions.session_manager.UnknownSessionException:  # Current session was deleted
+            except lair.sessions.session_manager.UnknownSessionException:
                 self._new_chat_session()
 
     def command_session_new(self, command, arguments, arguments_str):

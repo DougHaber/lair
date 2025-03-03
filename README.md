@@ -221,7 +221,7 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)               |
 | /session         | List or switch sessions  (usage: `/session [session_id|alias?]`)                                                        |
 | /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id|alias?] [new_alias?]`)                               |
-| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias?]...`)                                                    |
+| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias?]...`, provide `all` to remove all sesions)               |
 | /session-new     | Create a new session                                                                                                    |
 | /session-title   | Set or remove a session title  (usage: `/session-title [session_id|alias?] [new_title?]`)                               |
 | /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key?] [value?]`)                  |
@@ -324,6 +324,7 @@ Lair offers various commands and keyboard shortcuts for managing sessions. These
 - **Deleting Sessions**
   - Use `/session-delete [id|alias]` to delete one or more sessions.
   - Example: `/session-delete 1 2 3` deletes sessions **1, 2, and 3**.
+  - `all` could be provided to delete every session.
 
 - **Setting Session Aliases**
   - Use `/session-alias [id|alias] [new_alias]` to assign an alias.
