@@ -11,6 +11,7 @@
 - internal: Rename reportings plain() to style() for clarity
 
 ### Bug Fixes
+- Fix issue where automatic title generation fails if it uses a tool message (#13)
 - chat: Fix error on autocomplete for /set with null current values
 - chat: Fix error when switching back to a deleted session
 - tools: Fix incorrect response to invalid tool calls
