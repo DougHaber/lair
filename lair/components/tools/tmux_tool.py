@@ -100,9 +100,9 @@ class TmuxTool:
         '''
         Return the output dict based on the return_mode
         '''
-        if return_mode == "new":
+        if return_mode == "stream":
             return self.read_new_output(prune_line=prune_line)
-        elif return_mode == "full":
+        elif return_mode == "screen":
             return self.capture_output()
 
     def _generate_run_definition(self):
@@ -111,9 +111,7 @@ class TmuxTool:
             "function": {
                 "name": "run",
                 "description": (
-                    f"Create a new tmux window. {lair.config.get('tools.tmux.run.description')}"
-                    "Optionally wait a short delay and return output from the new window. "
-                    "Set return_mode to 'new' (default) for new output or 'full' for a full screen capture."
+                    f"Create a new tmux window. {lair.config.get('tools.tmux.run.description')} "
                 ),
                 "parameters": {
                     "type": "object",
@@ -125,8 +123,9 @@ class TmuxTool:
                         },
                         "return_mode": {
                             "type": "string",
-                            "description": "Output mode: 'new' (default) or 'full'.",
-                            "default": "new"
+                            "description": "Output mode: 'stream' (new terminal content) or 'screen' (string capture of the entire screen).",
+                            "enum": ["screen", "stream"],
+                            "default": "stream"
                         }
                     }
                 }
@@ -148,14 +147,14 @@ class TmuxTool:
 
         return file_name
 
-    def run(self, *, delay=2.0, return_mode="new"):
+    def run(self, *, delay=2.0, return_mode="stream"):
         try:
             self._ensure_connection()
 
             if len(self.session.windows) >= lair.config.get('tools.tmux.window_limit'):
                 return {"error": "Window limit reached. Close an existing window before opening a new one."}
-            elif return_mode not in {'new', 'full'}:
-                return {"error": "run(): return_mode must be either 'new' or 'full'"}
+            elif return_mode not in {'stream', 'screen'}:
+                return {"error": "run(): return_mode must be either 'stream' or 'screen'"}
 
             window = self.session.new_window(window_name="lair", attach=False)
             window.set_window_option("remain-on-exit", "on")
@@ -194,34 +193,49 @@ class TmuxTool:
                 "description": (
                     "Send keys to the active pane of the most recently created tmux window in session 'lair'. "
                     "Parameters: keys (string), enter (boolean, default true), literal (boolean, default true), "
-                    "return_mode (string, default 'new'), and delay (number, default 0.2 seconds)."
+                    "return_mode (string, default 'stream'), and delay (number, default 0.2 seconds)."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "keys": {"type": "string", "description": "The key sequence to send."},
-                        "enter": {"type": "boolean", "description": "Whether to send Enter after keys.", "default": True},
-                        "literal": {"type": "boolean", "description": "Send keys literally if true.", "default": True},
-                        "return_mode": {"type": "string", "description": "Output mode: 'new' or 'full'.", "default": "new"},
+                        "keys": {
+                            "type": "string",
+                            "description": "The key sequence to send. (libtmux style, literal=True by default)"},
+                        },
+                        "enter": {
+                            "type": "boolean",
+                            "description": "Whether to send Enter after keys.",
+                            "default": True
+                        },
+                        "literal": {
+                            "type": "boolean",
+                            "description": "Send keys literally in libtmux style when true.",
+                            "default": True
+                        },
+                        "return_mode": {
+                            "type": "string",
+                            "description": "Output mode: 'stream' (new terminal content) or 'screen' (string capture of the entire screen).",
+                            "enum": ["screen", "stream"],
+                            "default": "stream"
+                        },
                         "delay": {
                             "type": "number",
                             "description": "Delay (in seconds) before capturing output. Set longer for long-running commands.",
                             "default": 0.2
                         }
-                    },
-                    "required": ["keys"]
-                }
+                },
+                "required": ["keys"]
             }
         }
 
-    def send_keys(self, keys, enter=True, literal=True, return_mode="new", delay=0.2):
+    def send_keys(self, keys, enter=True, literal=True, return_mode="stream", delay=0.2):
         try:
             self._ensure_connection()
 
             if not self.session.windows:
                 return {"error": "No active tmux windows available."}
-            elif return_mode not in {'new', 'full'}:
-                return {"error": "send_keys(): return_mode must be either 'new' or 'full'"}
+            elif return_mode not in {'stream', 'screen'}:
+                return {"error": "send_keys(): return_mode must be either 'stream' or 'screen'"}
 
             window = self.session.windows[-1]
             pane = window.attached_pane or window.active_pane
@@ -240,9 +254,12 @@ class TmuxTool:
             "function": {
                 "name": "capture_output",
                 "description": (
-                    "Capture the entire output from the active pane of the most recently created tmux window in session 'lair'."
+                    "Capture a string of the active window as a string."
                 ),
-                "parameters": {"type": "object", "properties": {}}
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
             }
         }
 
@@ -273,8 +290,9 @@ class TmuxTool:
                     "properties": {
                         "max_size": {
                             "type": "integer",
-                            "description": "Maximum number of bytes to return. Default is 1024.",
-                            "default": 1024
+                            "description": ("Maximum number of bytes to return. If more bytes are available, only the "
+                                            "last `max_size` bytes are returned."),
+                            "default": lair.config.get('tools.tmux.read_new_output.max_size_default')
                         }
                     }
                 }
@@ -295,7 +313,10 @@ class TmuxTool:
             self._ensure_connection()
             if not self.session.windows:
                 return {"error": "No active tmux windows available."}
-            # TODO: Output limit
+
+            # Use the provided max_size or the default one, but never exceed the limit
+            max_size = min(max_size or lair.config.get('tools.tmux.read_new_output.max_size_default'),
+                           lair.config.get('tools.tmux.read_new_output.max_size_limit'))
 
             window = self.session.windows[-1]  # TODO: This style really work if a window is manually selected?
             pane = window.attached_pane or window.active_pane

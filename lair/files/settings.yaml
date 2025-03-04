@@ -399,6 +399,11 @@ tools.tmux.run.enabled: true
 # to the screen, rather than just stdout/stderr, since tmux doesn't differentiate.  The
 # remove_echoed_commands and strip_escape_codes modifiers can filter the output.
 tools.tmux.read_new_output.enabled: true
+# The maximum amount of text to return in bytes. When truncating, only the last `max_size` bytes are
+# preserved.
+tools.tmux.read_new_output.max_size_default: 1024
+# The maximum max_size that can be requested by the calling model
+tools.tmux.read_new_output.max_size_limit: 8192
 # The values read_new_output include anything written to the terminal, including the models own key
 # presses if they are printed. When true, this filters those out.
 tools.tmux.read_new_output.remove_echoed_commands: true
@@ -410,7 +415,7 @@ tools.tmux.read_new_output.strip_escape_codes: true
 tools.tmux.run.command: 'exec docker run --rm -it debian'
 # This is a description for the run command which gets placed into the help provided to the
 # model. Use this to let the model know what the run() tool will be doing.
-tools.tmux.run.description: 'Launches a bash shell within a docker environment'
+tools.tmux.run.description: 'This will launches a bash shell within a docker container.'
 # The tmux session name
 tools.tmux.session_name: 'lair'
 # The maximum number of tmux windows that can be open. If this limit is reached, an error message
