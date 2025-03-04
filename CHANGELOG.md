@@ -13,11 +13,12 @@
 
 ### Bug Fixes
 - Fix issue where automatic title generation fails if it uses a tool message (#13)
+- README.md: Fix badly rendered table from github-flavored markdown glitch
+- chat: Fix bug where /set fails to cast bools with extra space
 - chat: Fix error on autocomplete for /set with null current values
 - chat: Fix error when switching back to a deleted session
-- tools: Fix incorrect response to invalid tool calls
 - docs: Fix incorrect chat command optional flags
-- chat: Fix bug where /set fails to cast bools with extra space
+- tools: Fix incorrect response to invalid tool calls
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
 

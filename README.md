@@ -219,12 +219,12 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /prompt          | Show or set the system prompt  (usage: `/prompt [prompt?]`)                                                             |
 | /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                     |
 | /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)               |
-| /session         | List or switch sessions  (usage: `/session [session_id|alias?]`)                                                        |
-| /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id|alias] [new_alias?]`)                               |
-| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias|all]...`)                                                |
+| /session         | List or switch sessions  (usage: `/session [session_id\|alias?]`)                                                       |
+| /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id\|alias] [new_alias?]`)                               |
+| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id\|alias\|all]...`)                                               |
 | /session-new     | Create a new session                                                                                                    |
-| /session-title   | Set or remove a session title  (usage: `/session-title [session_id|alias] [new_title?]`)                               |
-| /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key] [value?]`)                  |
+| /session-title   | Set or remove a session title  (usage: `/session-title [session_id\|alias] [new_title?]`)                               |
+| /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key] [value?]`)                   |
 
 #### Shortcut Keys
 
