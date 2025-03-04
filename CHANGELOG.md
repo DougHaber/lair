@@ -17,6 +17,7 @@
 - chat: Fix error when switching back to a deleted session
 - tools: Fix incorrect response to invalid tool calls
 - docs: Fix incorrect chat command optional flags
+- chat: Fix bug where /set fails to cast bools with extra space
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
 
