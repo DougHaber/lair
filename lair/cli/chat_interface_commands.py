@@ -87,11 +87,11 @@ class ChatInterfaceCommands():
             },
             '/session-alias': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_alias(command, arguments, arguments_str),
-                'description': 'Set or remove a session alias  (usage: /session-alias [session_id|alias?] [new_alias?])'
+                'description': 'Set or remove a session alias  (usage: /session-alias [session_id|alias] [new_alias?])'
             },
             '/session-delete': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_delete(command, arguments, arguments_str),
-                'description': 'Delete session(s)  (usage: /session-delete [session_id|alias?]...)'
+                'description': 'Delete session(s)  (usage: /session-delete [session_id|alias|all]...)'
             },
             '/session-new': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_new(command, arguments, arguments_str),
@@ -99,7 +99,7 @@ class ChatInterfaceCommands():
             },
             '/session-title': {
                 'callback': lambda command, arguments, arguments_str: self.command_session_title(command, arguments, arguments_str),
-                'description': 'Set or remove a session title  (usage: /session-title [session_id|alias?] [new_title?])'
+                'description': 'Set or remove a session title  (usage: /session-title [session_id|alias] [new_title?])'
             },
             '/set': {
                 'callback': lambda command, arguments, arguments_str: self.command_set(command, arguments, arguments_str),
@@ -350,9 +350,10 @@ class ChatInterfaceCommands():
         else:
             self.session_manager.delete_sessions(arguments)
 
+            # If the current session was deleted, recreate it
             try:
                 self.session_manager.get_session_id(self.chat_session.session_id)
-            except lair.sessions.session_manager.UnknownSessionException:  # Current session was deleted
+            except lair.sessions.session_manager.UnknownSessionException:
                 self._new_chat_session()
 
     def command_session_new(self, command, arguments, arguments_str):

@@ -186,8 +186,12 @@ class SessionManager:
 
     def delete_sessions(self, session_list):
         with self.env.begin(write=True) as txn:
-            for session_id in session_list:
-                self.delete_session(session_id, txn=txn)
+            if 'all' in session_list:
+                for session in self.all_sessions():
+                    self.delete_session(session['id'], txn=txn)
+            else:
+                for session_id in session_list:
+                    self.delete_session(session_id, txn=txn)
 
     def switch_to_session(self, id_or_alias, chat_session):
         session_id = self.get_session_id(id_or_alias)

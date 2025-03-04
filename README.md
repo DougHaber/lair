@@ -220,11 +220,11 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /reload-settings | Reload settings from disk  (resets everything, except current mode)                                                     |
 | /save            | Save the current session to a file  (usage: `/save [filename?]`, default filename is `chat_session.json`)               |
 | /session         | List or switch sessions  (usage: `/session [session_id|alias?]`)                                                        |
-| /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id|alias?] [new_alias?]`)                               |
-| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias?]...`)                                                    |
+| /session-alias   | Set or remove a session alias  (usage: `/session-alias [session_id|alias] [new_alias?]`)                               |
+| /session-delete  | Delete session(s)  (usage: `/session-delete [session_id|alias|all]...`)                                                |
 | /session-new     | Create a new session                                                                                                    |
-| /session-title   | Set or remove a session title  (usage: `/session-title [session_id|alias?] [new_title?]`)                               |
-| /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key?] [value?]`)                  |
+| /session-title   | Set or remove a session title  (usage: `/session-title [session_id|alias] [new_title?]`)                               |
+| /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key] [value?]`)                  |
 
 #### Shortcut Keys
 
@@ -322,8 +322,10 @@ Lair offers various commands and keyboard shortcuts for managing sessions. These
   - Use `/session-new` or `C-x n` to create a new session.
 
 - **Deleting Sessions**
-  - Use `/session-delete [id|alias]` to delete one or more sessions.
-  - Example: `/session-delete 1 2 3` deletes sessions **1, 2, and 3**.
+  - Use `/session-delete [id|alias|all]` to delete one or more sessions.
+  - Examples:
+	- `/session-delete 1 2 3` deletes sessions **1, 2, and 3**.
+    - `/session-delete all` removes all sessions including the current one.
 
 - **Setting Session Aliases**
   - Use `/session-alias [id|alias] [new_alias]` to assign an alias.

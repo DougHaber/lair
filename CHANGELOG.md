@@ -6,14 +6,17 @@
 - chat: Improve sorting in modes report and highlight active instead of using a `*`
 - chat: Remove sessions report active column and highlight active id
 - chat: Show `0` messages in the sessions report with a dark gray color
+- chat: The /session-delete command now supports `all` as an id to remove all sessions
 
 ### Internal
 - internal: Rename reportings plain() to style() for clarity
 
 ### Bug Fixes
+- Fix issue where automatic title generation fails if it uses a tool message (#13)
 - chat: Fix error on autocomplete for /set with null current values
 - chat: Fix error when switching back to a deleted session
 - tools: Fix incorrect response to invalid tool calls
+- docs: Fix incorrect chat command optional flags
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
 

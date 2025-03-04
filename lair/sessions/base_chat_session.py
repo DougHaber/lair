@@ -98,7 +98,21 @@ class BaseChatSession(abc.ABC):
         if self.history.num_messages() < 2 or not lair.config.get('session.auto_generate_titles.enabled'):
             return None
 
-        messages = self.history.get_messages()[:2]
+        user_message = None
+        assistant_reply = None
+        for message in self.history.get_messages():
+            if not user_message and message['role'] == 'user' and message['content']:
+                user_message = message['content']
+            elif not assistant_reply and message['role'] == 'assistant' and message['content']:
+                assistant_reply = message['content']
+
+            if user_message and assistant_reply:
+                break
+
+        if not (user_message and assistant_reply):
+            logger.debug(f"auto_generate_title(): failed: Could not find a user message and assistant reply  (session={self.session_id})")
+            return None
+
         message = self.invoke(
             disable_system_prompt=True,
             model=lair.config.get('session.auto_generate_titles.model'),
@@ -110,7 +124,7 @@ class BaseChatSession(abc.ABC):
                 },
                 {
                     'role': 'user',
-                    'content': f'USER\n{messages[0]['content'][:128]}\n\nASSISTANT\n{messages[1]['content'][:128]}',
+                    'content': f'USER\n{user_message[:128]}\n\nASSISTANT\n{assistant_reply[:128]}',
                 }
             ]
         )
