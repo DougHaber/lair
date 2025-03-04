@@ -1,3 +1,4 @@
+import os
 import re
 import time
 
@@ -132,6 +133,21 @@ class TmuxTool:
             }
         }
 
+    def get_log_file_name_and_create_directories(self, window):
+        template = lair.config.get('tools.tmux.capture_file_name').format(
+            pid=os.getpid(),
+            window_id=window.get('window_id'),
+        )
+
+        file_name = os.path.expanduser(template)
+
+        # Create parent directories
+        directory = os.path.dirname(file_name)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+
+        return file_name
+
     def run(self, *, delay=2.0, return_mode="new"):
         try:
             self._ensure_connection()
@@ -146,14 +162,17 @@ class TmuxTool:
             pane = window.attached_pane or window.active_pane
             pane_id = pane.get("pane_id")
 
-            # TODO: Clean up tempfiles on session close
+            log_file_name = self.get_log_file_name_and_create_directories(window)
             # Set up a log file and attach the pipe before sending the command.
-            log_file_name = f"/tmp/window-{window.get('window_id')}.log"
             with open(log_file_name, 'w'):
                 pass
+
             self.log_files[pane_id] = log_file_name
             self.log_offsets[pane_id] = 0
             pane.cmd('pipe-pane', '-o', f'cat >> {log_file_name}')
+
+            logger.debug(f"TmuxTool(): run(): window_id={window.get('window_id')}, pane_id={pane.get("pane_id")}, "
+                         f"logfile={log_file_name}")
 
             pane.send_keys(lair.config.get('tools.tmux.run.command'))
             time.sleep(delay)
@@ -163,8 +182,9 @@ class TmuxTool:
                 "message": "Window created",
                 **self._get_output(return_mode=return_mode),
             }
-        except Exception as e:
-            return {"error": str(e)}
+        except Exception as error:
+            import traceback; traceback.print_exc()
+            return {"error": str(error)}
 
     def _generate_send_keys_definition(self):
         return {
@@ -236,8 +256,8 @@ class TmuxTool:
             pane = window.attached_pane or window.active_pane
 
             return {"current_screen": '\n'.join(pane.capture_pane())}
-        except Exception as e:
-            return {"error": str(e)}
+        except Exception as error:
+            return {"error": str(error)}
 
     def _generate_read_new_output_definition(self):
         return {
@@ -314,8 +334,8 @@ class TmuxTool:
                 new_data = new_data[-max_size:]
 
             return {"output": new_data}
-        except Exception as e:
-            return {"error": str(e)}
+        except Exception as error:
+            return {"error": str(error)}
 
     def _generate_kill_definition(self):
         return {
@@ -338,8 +358,8 @@ class TmuxTool:
             window.kill_window()
 
             return {"message": f"Window {window_id} closed."}
-        except Exception as e:
-            return {"error": str(e)}
+        except Exception as error:
+            return {"error": str(error)}
 
     def _generate_list_windows_definition(self):
         return {
@@ -359,8 +379,8 @@ class TmuxTool:
                 {"window_id": window.get("window_id"), "window_name": window.get("window_name")}
                 for window in self.session.windows
             ]}
-        except Exception as e:
-            return {"error": str(e)}
+        except Exception as error:
+            return {"error": str(error)}
 
     def _generate_attach_window_definition(self):
         return {
@@ -407,5 +427,5 @@ class TmuxTool:
 
             target_window.select_window()
             return {"message": f"Attached to window {target_window.get('window_id')} ({target_window.get('window_name')})."}
-        except Exception as e:
-            return {"error": str(e)}
+        except Exception as error:
+            return {"error": str(error)}

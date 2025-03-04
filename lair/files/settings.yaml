@@ -385,6 +385,10 @@ tools.tmux.capture_output.enabled: true
 # kill terminates a window
 tools.tmux.kill.enabled: false
 tools.tmux.list_windows.enabled: false
+# All terminal displayed output is written to files. These are not currently removed automatically.
+# Two variables are available to use in the template: window-id, pid
+# Parent directories will be automatically created as necessary.
+tools.tmux.capture_file_name: '~/.lair/tmux-logs/window-{window_id}-pid-{pid}.cap'
 # send_keys allows the model to send input to a window. Turning this off can make it read-only so it
 # can watch a terminal, but not modify it. In order for this to work 'tools.allow_dangerous_tools'
 # must also be true.
