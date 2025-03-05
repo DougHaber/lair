@@ -23,45 +23,46 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 - [Future](#future)
 - [Installation](#installation)
 - [Configuration](#configuration)
-- [Usage](#usage)
-  - [Lair Core](#lair-core)
+- [Lair Core](#lair-core)
+  - [Common Command Line Options](#common-command-line-options)
   - [Prompt Templates](#prompt-templates)
-  - [Chat - Command Line Chat Interface](#chat---command-line-chat-interface)
-    - [Commands](#commands)
-    - [Shortcut Keys](#shortcut-keys)
-    - [Markdown Rendering](#markdown-rendering)
-    - [Session Management](#session-management)
-      - [Session Database](#session-database)
-      - [Session Management Commands and Shortcuts](#session-management-commands-and-shortcuts)
-      - [Session Titles](#session-titles)
-    - [Reasoning Models](#reasoning-models)
-    - [Chat Examples](#chat-examples)
-      - [Attaching Files](#attaching-files)
-      - [Tools](#tools)
-        - [Python Tool](#python-tool)
-        - [Search Tool](#search-tool)
-        - [File Tool](#file-tool)
-      - [One-off Chat](#one-off-chat)
-      - [Extracting Embedded Responses](#extracting-embedded-responses)
-      - [Modifying Chat History](#modifying-chat-history)
-    - [Model Settings](#model-settings)
-    - [File Based Session Management](#file-based-session-management)
-    - [Calling Comfy Workflows](#calling-comfy-workflows)
-  - [Comfy](#comfy)
-    - [Workflows and Dependencies](#workflows-and-dependencies)
-    - [Comfy Usage & Examples](#comfy-usage--examples)
-      - [image - Image Generation](#image---image-generation)
-      - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
-      - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
-      - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
-      - [upscale - Enlarge Images and Enhance Quality](#upscale---enlarge-images-and-enhance-quality)
-  - [Util](#util)
-    - [Util Examples](#util-examples)
-      - [Generating Content](#generating-content)
-      - [Providing Input Content](#providing-input-content)
-      - [Attaching Files](#attaching-files-1)
-      - [Using Tools](#using-tools)
-      - [Using Sessions](#using-sessions)
+- [Chat - Command Line Chat Interface](#chat---command-line-chat-interface)
+  - [Commands](#commands)
+  - [Shortcut Keys](#shortcut-keys)
+  - [Markdown Rendering](#markdown-rendering)
+  - [Session Management](#session-management)
+    - [Session Database](#session-database)
+    - [Session Management Commands and Shortcuts](#session-management-commands-and-shortcuts)
+    - [Session Titles](#session-titles)
+  - [Reasoning Models](#reasoning-models)
+  - [Chat Examples](#chat-examples)
+    - [Attaching Files](#attaching-files)
+    - [Tools](#tools)
+      - [Python Tool](#python-tool)
+      - [Search Tool](#search-tool)
+      - [File Tool](#file-tool)
+      - [Tmux Tool](#tmux-tool)
+    - [One-off Chat](#one-off-chat)
+    - [Extracting Embedded Responses](#extracting-embedded-responses)
+    - [Modifying Chat History](#modifying-chat-history)
+  - [Model Settings](#model-settings)
+  - [File Based Session Management](#file-based-session-management)
+  - [Calling Comfy Workflows](#calling-comfy-workflows)
+- [Comfy](#comfy)
+  - [Workflows and Dependencies](#workflows-and-dependencies)
+  - [Comfy Usage & Examples](#comfy-usage--examples)
+    - [image - Image Generation](#image---image-generation)
+    - [ltxv-i2v - LTX Video Image to Video](#ltxv-i2v---ltx-video-image-to-video)
+    - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
+    - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
+    - [upscale - Enlarge Images and Enhance Quality](#upscale---enlarge-images-and-enhance-quality)
+- [Util](#util)
+  - [Util Examples](#util-examples)
+    - [Generating Content](#generating-content)
+    - [Providing Input Content](#providing-input-content)
+    - [Attaching Files](#attaching-files-1)
+    - [Using Tools](#using-tools)
+    - [Using Sessions](#using-sessions)
 
 <!-- markdown-toc end -->
 
@@ -127,11 +128,12 @@ To use Lair with OpenAI, set the environment variable `OPENAI_API_KEY` with your
 
 To use Lair with other OpenAI-compatible APIs, such as Ollama, set the configuration variable `openai.api_base`. For example, to use an Ollama endpoint `openai.api_base: http://localhost:11434/v1`.
 
-## Usage
 
-### Lair Core
+## Lair Core
 
-The following flags are supported when using the `lair` command. They must be provided before the sub-command.
+### Common Command Line Options
+
+When running Lair, the following flags can be used at the top level. They must be provided before the sub-command is specified.
 
 ```
   -h, --help               show this help message and exit
@@ -177,7 +179,7 @@ session.system_prompt_template: |-
 
 The `/last-prompt` command in the chat interface displays the full last prompt, including rendered system messages, which can be useful for debugging prompt templates.
 
-### Chat - Command Line Chat Interface
+## Chat - Command Line Chat Interface
 
 The `chat` command provides a rich command-line interface for interacting with large language models, as well as some experimental support for diffusion models.
 
@@ -197,7 +199,7 @@ When Verbose output is enabled tool calls and responses are displayed.
 
 The prompt and toolbar can be customized via `chat.*` settings.
 
-#### Commands
+### Commands
 
 | Command          | Description                                                                                                             |
 |------------------|-------------------------------------------------------------------------------------------------------------------------|
@@ -227,7 +229,7 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /session-title   | Set or remove a session title  (usage: `/session-title [session_id\|alias] [new_title?]`)                               |
 | /set             | Show configuration or set a configuration value for the current mode  (`usage: /set ([key] [value?]`)                   |
 
-#### Shortcut Keys
+### Shortcut Keys
 
 Lair's chat interface offers numerous keyboard shortcuts to enhance usability. Using `/help` or pressing `C-x ?` displays a list of all available shortcuts along with their current bindings.
 
@@ -261,7 +263,7 @@ In addition to standard GNU Readline-style key combinations, the following short
 
 Keyboard shortcuts can be modified through `chat.keys.*`.
 
-#### Markdown Rendering
+### Markdown Rendering
 
 By default, responses from LLMs are rendered as Markdown. The Markdown rendering includes features such as tables and code blocks with syntax highlighting.
 
@@ -285,7 +287,7 @@ crocodile> /last-response
 &lt;
 ```
 
-#### Session Management
+### Session Management
 
 A **session** in Lair represents the current chat history, configuration, and other active state.
 
@@ -299,7 +301,7 @@ When Lair starts, any sessions without messages are automatically removed from t
 
 By default, a new session is created on startup unless a session is specified via the `--session` / `-s` flag. This flag accepts either a session ID or alias and switches to that session. If the `--allow-create-session` / `-S` flag is also provided, Lair will create the session if it does not exist and assign it the specified alias.
 
-##### Session Database
+#### Session Database
 
 Sessions in Lair are stored in an LMDB (Lightning Memory-Mapped Database) located at `~/.lair/sessions` by default. The database size is controlled by the `database.sessions.size` setting, which defaults to 512MB.
 
@@ -307,7 +309,7 @@ If there are many sessions or large attachments, this limit may be reached. When
 
 To delete all sessions quickly, the LMDB directory (with a default of `~/.lair/sessions`) can be safely removed. Lair will automatically recreate it upon the next startup.
 
-##### Session Management Commands and Shortcuts
+#### Session Management Commands and Shortcuts
 
 Lair offers various commands and keyboard shortcuts for managing sessions. These can be customized via the `chat.keys.*` settings.
 
@@ -338,7 +340,7 @@ Lair offers various commands and keyboard shortcuts for managing sessions. These
 
 For a full list of commands and shortcuts, use `/help` or `C-x ?`.
 
-##### Session Titles
+#### Session Titles
 
 Sessions can have **titles** to help identify conversations. Titles may be generated automatically using a truncated version of the first message and response.
 
@@ -350,7 +352,7 @@ To set a session title:
 - Use `/session-title [id|alias] [new_title]`
 - For the current session, use `C-x C-t`.
 
-#### Reasoning Models
+### Reasoning Models
 
 Reasoning models include "thoughts" in their output. These thoughts may be enclosed in XML-style tags such as `<thought>`, `<think>`, or `<thinking>`. Lair provides customization options to control the appearance and behavior of these tagged responses.
 
@@ -361,9 +363,9 @@ Reasoning models include "thoughts" in their output. These thoughts may be enclo
 
 ![Reasoning Example](docs/images/reasoning.jpg "Reasoning example")
 
-#### Chat Examples
+### Chat Examples
 
-##### Attaching Files
+#### Attaching Files
 
 Files can be attached by enclosing file names within double angle brackets, such as `<<foo.png>>`. Globbing (wildcards and shell-style sets and pattern matching) and `~` for the home directory are also supported (e.g., `<<~/images/*.png>>`).
 
@@ -467,7 +469,7 @@ The response above is truncated, as it continues with additional details across 
 
 Attaching files in this manner allows for more than just documentation generation. It can also be used for tasks such as answering specific questions about the codebase, refactoring suggestions, or deeper analysis. Since the attached files remain in the chat history, follow-up questions and iterative requests can be made without reattaching the files.
 
-##### Tools
+#### Tools
 
 Tools allow the AI to perform actions beyond generating responses. By utilizing tools, the AI can perform actions such as executing computations and searching news sources, and incorporate the retrieved data into more informed responses.
 
@@ -481,7 +483,7 @@ The chat CLI provides the `/list-tools` command to display all available tools a
 
 Tools can be quickly toggled on or off using the `ESC-T` shortcut.
 
-###### Python Tool
+##### Python Tool
 
 ![Python Tool Example](docs/images/tool-python.jpg "Python tool example")
 
@@ -515,7 +517,7 @@ tools.python.extra_modules: 'numpy, requests'
 
 Python scripts will execute until they reach a timeout limit. The timeout duration is configurable via `tools.python.timeout` and defaults to 30 seconds.
 
-###### Search Tool
+##### Search Tool
 
 ![Search Tool Example](docs/images/tool-search.jpg "Search tool example")
 
@@ -531,7 +533,7 @@ Search results can be large. To manage this, content extracted from each page is
 
 The total amount of retrieved content can be as large as `max_results * max_length`, potentially exceeding the default context window of a language model. For users utilizing Ollama, the default context size is set to 2048 tokens. If this limit is exceeded, truncation may occur, leading to incomplete or inaccurate responses. To mitigate this, adjust the `num_ctx` parameter within Ollama as needed.
 
-###### File Tool
+##### File Tool
 
 The File Tool provides access to read and write files and directories on the local file system. This feature is **disabled by default** due to its potential risks.
 
@@ -550,7 +552,7 @@ The `tools.file.path` setting must also be configured with the path that should 
 Use caution when enabling these options, as they can modify or delete critical files.
 
 
-###### Tmux Tool
+##### Tmux Tool
 
 The Tmux tool allows interaction with command-line applications via Tmux. Depending on enabled features, it can create windows, send input, read output (either as a stream or as a text "screenshot" of the current state), list windows, and terminate them. This capability enables LLMs to execute any command-line application, including shells. However, this feature is **disabled by default** due to potential risks.
 
@@ -598,7 +600,7 @@ The stream includes all window output (stdout, stderr, and echoed input). By def
 All terminal output is saved to files in `~/.lair/tmux-logs/` by default. This path and filename can be configured using `tools.tmux.capture_file_name`. These log files are not automatically deleted and can be used for monitoring or as a record of terminal activity.
 
 
-##### One-off Chat
+#### One-off Chat
 
 By lowering `session.max_history_length` to `1`, only the system prompt and the current message are provided, with no conversation history. This can be useful in scenarios where maintaining a conversation history is not desirable or when sending one-off requests.
 
@@ -613,7 +615,7 @@ crocodile> Java programming language
 Why did Java go to the doctor? Because it had a class problem!
 ```
 
-##### Extracting Embedded Responses
+#### Extracting Embedded Responses
 
 The `/extract` command provides a quick way to retrieve specific sections of a response. By default, sections are defined as content within Markdown code blocks or between `<answer></answer>` tags. The definition of a section is configurable via the setting `chat.embedded_syntax_regex`. Any number of styles can be defined within the regex, but only the result of the first non-empty capture for each match is used.
 
@@ -684,7 +686,7 @@ crocodile> /extract 0 ~/hello.go
 Response saved  (76 bytes)
 ```
 
-##### Modifying Chat History
+#### Modifying Chat History
 
 Lair's chat interface provides several ways to view and modify chat history, making it easier to refine past interactions.
 
@@ -726,7 +728,7 @@ When `/history-edit` is executed, the full chat history is loaded into a JSONL-f
 
 Since `/history-edit` loads the complete history without truncation, large files may result if attachments or tool calls are present.
 
-#### Model Settings
+### Model Settings
 
 ```
 crocodile> /prompt Respond with a one-liner joke about the provided topic
@@ -751,7 +753,7 @@ crocodile> ducks
 Why did the duck go to art school? To learn how to draw its life!
 ```
 
-#### File Based Session Management
+### File Based Session Management
 
 This section provides examples of using file based session management. For a more general overview of sessions in Lair and the database-based session management, see [Session Management](#session-management).
 
@@ -796,7 +798,7 @@ Session files include the full active configuration. Loaded sessions will restor
 
 When using `/load`, the current active session replaced with the loaded session. To load the session into a new session slot, first create a new one (such as with `C-X n`,) and then use `/load`.
 
-#### Calling Comfy Workflows
+### Calling Comfy Workflows
 
 The `/comfy` command makes it possible to run ComfyUI workflows from the chat interface. This is a wrapper over the command line interface of the comfy sub-command and uses their options. For detailed help, see [the Comfy sub-command documentation.](#comfy)
 
@@ -821,13 +823,13 @@ The `/mode` command can be used with custom-defined modes to quickly jump betwee
 
 There are a couple known issues with this command. The output can be noisy due to issues with ComfyScript writing output with no options to turn it off. If debugging is enabled, all ComfyScript output is shown, otherwise it is partially muted. Some output is still displayed when threads writes output after workflows complete. On exit, sometimes the ComfyScript threads throw errors. This can cause extra output, but doesn't cause any actual harm.
 
-### Comfy
+## Comfy
 
 The Comfy command makes it possible to use a [ComfyUI](https://github.com/comfyanonymous/ComfyUI) server to run workflows. Currently, image diffusion and image to video workflows are supported. Underneath, this command uses [ComfyScript](https://github.com/Chaoses-Ib/ComfyScript) to provide a nice Python interface over ComfyUI.
 
 ComfyScript does have some issues where it's output is difficult to control.When using the `comfy` command, there may be extra output generated by ComfyScript which Lair is unable to hide. When ComfyScript encounters errors it catches them internally, and it isn't clear how the caller could view these errors. This means Lair will often be unable to display details of what caused errors. Running with `--debug` will sometimes show ComfyScript's internally printed errors.
 
-#### Workflows and Dependencies
+### Workflows and Dependencies
 
 The ComfyUI Server must have all required nodes installed to use any given workflow. The [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager) provides an easy way to set things up. Be aware that installing nodes can introduce security issues. Running ComfyUI in an isolated fashion or with containers could help lower risks.
 
@@ -890,7 +892,7 @@ The ComfyUI Server must have all required nodes installed to use any given workf
   </tbody>
 </table>
 
-#### Comfy Usage & Examples
+### Comfy Usage & Examples
 
 The `comfy` command provides distinct sub-commands for each supported workflow, each with its own flags and configuration options.
 
@@ -911,7 +913,7 @@ Some flags are shared across workflows:
 
 When setting inputs for a workflow, it is important to use valid values. Many settings directly provide inputs for nodes. The ComfyUI web interface is the easiest way to determine valid values. If invalid values are provided, an error will occur. Note that ComfyScript may not always handle exceptions cleanly, which can prevent detailed error messages from reaching the main thread. Running with the `--debug` flag enables additional ComfyScript output, often providing helpful information for troubleshooting.
 
-##### image - Image Generation
+#### image - Image Generation
 
 To generate a single image:
 
@@ -998,7 +1000,7 @@ convert monster-grid-full.jpg -resize 640x monster-grid.jpg
 
 ![Monster Dance Party Grid](docs/images/monster-grid.jpg "Monster Dance Party grid example - downscaled")
 
-##### ltxv-i2v - LTX Video Image to Video
+#### ltxv-i2v - LTX Video Image to Video
 
 The `ltxv-i2v` workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow. It takes an image as input and then produces a video using LTX Video. The LTX Video model requires detailed prompts to work well. This workflow can automatically generate prompts using Microsoft's Florence2 model.
 
@@ -1041,7 +1043,7 @@ done
 
 A similar technique was used to create [this video](https://youtube.com/shorts/XdiFj1qDIqk).
 
-##### ltxv-prompt - LTX Video Prompt Generation via Florence2
+#### ltxv-prompt - LTX Video Prompt Generation via Florence2
 
 This workflow is based on the [ComfyUI-LTXVideo's](https://github.com/Lightricks/ComfyUI-LTXVideo) image to video workflow, but it only performs prompt generation. It takes an image for input, and outputs the text of the prompt generated from the Florence2 model.
 
@@ -1069,7 +1071,7 @@ lair comfy ltxv-i2v \
     --image output.png
 ```
 
-##### hunyuan-video-t2v - Hunyuan Video Text to Video
+#### hunyuan-video-t2v - Hunyuan Video Text to Video
 
 Tencent's [Hunyuan Video model](https://github.com/Tencent/HunyuanVideo) is supported natively in ComfyUI, meaning no additional third-party nodes are needed for setup or usage. For installation notes and model links, see the [Comfy Examples](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/) page for Hunyuan Video. The workflow used by `hunyuan-video-t2v` is based on ComfyUI's example, and shares many of its defaults.
 
@@ -1115,7 +1117,7 @@ The number of frames must be `N * 4 + 1`, such as 73, 77, 81. This requirement e
 LoRAs are supported, and multiple LoRAs could be provided. For usage examples, see the [Image Generation](#image---image-generation) section, as the behavior is identical.  The config key `comfy.hunyuan_video.loras` can be used to create modes with LoRAs or LoRA chains.
 
 
-##### upscale - Enlarge Images and Enhance Quality
+#### upscale - Enlarge Images and Enhance Quality
 
 Upscale models can be used to enlarge images and enhance their quality by generating additional details based on learned patterns from other images. This is useful for sharpening images and improving quality.
 
@@ -1152,7 +1154,7 @@ The `--recursive` / `-r` flag enables recursive processing of directory trees. O
 $ lair comfy upscale --recursive images/
 ```
 
-### Util
+## Util
 
 The `util` command provides a simple interface for calling LLMs. It is intended for one shot tasks and for making LLMs easy to work with in the shell and scripts.
 
@@ -1160,9 +1162,9 @@ The system prompt for the `util` command can be customized by setting `util.syst
 
 By default, the `util` command does not render markdown, and the system prompt discourages markdown formatting unless explicitly requested. When the `--markdown` / `-m` flag is used, the system prompt permits markdown output, and the final response is rendered accordingly.
 
-#### Util Examples
+### Util Examples
 
-##### Generating Content
+#### Generating Content
 
 The `util` command can be used to create content very easily. For example, to create some CSV test data:
 
@@ -1221,7 +1223,7 @@ In every single device,
 Now its users just sigh with despair.
 ```
 
-##### Providing Input Content
+#### Providing Input Content
 
 The `util` command can operate on content, which could be provided a few different ways. The `--content` / `-c` flags allow providing the content as a string on the command line. The `--content-file` / `-C` flags provide the specified file as content. The `--pipe` / `-p` flags read the content from stdin.
 
@@ -1240,7 +1242,7 @@ $ netstat -nr | lair util -p -i 'Please summarize this routing table in plain en
 All traffic is routed through gateway 10.0.1.1 on interface wlo1, except for local network 172.17.0.0/16 which uses docker0 and local network 10.0.1.0/24 which also uses wlo1.
 ```
 
-##### Attaching Files
+#### Attaching Files
 
 The `--attach-file` / `-a` flag allows for attaching one or more files. Multiple files could be provided via either globbing or by repeating `--attach-file` argument. Globbing and homedir expansion (`~`) is performed automatically. Globs might need to be protected to prevent the shell from expanding them.
 
@@ -1295,7 +1297,7 @@ stained_glass.png: Colorful stained glass window.
 
 Note, the `Max 60 characters` instruction isn't followed by most current models. LLMs aren't that precise. Giving specific numbers like that nudges it in a direction, but doesn't introduce an actual limit.
 
-##### Using Tools
+#### Using Tools
 
 The `--enable-tools` (`-t`) flag allows the model to invoke tools when using the `util` command. When this flag is enabled, `tools.enabled` is automatically set to `true`, but individual tools must still be explicitly enabled in the configuration for them to be available.
 
@@ -1328,7 +1330,7 @@ $ lair util -i 'Use Python to GET whatismyip.akamai.com, and return the IP' -t
 
 The `--debug` flag can be added before `util` to enable detailed output, displaying all requests and responses. In the Python tool example, a common behavior is for the model to first attempt using the `requests` library. If `requests` is not installed, it encounters an error and retries using `urllib`. This additional cycle can be avoided by explicitly specifying `urllib` in the instructions or by using a custom Docker image that includes `requests` pre-installed.
 
-##### Using Sessions
+#### Using Sessions
 
 The `util` command fully supports sessions from the session database used by the `chat` command. For a more complete overview of sessions, see the [Session Management](#session-management) section.
 

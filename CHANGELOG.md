@@ -7,6 +7,8 @@
 - chat: Remove sessions report active column and highlight active id
 - chat: Show `0` messages in the sessions report with a dark gray color
 - chat: The /session-delete command now supports `all` as an id to remove all sessions
+- New tool: TmuxTool allows for interacting with command line applications
+- docs: Adjusted README.md headers to reduce document depth
 
 ### Internal
 - internal: Rename reportings plain() to style() for clarity
