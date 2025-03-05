@@ -9,6 +9,7 @@
 - chat: The /session-delete command now supports `all` as an id to remove all sessions
 - New tool: TmuxTool allows for interacting with command line applications
 - docs: Adjusted README.md headers to reduce document depth
+- file_tool: Support reading multiple files in one request with globs (#14)
 
 ### Internal
 - internal: Rename reportings plain() to style() for clarity

@@ -1,8 +1,9 @@
-import os
-import stat
-import pwd
-import grp
 import datetime
+import glob
+import grp
+import os
+import pwd
+import stat
 
 import lair
 from lair.logging import logger
@@ -125,7 +126,7 @@ class FileTool():
             "function": {
                 "name": "read_file",
                 "description": (
-                    f"Read the contents of a file within the workspace. "
+                    f"Read the contents of one or more files within the workspace using a file path or glob pattern. "
                     f"Only files within the following path are accessible: {workspace}."
                 ),
                 "parameters": {
@@ -133,7 +134,7 @@ class FileTool():
                     "properties": {
                         "path": {
                             "type": "string",
-                            "description": "File path relative to the workspace."
+                            "description": "File path or glob pattern to read. (Supports all glob styles, including recursive `**`)"
                         }
                     },
                     "required": ["path"]
@@ -143,12 +144,31 @@ class FileTool():
 
     def read_file(self, path):
         try:
-            file_path = self._resolve_path(path)
-            if not os.path.isfile(file_path):
-                return {"error": f"Path '{file_path}' is not a file."}
-            with open(file_path, "r") as f:
-                content = f.read()
-            return {"content": content}
+            workspace = os.path.abspath(lair.config.get('tools.file.path'))
+
+            if not os.path.isabs(path):
+                pattern = os.path.join(workspace, path)
+            else:
+                pattern = path
+
+            file_paths = glob.glob(pattern, recursive=True)
+            if not file_paths:
+                return {"error": f"No files match the pattern: {path}"}
+
+            file_contents = {}
+            for file_path in file_paths:
+                file_path = os.path.abspath(file_path)
+                if not file_path.startswith(workspace):
+                    return {"error": f"Access denied: {file_path} is outside the workspace."}
+                elif not os.path.isfile(file_path):
+                    continue  # Skip non-files (e.g., directories)
+
+                with open(file_path, "r") as f:
+                    content = f.read()
+                    relative_path = os.path.relpath(file_path, workspace)
+                    file_contents[relative_path] = content
+
+            return {"file_content": file_contents}
         except Exception as error:
             logger.warn(f"read_file(): Error encountered: {error}")
             return {"error": str(error)}
