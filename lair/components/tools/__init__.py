@@ -1,20 +1,23 @@
-# from .core import *
-from .tool_set import ToolSet
 from .file_tool import FileTool
-from .search_tool import SearchTool
 from .python_tool import PythonTool
+from .search_tool import SearchTool
+from .tmux_tool import TmuxTool
+from .tool_set import ToolSet
 
 
 DEFAULT_TOOLS = [
     FileTool,
-    SearchTool,
     PythonTool,
-]
+    SearchTool,
+    TmuxTool,
+ ]
 
 # Lookup for tool classes by their friendly names
 TOOLS = {
+    FileTool.name: FileTool,
     PythonTool.name: PythonTool,
     SearchTool.name: SearchTool,
+    TmuxTool.name: TmuxTool,
 }
 
 

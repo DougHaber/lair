@@ -1126,6 +1126,17 @@ files = [
 lxml = {version = ">=4.4.2", extras = ["html-clean"]}
 
 [[package]]
+name = "libtmux"
+version = "0.46.0"
+description = "Typed library that provides an ORM wrapper for tmux, a terminal multiplexer."
+optional = false
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "libtmux-0.46.0-py3-none-any.whl", hash = "sha256:27f3908dfff12de4dd534563e73cb77c18aefa3f0faccaba80d65db59beacc61"},
+    {file = "libtmux-0.46.0.tar.gz", hash = "sha256:65202494054ab2f6a72520a9f3ff0da29e3294af0365a96c51bb4a58cb9856ac"},
+]
+
+[[package]]
 name = "lmdb"
 version = "1.6.2"
 description = "Universal Python binding for the LMDB 'Lightning' Database"
@@ -3292,4 +3303,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "98e039d03e075b338def132a229f556dfad9e95c81635dee774197900688cba3"
+content-hash = "35d8f6679a3531ff9a675dc0738b2c8fd923ad6a1b0eca176dbbed2b91518a88"

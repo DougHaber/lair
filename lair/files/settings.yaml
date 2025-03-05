@@ -373,7 +373,59 @@ tools.search.max_results: 5
 # Currently, URLs are requested serially, so the total timeout can be several times this.
 tools.search.timeout: 5.0
 
-tools.duckduckgo_search.enabled: true
+# Tmux tools provide a terminal that can run any command line application, methods for sending
+# input, and reading output. The output can be read as a stream for line based applications, or as a
+# text-based screenshot for screen based applications.
+# As this allows the model to execute local commands, this is disabled by default
+tools.tmux.enabled: false
+# attach_window allows the model to specify any window to connect to within the session
+tools.tmux.attach_window.enabled: false
+# capture_output performs a screen capture and returns the string with each line of the string in it
+tools.tmux.capture_output.enabled: true
+# All terminal displayed output is written to files. These are not currently removed automatically.
+# Two variables are available to use in the template: window-id, pid
+# Parent directories will be automatically created as necessary.
+tools.tmux.capture_file_name: '~/.lair/tmux-logs/window-{window_id}-pid-{pid}.cap'
+# kill terminates a window
+tools.tmux.kill.enabled: false
+# List all windows in the session
+tools.tmux.list_windows.enabled: false
+# read_new_output returns all output since the last read or capture. This includes anything written
+# to the screen, rather than just stdout/stderr, since tmux doesn't differentiate.  The
+# remove_echoed_commands and strip_escape_codes modifiers can filter the output.
+tools.tmux.read_new_output.enabled: true
+# The maximum amount of text to return in bytes. When truncating, only the last `max_size` bytes are
+# preserved.
+tools.tmux.read_new_output.max_size_default: 1024
+# The maximum max_size that can be requested by the calling model
+tools.tmux.read_new_output.max_size_limit: 8192
+# The values read_new_output include anything written to the terminal, including the models own key
+# presses if they are printed. When true, this filters those out.
+tools.tmux.read_new_output.remove_echoed_commands: true
+# When true, escape sequences are automatically removed from the stream
+tools.tmux.read_new_output.strip_escape_codes: true
+# The run command starts a new window and launches tools.tmux.run.command in it
+tools.tmux.run.enabled: true
+# When using the run command, this is the command to run. Providing access to real systems is
+# dangerous, and so this example uses Docker to lower (but not eliminate) the risk., but be aware
+# nothing will be cleaning this automatically.
+# WARNING: "exec" is automatically inserted before this command to prevent access to the original
+#   shell. This should always be a single command and it must execute properly, otherwise the
+#   shell will be accessible.
+tools.tmux.run.command: 'docker run --rm -it debian'
+# This is a description for the run command which gets placed into the help provided to the
+# model. Use this to let the model know what the run() tool will be doing.
+tools.tmux.run.description: 'This will launches a bash shell within a docker container.'
+# send_keys allows the model to send input to a window. Turning this off can make it read-only so it
+# can watch a terminal, but not modify it. In order for this to work 'tools.allow_dangerous_tools'
+# must also be true.
+tools.tmux.send_keys.enabled: false
+# The tmux session name
+tools.tmux.session_name: 'lair'
+# The maximum number of tmux windows that can be open. If this limit is reached, an error message
+# will be sent to the model. The windows don't automatically close, so if the model isn't exiting
+# these will build up over time.
+tools.tmux.window_limit: 25
 
 # Jinja2 template providing the system prompt for when using the util command
 # See documentation for available variables and functions
