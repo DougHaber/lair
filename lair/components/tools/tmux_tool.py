@@ -188,7 +188,10 @@ class TmuxTool:
             logger.debug(f"TmuxTool(): run(): window_id={window.get('window_id')}, pane_id={pane.get("pane_id")}, "
                          f"logfile={log_file_name}")
 
-            pane.send_keys(lair.config.get('tools.tmux.run.command'))
+            # NOTE: We are doing this instead of passing `window_shell` on creation so that the logging can be
+            # setup first. Otherwise, we'd miss any initial output. The 'exec' is required so that the original
+            # shell can not be accessed. The "exit" is a backup, in case the command fails to run.
+            pane.send_keys(f"exec {lair.config.get('tools.tmux.run.command')}; exit")
             time.sleep(delay)
 
             return {
@@ -392,11 +395,10 @@ class TmuxTool:
             if not self.session.windows:
                 return {"error": "No active tmux windows to kill."}
 
-            window = self.active_window
-            window_id = window.get("window_id")
+            window = self._get_window_by_id(window_id)
             window.kill_window()
 
-            return {"message": f"Window {window_id} closed."}
+            return {"message": f"Window {window_id} closed.  ({window.get('window_name')})"}
         except Exception as error:
             return {"error": str(error)}
 
@@ -449,12 +451,12 @@ class TmuxTool:
             if not self.session.windows:
                 return {"error": "No tmux windows available to attach."}
 
-            window = self.session.new_window(window_name="lair", attach=False)
+            window = self._get_window_by_id(window_id)
             self.active_window = window
             window.select_window()
 
             return {
-                "message": f"Attached to window {window.get('window_id')} ({window.get('window_name')})."
+                "message": f"Attached to window {window_id} ({window.get('window_name')})."
             }
         except Exception as error:
             return {"error": str(error)}
