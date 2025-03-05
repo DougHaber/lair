@@ -92,9 +92,10 @@ The open-source version of Lair is a partial rewrite of the original closed-sour
 
 * Tools Support
   * Works in the chat interface and the util command
-  * Search Tool: Search the web or news with DuckDuckGo
-  * Python Tool: Run python code inside of a container
   * File Tool: Read and write files in a local path (**Experimental**)
+  * Python Tool: Run python code inside of a container
+  * Search Tool: Search the web or news with DuckDuckGo
+  * Tmux Tools: Interact with terminals in a Tmux sesion (**Experimental**)
 
 ## Future
 
@@ -547,6 +548,55 @@ To enable the File Tool, multiple configuration options must be set:
 The `tools.file.path` setting must also be configured with the path that should be made accessible.
 
 Use caution when enabling these options, as they can modify or delete critical files.
+
+
+###### Tmux Tool
+
+The Tmux tool allows interaction with command-line applications via Tmux. Depending on enabled features, it can create windows, send input, read output (either as a stream or as a text "screenshot" of the current state), list windows, and terminate them. This capability enables LLMs to execute any command-line application, including shells. However, this feature is **disabled by default** due to potential risks.
+
+⚠️ **DANGER:** This is an experimental feature. Running it in a chroot environment or within Docker is strongly recommended to minimize risks. Ensure you **back up any files it can access**. Granting root access is not advised.
+
+Configuration settings for Tmux are found under the `tools.tmux.*` namespace. In addition to enabling `tools.tmux.enabled`, each tool requires specific flags to be activated.
+
+| Tool              | Description                                       | Flags                                                         |
+|-------------------|---------------------------------------------------|---------------------------------------------------------------|
+| `attach_window`   | Attach to an existing window by ID                | `tools.tmux.attach_window.enabled`                            |
+| `capture_output`  | Capture a text "screenshot" of the current window | `tools.tmux.capture_output.enabled`                           |
+| `kill`            | Terminate a running window by ID                  | `tools.tmux.kill.enabled`                                     |
+| `list_windows`    | List all windows in the session                   | `tools.tmux.list_windows.enabled`                             |
+| `read_new_output` | Read new output as a stream                       | `tools.tmux.read_new_output.enabled`                          |
+| `run`             | Create a new window                               | `tools.tmux.run.enabled`                                      |
+| `send_keys`       | Send keyboard input to the window                 | `tools.tmux.send_keys.enabled`, `tools.allow_dangerous_tools` |
+
+By default, if Tmux is enabled, the `run`, `capture_output`, and `read_new_output` commands are also enabled. This configuration effectively puts Tmux into a read-only mode, allowing it to create new windows and view their output but not send input or modify them. While limited, this mode can still be useful for running commands to retrieve system status.
+
+All Tmux windows are placed in a session named by `tools.tmux.session_name` with a default of `lair`. To simplify management, each window supports only a single pane. Windows do not automatically close upon completion, as Lair cannot determine when they are no longer needed. To prevent resource exhaustion, you can set a maximum number of windows using `tools.tmux.window_limit`, which defaults to 25.
+
+The `run` command launches a window executing a fixed command defined by `tools.tmux.run.command`. The command's description, provided by `tools.tmux.run.description`, helps the model understand its purpose. Using Docker or chroot is always recommended for security.
+
+⚠️ **DANGER:** The window initially starts with a shell, and the command is executed as `exec {command}; exit`. This setup prevents access to the initial shell and ensures proper restriction enforcement. Be careful to keep command proper so that the restrictions are properly enforced. For those curious, this is done so that `pipe-pane` can be setup before the command runs and initial command output could be captured.
+
+Here is an example configuration for the run command:
+
+```yaml
+tools.tmux.run.enabled: true
+tools.tmux.run.command: 'docker run --rm -it local-example/nethack'
+tools.tmux.run.description: 'This will launch the game Nethack.'
+```
+
+In this setup, no mechanism exists to automatically clean up the windows created. If commands do not exit or windows are not closed by the model, manual cleanup or external automation will be required.
+
+**Output Handling:**
+
+- The `capture_output` command returns a string of the entire pane's content. This is particularly useful for screen-based applications.
+- The `read_new_output` command streams any new content since the last read or capture. By default, it returns the last `1024` bytes of new output, configurable via `tools.tmux.read_new_output.max_size_default`. The model can request more, up to the maximum specified by `tools.tmux.read_new_output.max_size_limit` (default `8192`).
+
+The stream includes all window output (stdout, stderr, and echoed input). By default, user input is removed with `tools.tmux.read_new_output.remove_echoed_commands` (set to true). Escape sequences are also stripped unless configured otherwise via `tools.tmux.read_new_output.strip_escape_codes`.
+
+**Log Management:**
+
+All terminal output is saved to files in `~/.lair/tmux-logs/` by default. This path and filename can be configured using `tools.tmux.capture_file_name`. These log files are not automatically deleted and can be used for monitoring or as a record of terminal activity.
+
 
 ##### One-off Chat
 
