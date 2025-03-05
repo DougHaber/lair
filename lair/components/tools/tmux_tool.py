@@ -90,6 +90,11 @@ class TmuxTool:
         if window_id is None:
             return None
 
+        # We request window ids as ints, but tmux uses them as strings `@{id}`
+        # This converts them back for the matching
+        if isinstance(window_id, int) or not window_id.startswith('@'):
+            window_id = f'@{window_id}'
+
         for window in self.session.list_windows():
             if window.get('window_id') == window_id:
                 return window
