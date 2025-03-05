@@ -86,6 +86,16 @@ class TmuxTool:
             self.log_files = {}
             self.log_offsets = {}
 
+    def _get_window_by_id(self, window_id):
+        if window_id is None:
+            return None
+
+        for window in self.session.list_windows():
+            if window.get('window_id') == window_id:
+                return window
+
+        raise Exception(f"Requested window id not found: {window_id}")
+
     def _ensure_connection(self):
         try:
             if self.server is None:  # First time connecting in
@@ -98,14 +108,16 @@ class TmuxTool:
             except Exception as connect_error:
                 raise Exception(f"Tmux server unavailable: {connect_error}")
 
-    def _get_output(self, return_mode, *, prune_line=None):
+    def _get_output(self, return_mode, *, prune_line=None, window_id=None):
         '''
         Return the output dict based on the return_mode
         '''
         if return_mode == "stream":
-            return self.read_new_output(prune_line=prune_line)
+            return self.read_new_output(prune_line=prune_line, window_id=window_id)
         elif return_mode == "screen":
-            return self.capture_output()
+            return self.capture_output(window_id=window_id)
+        else:
+            raise Exception("Invalid return_mode. Accepted values are stream or screen (screen capture)")
 
     def _generate_run_definition(self):
         return {
@@ -200,34 +212,38 @@ class TmuxTool:
                             "type": "string",
                             "description": "The key sequence to send. (libtmux style, literal=True by default)"
                         },
+                        "delay": {
+                            "type": "number",
+                            "description": "Delay (in seconds) before capturing output. Set longer for long-running commands.",
+                            "default": 0.2
+                        },
+                        "enter": {
+                            "type": "boolean",
+                            "description": "Whether to send Enter after keys.",
+                            "default": True
+                        },
+                        "literal": {
+                            "type": "boolean",
+                            "description": "Send keys literally in libtmux style when true.",
+                            "default": True
+                        },
+                        "return_mode": {
+                            "type": "string",
+                            "description": "Output mode: 'stream' (new terminal content) or 'screen' (string capture of the entire window).",
+                            "enum": ["screen", "stream"],
+                            "default": "stream"
+                        },
+                        "window_id": {
+                            "type": "number",
+                            "description": "The id of the window to target. The default is the active window"
+                        }
                     },
-                    "enter": {
-                        "type": "boolean",
-                        "description": "Whether to send Enter after keys.",
-                        "default": True
-                    },
-                    "literal": {
-                        "type": "boolean",
-                        "description": "Send keys literally in libtmux style when true.",
-                        "default": True
-                    },
-                    "return_mode": {
-                        "type": "string",
-                        "description": "Output mode: 'stream' (new terminal content) or 'screen' (string capture of the entire window).",
-                        "enum": ["screen", "stream"],
-                        "default": "stream"
-                    },
-                    "delay": {
-                        "type": "number",
-                        "description": "Delay (in seconds) before capturing output. Set longer for long-running commands.",
-                        "default": 0.2
-                    }
-                },
-                "required": ["keys"]
+                    "required": ["keys"]
+                }
             }
         }
 
-    def send_keys(self, keys, enter=True, literal=True, return_mode="stream", delay=0.2):
+    def send_keys(self, keys, enter=True, literal=True, return_mode="stream", delay=0.2, window_id=None):
         try:
             self._ensure_connection()
 
@@ -236,14 +252,15 @@ class TmuxTool:
             elif return_mode not in {'stream', 'screen'}:
                 return {"error": "send_keys(): return_mode must be either 'stream' or 'screen'"}
 
-            window = self.active_window
+            window = self.active_window if window_id is None else self._get_window_by_id(window_id)
             pane = window.attached_pane or window.active_pane
 
             pane.send_keys(keys, enter=enter, literal=literal)
             time.sleep(delay)
 
             return self._get_output(return_mode=return_mode,
-                                    prune_line=keys if enter else None)
+                                    prune_line=keys if enter else None,
+                                    window_id=window_id)
         except Exception as e:
             return {"error": str(e)}
 
@@ -257,23 +274,25 @@ class TmuxTool:
                 ),
                 "parameters": {
                     "type": "object",
-                    "properties": {}
+                    "properties": {
+                        "window_id": {
+                            "type": "number",
+                            "description": "The id of the window to target. The default is the active window"
+                        }
+                    }
                 }
             }
         }
 
-    def capture_output(self):
-        try:
-            self._ensure_connection()
-            if not self.session.windows:
-                return {"error": "No active tmux windows available."}
+    def capture_output(self, *, window_id=None):
+        self._ensure_connection()
+        if not self.session.windows:
+            raise Exception("No active tmux windows available.")
 
-            window = self.active_window
-            pane = window.attached_pane or window.active_pane
+        window = self.active_window if window_id is None else self._get_window_by_id(window_id)
+        pane = window.attached_pane or window.active_pane
 
-            return {"current_screen": '\n'.join(pane.capture_pane())}
-        except Exception as error:
-            return {"error": str(error)}
+        return {"current_screen": '\n'.join(pane.capture_pane())}
 
     def _generate_read_new_output_definition(self):
         return {
@@ -295,7 +314,7 @@ class TmuxTool:
             }
         }
 
-    def read_new_output(self, max_size=1024, prune_line=None):
+    def read_new_output(self, max_size=1024, prune_line=None, window_id=None):
         """Read all new output from the piped file.
 
         Arguments:
@@ -305,54 +324,51 @@ class TmuxTool:
               enabled, this will remove the first first line if it matches, so that echoed
               characters are sent back
         """
-        try:
-            self._ensure_connection()
-            if not self.session.windows:
-                return {"error": "No active tmux windows available."}
+        self._ensure_connection()
+        if not self.session.windows:
+            raise Exception("No active tmux windows available.")
 
-            # Use the provided max_size or the default one, but never exceed the limit
-            max_size = min(max_size or lair.config.get('tools.tmux.read_new_output.max_size_default'),
-                           lair.config.get('tools.tmux.read_new_output.max_size_limit'))
+        # Use the provided max_size or the default one, but never exceed the limit
+        max_size = min(max_size or lair.config.get('tools.tmux.read_new_output.max_size_default'),
+                       lair.config.get('tools.tmux.read_new_output.max_size_limit'))
 
-            window = self.active_window
-            pane = window.attached_pane or window.active_pane
-            pane_id = pane.get("pane_id")
+        window = self.active_window if window_id is None else self._get_window_by_id(window_id)
+        pane = window.attached_pane or window.active_pane
+        pane_id = pane.get("pane_id")
 
-            if pane_id not in self.log_files:
-                return {"error": "Connection to pane lost."}
-            log_file = self.log_files[pane_id]
-            offset = self.log_offsets.get(pane_id, 0)
+        if pane_id not in self.log_files:
+            raise Exception("Connection to pane lost.")
+        log_file = self.log_files[pane_id]
+        offset = self.log_offsets.get(pane_id, 0)
 
-            with open(log_file, 'rb') as f:
-                f.seek(offset)
-                new_data = f.read()
-                new_offset = f.tell()
+        with open(log_file, 'rb') as f:
+            f.seek(offset)
+            new_data = f.read()
+            new_offset = f.tell()
 
-            new_data = new_data.decode('utf-8', errors='replace')
-            new_data = new_data.replace('\r\n', '\n')
+        new_data = new_data.decode('utf-8', errors='replace')
+        new_data = new_data.replace('\r\n', '\n')
 
-            if offset == 0:
-                # If this is the first read, remove the first two lines
-                # The first line is the command sent by run() being typed
-                # The second is it echoing back with the prompt
-                new_data = '\n'.join(new_data.splitlines()[2:])
-            elif prune_line and lair.config.get('tools.tmux.read_new_output.remove_echoed_commands'):
-                # If the first line matches the last sent input, prune it
-                new_data = re.sub(rf'^{re.escape(prune_line)}\n', '', new_data)
+        if offset == 0:
+            # If this is the first read, remove the first two lines
+            # The first line is the command sent by run() being typed
+            # The second is it echoing back with the prompt
+            new_data = '\n'.join(new_data.splitlines()[2:])
+        elif prune_line and lair.config.get('tools.tmux.read_new_output.remove_echoed_commands'):
+            # If the first line matches the last sent input, prune it
+            new_data = re.sub(rf'^{re.escape(prune_line)}\n', '', new_data)
 
-            if lair.config.get('tools.tmux.read_new_output.strip_escape_codes'):
-                new_data = lair.util.strip_escape_codes(new_data)
-            if new_data.startswith('\r'):  # Skip the initial \r, since it adds no value
-                new_data = new_data[1:]
+        if lair.config.get('tools.tmux.read_new_output.strip_escape_codes'):
+            new_data = lair.util.strip_escape_codes(new_data)
+        if new_data.startswith('\r'):  # Skip the initial \r, since it adds no value
+            new_data = new_data[1:]
 
-            self.log_offsets[pane_id] = new_offset
+        self.log_offsets[pane_id] = new_offset
 
-            if len(new_data) > max_size:
-                new_data = new_data[-max_size:]
+        if len(new_data) > max_size:
+            new_data = new_data[-max_size:]
 
-            return {"output": new_data}
-        except Exception as error:
-            return {"error": str(error)}
+        return {"output": new_data}
 
     def _generate_kill_definition(self):
         return {
@@ -433,17 +449,12 @@ class TmuxTool:
             if not self.session.windows:
                 return {"error": "No tmux windows available to attach."}
 
-            target_window = None
-            for window in self.session.windows:
-                if window.get("window_id") == window_id:
-                    target_window = window
-                    self.active_window = window
-                    break
+            window = self.session.new_window(window_name="lair", attach=False)
+            self.active_window = window
+            window.select_window()
 
-            if not target_window:
-                return {"error": "Specified window not found."}
-
-            target_window.select_window()
-            return {"message": f"Attached to window {target_window.get('window_id')} ({target_window.get('window_name')})."}
+            return {
+                "message": f"Attached to window {window.get('window_id')} ({window.get('window_name')})."
+            }
         except Exception as error:
             return {"error": str(error)}
