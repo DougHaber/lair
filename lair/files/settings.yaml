@@ -382,19 +382,14 @@ tools.tmux.enabled: false
 tools.tmux.attach_window.enabled: false
 # capture_output performs a screen capture and returns the string with each line of the string in it
 tools.tmux.capture_output.enabled: true
-# kill terminates a window
-tools.tmux.kill.enabled: false
-tools.tmux.list_windows.enabled: false
 # All terminal displayed output is written to files. These are not currently removed automatically.
 # Two variables are available to use in the template: window-id, pid
 # Parent directories will be automatically created as necessary.
 tools.tmux.capture_file_name: '~/.lair/tmux-logs/window-{window_id}-pid-{pid}.cap'
-# send_keys allows the model to send input to a window. Turning this off can make it read-only so it
-# can watch a terminal, but not modify it. In order for this to work 'tools.allow_dangerous_tools'
-# must also be true.
-tools.tmux.send_keys.enabled: false
-# The run command starts a new window and launches tools.tmux.run.command in it
-tools.tmux.run.enabled: true
+# kill terminates a window
+tools.tmux.kill.enabled: false
+# List all windows in the session
+tools.tmux.list_windows.enabled: false
 # read_new_output returns all output since the last read or capture. This includes anything written
 # to the screen, rather than just stdout/stderr, since tmux doesn't differentiate.  The
 # remove_echoed_commands and strip_escape_codes modifiers can filter the output.
@@ -409,13 +404,22 @@ tools.tmux.read_new_output.max_size_limit: 8192
 tools.tmux.read_new_output.remove_echoed_commands: true
 # When true, escape sequences are automatically removed from the stream
 tools.tmux.read_new_output.strip_escape_codes: true
+# The run command starts a new window and launches tools.tmux.run.command in it
+tools.tmux.run.enabled: true
 # When using the run command, this is the command to run. Providing access to real systems is
 # dangerous, and so this example uses Docker to lower (but not eliminate) the risk., but be aware
 # nothing will be cleaning this automatically.
-tools.tmux.run.command: 'exec docker run --rm -it debian'
+# WARNING: "exec" is automatically inserted before this command to prevent access to the original
+#   shell. This should always be a single command and it must execute properly, otherwise the
+#   shell will be accessible.
+tools.tmux.run.command: 'docker run --rm -it debian'
 # This is a description for the run command which gets placed into the help provided to the
 # model. Use this to let the model know what the run() tool will be doing.
 tools.tmux.run.description: 'This will launches a bash shell within a docker container.'
+# send_keys allows the model to send input to a window. Turning this off can make it read-only so it
+# can watch a terminal, but not modify it. In order for this to work 'tools.allow_dangerous_tools'
+# must also be true.
+tools.tmux.send_keys.enabled: false
 # The tmux session name
 tools.tmux.session_name: 'lair'
 # The maximum number of tmux windows that can be open. If this limit is reached, an error message
