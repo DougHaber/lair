@@ -10,7 +10,10 @@ from lair.logging import logger
 class PythonTool():
     name = 'python'
 
-    def __init__(self, tool_set):
+    def __init__(self):
+        pass
+
+    def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='run_python',

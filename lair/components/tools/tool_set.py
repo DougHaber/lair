@@ -17,9 +17,9 @@ class ToolSet():
     def _init_tools(self, tools):
         self.requested_tools = lair.components.tools.DEFAULT_TOOLS if tools is None else tools
 
-        # Instantiate each tool collection, allowing it to register each individual tool
+        # Instantiate each tool collection and register the tools in our ToolSet() instance
         for tool in self.requested_tools:
-            tool(self)
+            tool().add_to_tool_set(self)
 
     def update_tools(self, tools=None):
         """

@@ -12,6 +12,7 @@
 
 ### Internal
 - internal: Rename reportings plain() to style() for clarity
+- internal: Refactored how tools are initialized to improve reusability and testing (#17)
 
 ### Bug Fixes
 - Fix issue where automatic title generation fails if it uses a tool message (#13)
@@ -21,6 +22,7 @@
 - chat: Fix error when switching back to a deleted session
 - docs: Fix incorrect chat command optional flags
 - tools: Fix incorrect response to invalid tool calls
+
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
 

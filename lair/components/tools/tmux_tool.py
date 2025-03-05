@@ -11,7 +11,7 @@ import libtmux
 class TmuxTool:
     name = 'tmux'
 
-    def __init__(self, tool_set):
+    def __init__(self):
         self.server = None
         self.session = None
 
@@ -20,6 +20,7 @@ class TmuxTool:
 
         self.active_window = None
 
+    def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='run',

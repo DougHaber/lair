@@ -49,7 +49,10 @@ class SearchTool:
         }
     }
 
-    def __init__(self, tool_set):
+    def __init__(self):
+        self.ddgs = duckduckgo_search.DDGS()
+
+    def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name='search_web',
@@ -64,8 +67,6 @@ class SearchTool:
             definition=self.SEARCH_NEWS_DEFINITION,
             handler=self.search_news
         )
-
-        self.ddgs = duckduckgo_search.DDGS()
 
     def _get_content(self, url):
         max_length = lair.config.get('tools.search.max_length')
