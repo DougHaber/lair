@@ -1,33 +1,34 @@
-# (WIP) v0.6.2+dev -
+# v0.7.0 - Tmux Tool, LTXV 0.9.5 support, many small improvements
 
 ### Changes
 - New tool: TmuxTool allows for interacting with command line applications
 - chat: Add colors and better sorting to Tools report
-- chat: Highlight active model in list-models report
+- chat: Highlight active model in `list-models` report
 - chat: Improve sorting in modes report and highlight active instead of using a `*`
 - chat: Remove sessions report active column and highlight active id
 - chat: Show `0` messages in the sessions report with a dark gray color
-- chat: The /session-delete command now supports `all` as an id to remove all sessions
-- comfy: ltxv_i2v workflow is updated for compatibility with LTXVideo 0.9.5
+- chat: The `/session-delete` command now supports `all` as an id to remove all sessions
+- comfy: `ltxv_i2v` workflow is updated for compatibility with LTXVideo 0.9.5
 - docs: Adjusted README.md headers to reduce document depth
 - file_tool: Support reading multiple files in one request with globs (#14)
-
-### Internal
-- internal: Refactored how tools are initialized to improve reusability and testing (#17)
-- internal: Rename reportings plain() to style() for clarity
 
 ### Bug Fixes
 - Fix issue where automatic title generation fails if it uses a tool message (#13)
 - README.md: Fix badly rendered table from github-flavored markdown glitch
-- chat: Fix bug where /set fails to cast bools with extra space
-- chat: Fix error on autocomplete for /set with null current values
+- chat: Fix bug where `/set` fails to cast bools with extra space
+- chat: Fix error on autocomplete for `/set` with null current values
 - chat: Fix error when switching back to a deleted session
-- comfy: Fix bad help message for ltxv_i2v
+- comfy: Fix bad help message for `ltxv_i2v`
 - comfy: Fix config values that broke in the config system overhaul
 - docs: Fix incorrect chat command optional flags
 - tools: Fix incorrect response to invalid tool calls
 
+### Breaking Changes
+- ltxv-i2v is a new workflow with config parameter changes and flag changes
 
+### Internal
+- internal: Refactored how tools are initialized to improve reusability and testing (#17)
+- internal: Rename reporting's `plain()` to `style()` for clarity
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues
 
