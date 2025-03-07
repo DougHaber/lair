@@ -576,7 +576,7 @@ All Tmux windows are placed in a session named by `tools.tmux.session_name` with
 
 The `run` command launches a window executing a fixed command defined by `tools.tmux.run.command`. The command's description, provided by `tools.tmux.run.description`, helps the model understand its purpose. Using Docker or chroot is always recommended for security.
 
-⚠️ **DANGER:** The window initially starts with a shell, and the command is executed as `exec {command}; exit`. This setup prevents access to the initial shell and ensures proper restriction enforcement. Be careful to keep command proper so that the restrictions are properly enforced. For those curious, this is done so that `pipe-pane` can be setup before the command runs and initial command output could be captured.
+⚠️ **DANGER:** The window initially starts with a shell, and the command is executed as `exec {command}; exit`. This setup prevents access to the initial shell and ensures proper restriction enforcement. Be careful to keep the command proper so that restrictions are properly enforced. For those curious, this is done so that `pipe-pane` can be setup before the command runs and initial command output could be captured.
 
 Here is an example configuration for the run command:
 
