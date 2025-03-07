@@ -221,16 +221,19 @@ class ComfyCaller():
         return {
             'auto_prompt_extra': lair.config.get('comfy.ltxv_i2v.auto_prompt_extra'),
             'auto_prompt_suffix': lair.config.get('comfy.ltxv_i2v.auto_prompt_suffix'),
+            'base_shift': lair.config.get('comfy.ltxv_i2v.scheduler_base_shift'),
             'batch_size': lair.config.get('comfy.ltxv_i2v.batch_size'),
             'cfg': lair.config.get('comfy.ltxv_i2v.cfg'),
             'clip_name': lair.config.get('comfy.ltxv_i2v.clip_name'),
             'denoise': lair.config.get('comfy.ltxv_i2v.denoise'),
             'florence_model_name': lair.config.get('comfy.ltxv_i2v.florence_model_name'),
             'florence_seed': lair.config.get('comfy.ltxv_i2v.florence_seed'),
-            'frame_rate': lair.config.get('comfy.ltxv_i2v.frame_rate'),
+            'frame_rate_conditioning': lair.config.get('comfy.ltxv_i2v.frame_rate_conditioning'),
+            'frame_rate_save': lair.config.get('comfy.ltxv_i2v.frame_rate_save'),
             'image': None,
             'image_resize_height': lair.config.get('comfy.ltxv_i2v.image_resize_height'),
             'image_resize_width': lair.config.get('comfy.ltxv_i2v.image_resize_width'),
+            'max_shift': lair.config.get('comfy.ltxv_i2v.scheduler_max_shift'),
             'model_name': lair.config.get('comfy.ltxv_i2v.model_name'),
             'negative_prompt': lair.config.get('comfy.ltxv_i2v.negative_prompt'),
             'num_frames': lair.config.get('comfy.ltxv_i2v.num_frames'),
@@ -241,15 +244,15 @@ class ComfyCaller():
             'scheduler': lair.config.get('comfy.ltxv_i2v.scheduler'),
             'seed': lair.config.get('comfy.ltxv_i2v.seed'),
             'steps': lair.config.get('comfy.ltxv_i2v.steps'),
-            'stg': lair.config.get('comfy.ltxv_i2v.stg'),
-            'stg_block_indices': lair.config.get('comfy.ltxv_i2v.stg_block_indices'),
-            'stg_rescale': lair.config.get('comfy.ltxv_i2v.stg_rescale'),
+            'stretch': lair.config.get('comfy.ltxv_i2v.scheduler_stretch'),
+            'terminal': lair.config.get('comfy.ltxv_i2v.scheduler_terminal'),
         }
 
-    async def _workflow_ltxv_i2v(self, image, *, model_name, clip_name, stg_block_indices, image_resize_height,
-                                 image_resize_width, num_frames, frame_rate, batch_size, florence_model_name,
-                                 negative_prompt, auto_prompt_suffix, auto_prompt_extra, prompte, cfg, stg, stg_rescale,
-                                 sampler, scheduler, steps, pingpong, output_format, denoise, seed, florence_seed):
+    async def _workflow_ltxv_i2v(self, image, *, model_name, clip_name, image_resize_height, image_resize_width,
+                                 num_frames, frame_rate_conditioning, frame_rate_save, batch_size, florence_model_name,
+                                 max_shift, base_shift, stretch, terminal, negative_prompt, auto_prompt_suffix,
+                                 auto_prompt_extra, prompt, cfg, sampler, scheduler, steps, pingpong, output_format,
+                                 denoise, seed, florence_seed):
         if image is None:
             raise ValueError("ltxv-i2v: Image must not be None")
         if seed is None:
@@ -258,15 +261,13 @@ class ComfyCaller():
             florence_seed = random.randint(0, 2**31 - 1)
 
         with Workflow():
-            noise = RandomNoise(seed)
-            model, vae = LTXVLoader(model_name, 'bfloat16')
-            model = LTXVApplySTG(model, 'attention', stg_block_indices)
+            model, _, vae = CheckpointLoaderSimple(model_name)
             image, _ = ETNLoadImageBase64(self._image_to_base64(image))
+            image = LTXVPreprocess(image, 40)
             image2, width, height = ImageResizeKJ(image, image_resize_height, image_resize_width, 'bilinear',
                                                   True, 32, 0, 0, None, 'disabled')
-            model, latent, sigma_shift = LTXVModelConfigurator(model, vae, 'Custom', width, height, num_frames,
-                                                               frame_rate, batch_size, True, 29, image2, None)
-            clip = CLIPLoader(clip_name, 'ltxv')
+            clip = CLIPLoader(clip_name, 'ltxv', 'default')
+
             if prompt is None:  # If a prompt is not provided, automatically generate one
                 florence2_model = DownloadAndLoadFlorence2Model(florence_model_name, 'fp16', 'sdpa', None)
                 _, _, prompt, _ = Florence2Run(image, florence2_model, '', 'more_detailed_caption', True, False, 256,
@@ -277,19 +278,19 @@ class ComfyCaller():
                 prompt = StringReplaceMtb(prompt, 'illustration', 'video')
                 prompt = StringFunctionPysssss('append', 'no', prompt, auto_prompt_extra, auto_prompt_suffix)
 
-            positive_conditioning = CLIPTextEncode(prompt, clip)
-            negative_conditioning = CLIPTextEncode(negative_prompt, clip)
+            positive = CLIPTextEncode(prompt, clip)
+            negative = CLIPTextEncode(negative_prompt, clip)
+            positive, negative, latent = LTXVImgToVideo(positive, negative, vae, image, width, height, num_frames, 1)
+            positive, negative = LTXVConditioning(positive, negative, frame_rate_conditioning)
 
-            guider = STGGuider(model, positive_conditioning, negative_conditioning, cfg, stg, stg_rescale)
             sampler = KSamplerSelect(sampler)
-            sigmas = BasicScheduler(model, scheduler, steps, denoise)
-            sigmas = LTXVShiftSigmas(sigmas, sigma_shift, True, 0.1)
-            _, latent = SamplerCustomAdvanced(noise, guider, sampler, sigmas, latent)
-            image3 = VAEDecode(latent, vae)
-            video_node = VHSVideoCombine(images=image3,
-                                         # The official workflow set frame_rate to 24 instead of 25.
-                                         # For simplicity, I made them the same, but I'm not sure what the reason for that is.
-                                         frame_rate=frame_rate,
+            sigmas = LTXVScheduler(steps, max_shift, base_shift, stretch, terminal, latent)
+
+            output, _ = SamplerCustom(model, True, seed, cfg, positive, negative, sampler, sigmas, latent)
+            frames = VAEDecode(output, vae)
+
+            video_node = VHSVideoCombine(images=frames,
+                                         frame_rate=frame_rate_save,
                                          loop_count=0,
                                          filename_prefix='LTXVideo',
                                          format=output_format,
@@ -342,6 +343,7 @@ class ComfyCaller():
             # Encoding is used so that the save file bytes() support can write the output
             prompts.append(prompt.encode())
 
+        # TODO: Fix variable bindings.. Add new..
         return prompts
 
     def _get_defaults_hunyuan_video_t2v(self):

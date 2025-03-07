@@ -142,12 +142,10 @@ class Comfy():
                                     help=f'Classifier-free guidance scale (default: {defaults["cfg"]})')
         command_parser.add_argument('-C', '--clip-name', type=str,
                                     help=f'Name of the clip model (default: {defaults["clip_name"]})')
-        command_parser.add_argument('-f', '--frame-rate', type=int,
-                                    help=f'Batch size (default: {defaults["frame_rate"]})')
+        command_parser.add_argument('-f', '--frame-rate-saving', type=int,
+                                    help=f'Frame rate for saving -- different than conditioning (default: {defaults["frame_rate_save"]})')
         command_parser.add_argument('-F', '--num-frames', type=int,
                                     help=f'Number of frames to generate (default: {defaults["num_frames"]}, must be N * 8 + 1)')
-        command_parser.add_argument('-g', '--stg', type=float,
-                                    help=f'Spatio-Temporal Guidance scale (default: {defaults["stg"]})')
         command_parser.add_argument('-i', '--image', type=str, required=True,
                                     help='Input image file to use (required)')
         command_parser.add_argument('-m', '--model-name', type=str,
@@ -166,6 +164,8 @@ class Comfy():
                                     help='File name to read a prompt from.  (auto-prompt is disabled when this is provided)')
         command_parser.add_argument('-r', '--repeat', default=1, type=int,
                                     help='Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)')
+        command_parser.add_argument('-R', '--frame-rate-conditioning', type=int,
+                                    help=f'Frame rate for conditioning -- different than saving (default: {defaults["frame_rate_conditioning"]})')
         command_parser.add_argument('-s', '--sampler', type=str,
                                     help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})')
         command_parser.add_argument('-S', '--scheduler', type=str,

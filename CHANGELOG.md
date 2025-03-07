@@ -1,19 +1,20 @@
 # (WIP) v0.6.2+dev -
 
 ### Changes
+- New tool: TmuxTool allows for interacting with command line applications
 - chat: Add colors and better sorting to Tools report
 - chat: Highlight active model in list-models report
 - chat: Improve sorting in modes report and highlight active instead of using a `*`
 - chat: Remove sessions report active column and highlight active id
 - chat: Show `0` messages in the sessions report with a dark gray color
 - chat: The /session-delete command now supports `all` as an id to remove all sessions
-- New tool: TmuxTool allows for interacting with command line applications
+- comfy: ltxv_i2v workflow is updated for compatibility with LTXVideo 0.9.5
 - docs: Adjusted README.md headers to reduce document depth
 - file_tool: Support reading multiple files in one request with globs (#14)
 
 ### Internal
-- internal: Rename reportings plain() to style() for clarity
 - internal: Refactored how tools are initialized to improve reusability and testing (#17)
+- internal: Rename reportings plain() to style() for clarity
 
 ### Bug Fixes
 - Fix issue where automatic title generation fails if it uses a tool message (#13)
@@ -21,8 +22,11 @@
 - chat: Fix bug where /set fails to cast bools with extra space
 - chat: Fix error on autocomplete for /set with null current values
 - chat: Fix error when switching back to a deleted session
+- comfy: Fix bad help message for ltxv_i2v
+- comfy: Fix config values that broke in the config system overhaul
 - docs: Fix incorrect chat command optional flags
 - tools: Fix incorrect response to invalid tool calls
+
 
 
 # v0.6.1 - Bug Fixes: Dependency & Tools Issues

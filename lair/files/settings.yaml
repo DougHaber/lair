@@ -148,10 +148,12 @@ comfy.ltxv_i2v.florence_model_name: 'microsoft/Florence-2-base'
 # The seed for the florence model to use. If set to null, it will be randomly selected each cycle. Setting to null
 # effectively disables caching of Florence results.
 comfy.ltxv_i2v.florence_seed: 42
-comfy.ltxv_i2v.frame_rate: 25
+comfy.ltxv_i2v.frame_rate_conditioning: 25
+comfy.ltxv_i2v.frame_rate_save: 24
 comfy.ltxv_i2v.image_resize_height: 800
 comfy.ltxv_i2v.image_resize_width: 800
 comfy.ltxv_i2v.model_name: 'ltx-video-2b-v0.9.1.safetensors'
+# comfy.ltxv_i2v.model_name: 'ltx-video-2b-v0.9.5.safetensors'
 comfy.ltxv_i2v.negative_prompt: 'worst quality, inconsistent motion, blurry, jittery, distorted, watermarks'
 # Number of frames to generate  (Must be N * 8 + 1)
 comfy.ltxv_i2v.num_frames: 105
@@ -165,22 +167,20 @@ comfy.ltxv_i2v.output_format: 'video/h264-mp4'
 comfy.ltxv_i2v.pingpong: false
 # When a prompt is provided this exact prompt is used instead of the auto-generated prompt.
 # Auto prompt and florence settings are ignored when this is used.
-comfy.ltxv_i2v.prompt: null
-comfy.ltxv_i2v.sampler: 'euler_ancestral'
+comfy.ltxv_i2v.prompt: __null_str
+comfy.ltxv_i2v.sampler: 'euler'
 comfy.ltxv_i2v.scheduler: 'normal'
-comfy.ltxv_i2v.seed: null
+comfy.ltxv_i2v.scheduler_max_shift: 2.05
+comfy.ltxv_i2v.scheduler_base_shift: 0.95
+comfy.ltxv_i2v.scheduler_stretch: true
+comfy.ltxv_i2v.scheduler_terminal: 0.10
+comfy.ltxv_i2v.seed: __null_int
 comfy.ltxv_i2v.steps: 25
-comfy.ltxv_i2v.stg: 1.0
-# This is the block_indices parameter from the LTXV Apply STG node
-# The Comfy LTXV I2V workflow recommends 11, 14, and 19.
-# The value is a string and can contain multiple comma delimited items.
-comfy.ltxv_i2v.stg_block_indices: '14'
-comfy.ltxv_i2v.stg_rescale: 0.75
 
 comfy.ltxv_prompt.auto_prompt_extra: ''
 comfy.ltxv_prompt.auto_prompt_suffix: ' The scene is captured in real-life footage.'
 comfy.ltxv_prompt.florence_model_name: 'microsoft/Florence-2-base'
-comfy.ltxv_prompt.florence_seed: null
+comfy.ltxv_prompt.florence_seed: __null_int
 comfy.ltxv_prompt.image_resize_height: 800
 comfy.ltxv_prompt.image_resize_width: 800
 comfy.ltxv_prompt.output_file: 'output.txt'
