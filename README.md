@@ -96,7 +96,7 @@ The open-source version of Lair is a partial rewrite of the original closed-sour
   * File Tool: Read and write files in a local path (**Experimental**)
   * Python Tool: Run python code inside of a container
   * Search Tool: Search the web or news with DuckDuckGo
-  * Tmux Tools: Interact with terminals in a Tmux sesion (**Experimental**)
+  * Tmux Tool: Interact with terminals in a Tmux sesion (**Experimental**)
 
 ## Future
 
