@@ -1,3 +1,8 @@
+# v0.7.1+dev -
+
+### Changes
+- chat: Pressing tab while at the sessions switch prompt now shows all sessions
+
 # v0.7.0 - Tmux Tool, LTXV 0.9.5 support, many small improvements
 
 ### Changes

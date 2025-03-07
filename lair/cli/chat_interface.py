@@ -322,10 +322,16 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
     def _handle_session_switch(self):
         default_session_id = self._get_default_switch_session_id()
 
+        key_bindings = prompt_toolkit.key_binding.KeyBindings()
+        @key_bindings.add('tab')
+        def show_sessions(event):
+            prompt_toolkit.application.run_in_terminal(lambda: self.print_sessions_report())
+
         try:
             id_or_alias = prompt_toolkit.prompt(f'Switch to session (default {default_session_id}): ',
                                                 history=self.sub_prompt_history['session_switch'],
-                                                in_thread=True).strip()
+                                                in_thread=True,
+                                                key_bindings=key_bindings).strip()
         except (KeyboardInterrupt, EOFError):
             return
 
