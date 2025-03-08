@@ -5,6 +5,7 @@
 
 ### Bug Fixes
 - Fix errors from inconsistent types between Ollama OpenAI endpoints and real OpenAI
+- Fix schema strictness issue where null tool call "index" values were not allowed
 
 # v0.7.0 - Tmux Tool, LTXV 0.9.5 support, many small improvements
 

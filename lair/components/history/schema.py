@@ -86,7 +86,7 @@ MESSAGES_SCHEMA = {
                             "description": "Index of the tool call in the sequence."
                         }
                     },
-                    "required": ["id", "type", "function", "index"]
+                    "required": ["id", "type", "function"]
                 }
             },
             "refusal": {
