@@ -47,13 +47,13 @@ class ChatHistory:
             if message['role'] == 'tool':
                 self._history.append({
                     "role": 'tool',
-                    "content": message['content'],
+                    "content": message['content'] or '',
                     "tool_call_id": message['tool_call_id'],
                 })
             elif message['role'] == 'assistant':
                 self._history.append({
                     "role": 'assistant',
-                    "content": message['content'],
+                    "content": message['content'] or '',
                     "refusal": message['refusal'],
                     "tool_calls": message['tool_calls'],
                 })

@@ -3,6 +3,9 @@
 ### Changes
 - chat: Pressing tab while at the sessions switch prompt now shows all sessions
 
+### Bug Fixes
+- Fix errors from inconsistent types between Ollama OpenAI endpoints and real OpenAI
+
 # v0.7.0 - Tmux Tool, LTXV 0.9.5 support, many small improvements
 
 ### Changes
