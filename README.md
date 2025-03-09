@@ -122,6 +122,8 @@ YAML anchors and aliasing can be used to make modes inherit from each other. An 
 
 Modes with names beginning with an underscore are considered hidden and not displayed by the `/mode` command. This is helpful when making modes that are intended to be used with `_inherit`, but not otherwise used directly.
 
+In the chat interface, use the `/set` command to modify settings for an active session. Running `/set` without arguments shows all settings, highlighting those that differ from the defaults. To change a setting, use `/set {key} {value}`. The `/list-settings` command allows searching with regular expressions, showing only differences, or comparing the current mode against a different baseline mode. Use `/list-settings --help` to see all options.
+
 In the current release, the only supported `session.type` is `openai_chat`, which uses OpenAI's API or other APIs that provide compatibility, such as Ollama. Lair originally used LangChain and supported various other options, but these have been removed to simplify the code.
 
 To use Lair with OpenAI, set the environment variable `OPENAI_API_KEY` with your key. The default environment variable to use can be modified with `openai.api_key_environment_variable`.
@@ -214,6 +216,7 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /last-prompt     | Display the most recently used prompt                                                                                   |
 | /last-response   | Display or save the most recently seen response  (usage: `/last-response [filename?]`)                                  |
 | /list-models     | Display a list of available models for the current session                                                              |
+| /list-settings   | Show and search settings  (for usage, run `/list-settings --help`)                                                      |
 | /list-tools      | Show tools and their status                                                                                             |
 | /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                       |
 | /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                      |

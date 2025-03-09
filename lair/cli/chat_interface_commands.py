@@ -1,8 +1,14 @@
 import json
 import os
+import shlex
 
 import lair
 from lair.logging import logger
+from lair.util.argparse import (
+    ArgumentParserExitException,
+    ArgumentParserHelpException,
+    ErrorRaisingArgumentParser,
+)
 
 
 class ChatInterfaceCommands():
@@ -48,6 +54,10 @@ class ChatInterfaceCommands():
             '/list-models': {
                 'callback': lambda command, arguments, arguments_str: self.command_list_models(command, arguments, arguments_str),
                 'description': 'Display a list of available models for the current session'
+            },
+            '/list-settings': {
+                'callback': lambda command, arguments, arguments_str: self.command_list_settings(command, arguments, arguments_str),
+                'description': 'Show and search settings  (for usage, run /list-settings --help)'
             },
             '/list-tools': {
                 'callback': lambda command, arguments, arguments_str: self.command_list_tools(command, arguments, arguments_str),
@@ -244,6 +254,29 @@ class ChatInterfaceCommands():
             self.reporting.user_error("ERROR: /list-models takes no arguments")
         else:
             self.print_models_report(update_cache=True)
+
+    def command_list_settings(self, command, arguments, arguments_str):
+        parser = ErrorRaisingArgumentParser(prog='/list-settings')
+        parser.add_argument('-b', '--baseline', type=str,
+                            help='Baseline mode to compare against (default is the built in default configuration)')
+        parser.add_argument('-d', '--show-diff', action='store_true',
+                            help='Only show settings which do not match the baselines')
+        parser.add_argument('search', nargs='?', default=None,
+                            help='Regular expression to filter settings by')
+
+        try:
+            new_arguments = parser.parse_args(shlex.split(arguments_str))
+        except ArgumentParserHelpException as error:  # Display help with styles
+            self.reporting.system_message(str(error), disable_markdown=True)
+            return
+        except ArgumentParserExitException:  # Ignore exits
+            return
+
+        self.print_config_report(
+            baseline=new_arguments.baseline,
+            show_only_differences=new_arguments.show_diff,
+            filter_regex=new_arguments.search,
+        )
 
     def command_list_tools(self, command, arguments, arguments_str):
         if len(arguments) != 0:

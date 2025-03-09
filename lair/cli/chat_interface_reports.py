@@ -1,24 +1,41 @@
+import re
+
 import lair
 from lair.logging import logger  # noqa
 
 
 class ChatInterfaceReports():
-    def print_config_report(self):
-        self.reporting.system_message(f"Current mode: {lair.config.active_mode}")
+    def print_config_report(self, *, show_only_differences=False, filter_regex=None, baseline=None):
+        if baseline:
+            if baseline not in lair.config.modes:
+                logger.error(f"Unknown mode: {baseline}")
+                return
+            else:
+                self.reporting.system_message(f"Current mode: {lair.config.active_mode}, Baseline mode: {baseline}")
+        else:
+            self.reporting.system_message(f"Current mode: {lair.config.active_mode}")
 
-        default_settings = lair.config.default_settings
+        default_settings = lair.config.default_settings if baseline is None else lair.config.modes[baseline]
         modified_style = lair.config.get('chat.set_command.modified_style')
         unmodified_style = lair.config.get('chat.set_command.unmodified_style')
         rows = []
         for key, value in sorted(lair.config.active.items()):
-            if not key.startswith('_'):
-                if value == default_settings.get(key):
-                    display_value = self.reporting.style(str(value), style=unmodified_style)
-                else:
-                    display_value = self.reporting.style(str(value), style=modified_style)
-                rows.append([key, display_value])
+            if key.startswith('_') or \
+               (filter_regex is not None and not re.search(filter_regex, key)):
+                continue
 
-        self.reporting.table_system(rows)
+            if value == default_settings.get(key):
+                if show_only_differences:
+                    continue
+                display_value = self.reporting.style(str(value), style=unmodified_style)
+            else:
+                display_value = self.reporting.style(str(value), style=modified_style)
+            rows.append([key, display_value])
+
+        if rows:
+            self.reporting.table_system(rows)
+        else:
+            self.reporting.system_message(f"No matching keys")
 
     def print_current_model_report(self):
         active_config = lair.config.active

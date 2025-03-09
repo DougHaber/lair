@@ -243,12 +243,12 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         self.print_rich(self.style(message),
                         style=lair.config.get('style.user_error'))
 
-    def system_message(self, message, show_heading=False):
+    def system_message(self, message, show_heading=False, disable_markdown=False):
         if show_heading:
             self.print_rich('SYSTEM',
                             style=lair.config.get('style.system_message_heading'))
 
-        if lair.config.get('style.render_markdown'):
+        if lair.config.get('style.render_markdown') and not disable_markdown:
             self.print_rich(rich.markdown.Markdown(message),
                             style=lair.config.get('style.system_message'))
         else:
