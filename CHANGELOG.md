@@ -3,6 +3,7 @@
 ### Changes
 - chat: Pressing tab while at the sessions switch prompt now shows all sessions
 - chat: Add /list-settings command with search, baseline compare, and only-show diff options
+- chat: Add output message when running /clear for consistency with c-x c
 
 ### Bug Fixes
 - Fix errors from inconsistent types between Ollama OpenAI endpoints and real OpenAI

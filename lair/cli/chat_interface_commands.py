@@ -134,6 +134,7 @@ class ChatInterfaceCommands():
         else:
             self.chat_session.history.clear()
             self.chat_session.session_title = None
+            self.reporting.system_message('Conversation history cleared')
 
     def command_debug(self, command, arguments, arguments_str):
         if len(arguments) != 0:
