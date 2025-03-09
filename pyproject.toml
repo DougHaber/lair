@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lair"
-version = "0.7.1+dev"
+version = "0.8.0"
 description = "Lousy AI Resources"
 license = "BSD-3-Clause"
 authors = ["Doug Haber <dhaber@leshylabs.com>"]
