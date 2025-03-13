@@ -202,7 +202,7 @@ class Comfy():
         comfy_url = lair.config.get('comfy.url')
 
         command_parser.add_argument('-m', '--model-name', type=str,
-                                    help=f'Upscale model  (required, default: {defaults["model_name"]})')
+                                    help=f'Upscale model  (default: {defaults["model_name"]})')
         command_parser.add_argument('-r', '--recursive', action='store_true',
                                     help='Recursively process all files in provided paths')
         command_parser.add_argument('--skip-existing', action='store_true',

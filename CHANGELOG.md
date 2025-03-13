@@ -1,3 +1,9 @@
+# WIP - v0.8.1+dev
+
+### Bug Fixes
+- comfy: Fix upscale help message inaccurately claiming model is required
+
+
 # v0.8.0 - New /list-settings command, bugfixes
 
 ### Changes
