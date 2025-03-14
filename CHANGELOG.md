@@ -1,3 +1,8 @@
+# WIP - v0.8.2+dev
+
+### Bug Fixes
+- comfy: Fix `ltxv-i2v` default model version
+
 # v0.8.1 - Bug fixes
 
 ### Bug Fixes

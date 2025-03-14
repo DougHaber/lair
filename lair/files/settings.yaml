@@ -152,8 +152,7 @@ comfy.ltxv_i2v.frame_rate_conditioning: 25
 comfy.ltxv_i2v.frame_rate_save: 24
 comfy.ltxv_i2v.image_resize_height: 800
 comfy.ltxv_i2v.image_resize_width: 800
-comfy.ltxv_i2v.model_name: 'ltx-video-2b-v0.9.1.safetensors'
-# comfy.ltxv_i2v.model_name: 'ltx-video-2b-v0.9.5.safetensors'
+comfy.ltxv_i2v.model_name: 'ltx-video-2b-v0.9.5.safetensors'
 comfy.ltxv_i2v.negative_prompt: 'worst quality, inconsistent motion, blurry, jittery, distorted, watermarks'
 # Number of frames to generate  (Must be N * 8 + 1)
 comfy.ltxv_i2v.num_frames: 105
