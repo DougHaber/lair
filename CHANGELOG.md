@@ -1,7 +1,7 @@
-# WIP - v0.8.1+dev
+# v0.8.1 - Bug fixes
 
 ### Bug Fixes
-- comfy: Fix issue in chat where changes to comfy.url are not propagated on mode switch
+- comfy: Fix issue in chat where changes to `comfy.url` are not propagated on mode switch
 - comfy: Fix upscale help message inaccurately claiming model is required
 - config: Fix broken mode inheritance when inheriting from multiple modes
 
