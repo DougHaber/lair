@@ -232,6 +232,7 @@ class Comfy():
                 new_arguments = shlex.split(' '.join(arguments))
                 try:
                     params = chat_command_parser.parse_args(new_arguments)
+                    params.comfy_url = lair.config.get('comfy.url')
                 except ArgumentParserHelpException as error:  # Display help with styles
                     chat_interface.reporting.error(str(error), show_exception=False)
                     return
