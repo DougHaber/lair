@@ -2,7 +2,7 @@
 
 ### Bug Fixes
 - comfy: Fix upscale help message inaccurately claiming model is required
-
+- config: Fix broken mode inheritance when inheriting from multiple modes
 
 # v0.8.0 - New /list-settings command, bugfixes
 

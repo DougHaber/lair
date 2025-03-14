@@ -17,6 +17,7 @@ class Configuration():
 
     def __init__(self):
         self.modes = {}
+        self.explicit_mode_settings = {}
         self.types = {}  # Preserve the valid type for each key (key -> type)
         self._init_default_mode()
         self.default_settings = self.modes['_default'].copy()  # Immutable copy of the defaults
@@ -71,12 +72,15 @@ class Configuration():
             if mode == 'default_mode':  # Default mode definition -- Not a real mode
                 default_mode = config[mode]
             else:
-                if mode not in self.modes:  # A newly defined mode starts with a copy of the defaults
+                if mode not in self.modes:
+                    # A newly defined mode starts with a copy of the defaults
                     self.modes[mode] = self.modes['_default'].copy()
+                    # We also need a copy of only the keys that are explicitly set for inheritance
+                    self.explicit_mode_settings[mode] = mode_config.copy()
 
                 # If there is an `_inherit` section, copy each mode's settings in order
                 for inherit_from_mode in mode_config.get('_inherit', []):
-                    self.modes[mode].update(self.modes[inherit_from_mode])
+                    self.modes[mode].update(self.explicit_mode_settings[inherit_from_mode])
 
                 # Finally, give precedence to the mode's own settings
                 self.modes[mode].update(mode_config)
