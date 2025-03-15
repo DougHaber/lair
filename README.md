@@ -69,7 +69,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 
 ## Overview
 
-Lair is a command-line toolkit for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Designed with AI developers in mind, Lair simplifies the process of scripting AI-powered workflows and includes tools for prompt experimentation and testing.
+Lair is a command-line tool for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Lair aims to make generative AI accessible from the command line and easy to use with shell scripting. It's chat interface provides many keyboard shorcuts and tools for helping experiment with prompt engineering.
 
 The open-source version of Lair is a partial rewrite of the original closed-source project. The original included additional features such as an agent framework, evolutionary programming tools for LLMs, and a utility for generating non-temporal videos from image diffusion models. While some traces of these features may still exist in the code, many are not currently included in the open-source release. Future updates may reintroduce select functionality from the original version.
 
