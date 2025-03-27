@@ -205,6 +205,8 @@ class Comfy():
 
         command_parser.add_argument('-c', '--cfg', type=float,
                                     help=f'Classifier-free guidance scale (default: {defaults["cfg"]})')
+        command_parser.add_argument('-d', '--denoise', type=float,
+                                    help=f'Denoise level (default: {defaults["denoise"]})')
         command_parser.add_argument('-f', '--feathering', type=float,
                                     help=f'Feathering pixels (default: {defaults["feathering"]})')
         command_parser.add_argument('-g', '--grow-mask_by', type=float,
