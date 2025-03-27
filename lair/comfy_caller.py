@@ -98,6 +98,7 @@ class ComfyCaller():
             'image': self._workflow_image,
             'ltxv-i2v': self._workflow_ltxv_i2v,
             'ltxv-prompt': self._workflow_ltxv_prompt,
+            'outpaint': self._workflow_outpaint,
             'upscale': self._workflow_upscale,
         }
 
@@ -107,6 +108,7 @@ class ComfyCaller():
             'image': self._get_defaults_image(),
             'ltxv-i2v': self._get_defaults_ltxv_i2v(),
             'ltxv-prompt': self._get_defaults_ltxv_prompt(),
+            'outpaint': self._get_defaults_outpaint(),
             'upscale': self._get_defaults_upscale(),
         }
 
@@ -343,7 +345,6 @@ class ComfyCaller():
             # Encoding is used so that the save file bytes() support can write the output
             prompts.append(prompt.encode())
 
-        # TODO: Fix variable bindings.. Add new..
         return prompts
 
     def _get_defaults_hunyuan_video_t2v(self):
@@ -419,10 +420,67 @@ class ComfyCaller():
 
         return videos
 
+    def _get_defaults_outpaint(self):
+        loras = lair.config.get('comfy.outpaint.loras')
+        if loras is not None:
+            loras = [lora for lora in loras.split('\n') if lora]
+
+        return {
+            'cfg': lair.config.get('comfy.outpaint.cfg'),
+            'denoise': lair.config.get('comfy.outpaint.denoise'),
+            'feathering': lair.config.get('comfy.outpaint.feathering'),
+            'grow_mask_by': lair.config.get('comfy.outpaint.grow_mask_by'),
+            'loras': loras,
+            'model_name': lair.config.get('comfy.outpaint.model_name'),
+            'negative_prompt': lair.config.get('comfy.outpaint.negative_prompt'),
+            'padding_bottom': lair.config.get('comfy.outpaint.padding_bottom'),
+            'padding_left': lair.config.get('comfy.outpaint.padding_left'),
+            'padding_right': lair.config.get('comfy.outpaint.padding_right'),
+            'padding_top': lair.config.get('comfy.outpaint.padding_top'),
+            'prompt': lair.config.get('comfy.outpaint.prompt'),
+            'sampler': lair.config.get('comfy.outpaint.sampler'),
+            'scheduler': lair.config.get('comfy.outpaint.scheduler'),
+            'seed': lair.config.get('comfy.outpaint.seed'),
+            'source_image': None,
+            'steps': lair.config.get('comfy.outpaint.steps'),
+        }
+
+    async def _workflow_outpaint(self, *, model_name, prompt, loras, negative_prompt, grow_mask_by,
+                                 seed, source_image, steps, cfg, sampler, scheduler, denoise,
+                                 padding_left, padding_top, padding_right, padding_bottom, feathering):
+        if seed is None:
+            seed = random.randint(0, 2**31 - 1)
+
+        async with Workflow():
+            model, clip, vae = CheckpointLoaderSimple(model_name)
+
+            for lora in loras or []:
+                lora_model, weight, clip_weight = self._parse_lora_argument(lora)
+                model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+
+            positive_conditioning = CLIPTextEncode(prompt, clip)
+            negative_conditioning = CLIPTextEncode(negative_prompt, clip)
+
+            source_image, _ = ETNLoadImageBase64(self._image_to_base64(source_image))
+            source_image, mask = ImagePadForOutpaint(source_image, padding_left, padding_top, padding_right,
+                                                     padding_bottom, feathering)
+            save_image_node = SaveImage(source_image, self.output_prefix)
+
+            latent = VAEEncodeForInpaint(source_image, vae, mask, grow_mask_by)
+            latent = KSampler(model, seed, steps, cfg, sampler, scheduler,
+                              positive_conditioning, negative_conditioning, latent, denoise)
+
+            image = VAEDecode(latent, vae)
+            save_image_node = SaveImage(image, self.output_prefix)
+
+            images = await save_image_node.wait()
+
+        return images
+
     def _get_defaults_upscale(self):
         return {
             'source_image': None,
-            'model_name': 'RealESRGAN_x2.pth'
+            'model_name': lair.config.get('comfy.upscale.model_name'),
         }
 
     async def _workflow_upscale(self, *, source_image, model_name):

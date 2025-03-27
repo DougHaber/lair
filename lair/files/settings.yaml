@@ -184,6 +184,30 @@ comfy.ltxv_prompt.image_resize_height: 800
 comfy.ltxv_prompt.image_resize_width: 800
 comfy.ltxv_prompt.output_file: 'output.txt'
 
+comfy.outpaint.cfg: 8.0
+comfy.outpaint.denoise: 1.0
+comfy.outpaint.feathering: 40
+comfy.outpaint.grow_mask_by: 8
+comfy.outpaint.loras: __null_str
+comfy.outpaint.model_name: 512-inpainting-ema.safetensors
+comfy.outpaint.negative_prompt: ''
+# This is the format for new filenames applied to each file being written. It is a python format
+# string. The variable `basename` provides the full filename without extension. (For example
+# /foo/bar/baz.png has a basename of `/foo/bar/baz` Not including {basename} will likely be
+# undesirable.
+comfy.outpaint.output_filename: '{basename}-outpainted.png'
+comfy.outpaint.padding_bottom: 128
+comfy.outpaint.padding_left: 128
+comfy.outpaint.padding_right: 128
+comfy.outpaint.padding_top: 128
+# When writing out files the output_file is used as is when there is a single output.  If there are multiple outputs the
+# basename becomes a prefix and a zero-padded counter is added. (For example output000000.png)
+comfy.outpaint.prompt: ''
+comfy.outpaint.sampler: 'uni_pc_bh2'
+comfy.outpaint.scheduler: 'normal'
+comfy.outpaint.seed: __null_int
+comfy.outpaint.steps: 20
+
 # The default model to use
 comfy.upscale.model_name: 'RealESRGAN_x2.pth'
 # This is the format for new filenames applied to each file being written. It is a python format
