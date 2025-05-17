@@ -2,6 +2,7 @@
 
 ### Bug Fixes
 - comfy: Fix `ltxv-i2v` default model version
+- util: Fix issue where image attachments stopped working
 
 # v0.8.1 - Bug fixes
 
