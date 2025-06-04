@@ -321,7 +321,7 @@ class Comfy():
                         if path.is_dir() or path.suffix.lower() in self._image_file_extensions:
                             queue.append(str(path.absolute()))
                 else:
-                    logger.warn(f"Path ignored: Use --recursive to process directories: {source_filename}")
+                    logger.warning(f"Path ignored: Use --recursive to process directories: {source_filename}")
             else:
                 function_arguments['source_image'] = source_filename
                 output_filename = output_filename_template.format(
@@ -329,7 +329,7 @@ class Comfy():
                 )
 
                 if os.path.exists(output_filename) and arguments.skip_existing:
-                    logger.warn(f"Skipping existing file: {output_filename}")
+                    logger.warning(f"Skipping existing file: {output_filename}")
                     continue
 
                 output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
