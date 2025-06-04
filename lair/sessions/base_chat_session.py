@@ -146,7 +146,7 @@ class BaseChatSession(abc.ABC):
         return lair.sessions.serializer.session_to_dict(self)
 
     def update_from_dict(self, state):
-        return lair.sessions.serializer.update_session_from_dict(self)
+        return lair.sessions.serializer.update_session_from_dict(self, state)
 
     @abc.abstractmethod
     def list_models(self, *, ignore_errors=False):

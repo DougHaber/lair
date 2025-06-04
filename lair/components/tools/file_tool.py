@@ -116,7 +116,7 @@ class FileTool():
                 })
             return {"contents": contents}
         except Exception as error:
-            logger.warn(f"list_directory(): Error encountered: {error}")
+            logger.warning(f"list_directory(): Error encountered: {error}")
             return {"error": str(error)}
 
     def _generate_read_file_definition(self):
@@ -170,7 +170,7 @@ class FileTool():
 
             return {"file_content": file_contents}
         except Exception as error:
-            logger.warn(f"read_file(): Error encountered: {error}")
+            logger.warning(f"read_file(): Error encountered: {error}")
             return {"error": str(error)}
 
     def _generate_write_file_definition(self):
@@ -208,7 +208,7 @@ class FileTool():
                 f.write(content)
             return {"message": f"File written to '{file_path}'."}
         except Exception as error:
-            logger.warn(f"write_file(): Error encountered: {error}")
+            logger.warning(f"write_file(): Error encountered: {error}")
             return {"error": str(error)}
 
     def _generate_delete_file_definition(self):
@@ -242,7 +242,7 @@ class FileTool():
             os.remove(file_path)
             return {"message": f"File '{file_path}' deleted."}
         except Exception as error:
-            logger.warn(f"delete_file(): Error encountered: {error}")
+            logger.warning(f"delete_file(): Error encountered: {error}")
             return {"error": str(error)}
 
     def _generate_make_directory_definition(self):
@@ -274,7 +274,7 @@ class FileTool():
             os.makedirs(dir_path, exist_ok=True)
             return {"message": f"Directory '{dir_path}' created or already exists."}
         except Exception as error:
-            logger.warn(f"make_directory(): Error encountered: {error}")
+            logger.warning(f"make_directory(): Error encountered: {error}")
             return {"error": str(error)}
 
     def _generate_remove_directory_definition(self):
@@ -308,5 +308,5 @@ class FileTool():
             os.rmdir(dir_path)
             return {"message": f"Directory '{dir_path}' removed."}
         except Exception as error:
-            logger.warn(f"remove_directory(): Error encountered: {error}")
+            logger.warning(f"remove_directory(): Error encountered: {error}")
             return {"error": str(error)}
