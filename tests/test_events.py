@@ -1,4 +1,4 @@
-from lair import events
+import lair.events as events
 
 
 def test_subscribe_and_fire():
