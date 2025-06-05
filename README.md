@@ -56,6 +56,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
     - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
     - [upscale - Enlarge Images and Enhance Quality](#upscale---enlarge-images-and-enhance-quality)
+    - [outpaint - Extend Images](#outpaint---extend-images)
 - [Util](#util)
   - [Util Examples](#util-examples)
     - [Generating Content](#generating-content)
@@ -1157,6 +1158,25 @@ The `--recursive` / `-r` flag enables recursive processing of directory trees. O
 ```sh
 # Upscale all images in a directory and its subdirectories
 $ lair comfy upscale --recursive images/
+```
+
+#### outpaint - Extend Images
+
+Outpainting expands an image by generating new content outside of its
+original borders. It uses an inpainting model and requires specifying how
+much padding to add around the source image.
+
+**Configuration**
+
+Settings are under the `comfy.outpaint.*` namespace and include options for
+padding, sampler, scheduler and other diffusion parameters. The `--denoise`
+flag controls how strongly the outpainted area is blended with the original
+image.
+
+**Usage Example**
+
+```sh
+$ lair comfy outpaint example.png
 ```
 
 ## Util

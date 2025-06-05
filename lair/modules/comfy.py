@@ -38,6 +38,7 @@ class Comfy():
         self._add_argparse_image(sub_parser)
         self._add_argparse_ltxv_i2v(sub_parser)
         self._add_argparse_ltxv_prompt(sub_parser)
+        self._add_argparse_outpaint(sub_parser)
         self._add_argparse_upscale(sub_parser)
 
         lair.events.subscribe('chat.init', lambda d: self._on_chat_init(d), instance=self)
@@ -196,6 +197,49 @@ class Comfy():
         command_parser.add_argument('-x', '--seed', type=int, dest='florence_seed',
                                     help=f'The seed to use with the Florence model (default: {defaults["florence_seed"] if defaults["florence_seed"] is not None else "random"})')
 
+    def _add_argparse_outpaint(self, sub_parser):
+        command_parser = sub_parser.add_parser('outpaint', help='Outpaint images')
+        defaults = self.comfy.defaults['outpaint']
+        comfy_url = lair.config.get('comfy.url')
+        padding_default = f'{defaults["padding_top"]}x{defaults["padding_right"]}x{defaults["padding_bottom"]}x{defaults["padding_left"]}'
+
+        command_parser.add_argument('-c', '--cfg', type=float,
+                                    help=f'Classifier-free guidance scale (default: {defaults["cfg"]})')
+        command_parser.add_argument('-d', '--denoise', type=float,
+                                    help=f'Denoise level (default: {defaults["denoise"]})')
+        command_parser.add_argument('-f', '--feathering', type=float,
+                                    help=f'Feathering pixels (default: {defaults["feathering"]})')
+        command_parser.add_argument('-g', '--grow-mask_by', type=float,
+                                    help=f'How many pixels to use for the grow_mask_by setting (default: {defaults["grow_mask_by"]})')
+        command_parser.add_argument('-l', '--lora', nargs='*', type=str, dest='loras',
+                                    help='Loras to use. Can be specified multiple times. These are processed in order. Command line usage overrides LoRAs in the settings. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})')
+        command_parser.add_argument('-m', '--model-name', type=str,
+                                    help=f'Name of the image diffusion model (default: {defaults["model_name"]})')
+        command_parser.add_argument('-n', '--negative-prompt', type=str,
+                                    help='Negative prompt to use for image diffusion')
+        command_parser.add_argument('-N', '--steps', type=int,
+                                    help=f'Number of sampling steps (default: {defaults["steps"]})')
+        command_parser.add_argument('-p', '--prompt', type=str,
+                                    help='Prompt to use for image diffusion.')
+        command_parser.add_argument('-P', '--prompt-file', type=str,
+                                    help='File name to read a prompt from.')
+        command_parser.add_argument('-r', '--recursive', action='store_true',
+                                    help='Recursively process all files in provided paths')
+        command_parser.add_argument('-R', '--padding', type=str,
+                                    help=f'Provide top/right/bottom/left padding (format: TxRxBxL, default: {padding_default})')
+        command_parser.add_argument('--skip-existing', action='store_true',
+                                    help='Do not perform upscaling for files that already have an output file')
+        command_parser.add_argument('-s', '--sampler', type=str,
+                                    help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})')
+        command_parser.add_argument('-S', '--scheduler', type=str,
+                                    help=f'Scheduler to use for image diffusion (default: {defaults["scheduler"]})')
+        command_parser.add_argument('-u', '--comfy-url', default=comfy_url,
+                                    help=f'URL for the Comfy UI API (default: {comfy_url})')
+        command_parser.add_argument('-x', '--seed', type=int,
+                                    help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})')
+        command_parser.add_argument('outpaint_files', type=str, nargs='+',
+                                    help='File(s) to outpaint')
+
     def _add_argparse_upscale(self, sub_parser):
         command_parser = sub_parser.add_parser('upscale', help='Upscale images')
         defaults = self.comfy.defaults['upscale']
@@ -308,10 +352,7 @@ class Comfy():
     def get_output_file_name(self, file_name):
         return f'{os.path.splitext(file_name)[0]}-upscaled{os.path.splitext(file_name)[1]}'
 
-    def run_workflow_upscale(self, arguments, defaults, function_arguments):
-        queue = [*arguments.scale_files]
-        output_filename_template = lair.config.get('comfy.upscale.output_filename')
-
+    def _run_workflow_queue(self, arguments, defaults, function_arguments, *, queue, output_filename_template):
         while queue:
             source_filename = queue.pop(0)
             if os.path.isdir(source_filename):
@@ -338,6 +379,31 @@ class Comfy():
                 else:
                     self._save_output(output, output_filename, single_output=True)
 
+    def run_workflow_outpaint(self, arguments, defaults, function_arguments):
+        if arguments.padding:
+            components = arguments.padding.split('x')
+            if len(components) != 4:
+                raise ValueError("Padding must have 4 components (top/right/bottom/left)")
+
+            for value in components:
+                int_value = lair.util.safe_int(value)
+                if not isinstance(int_value, int):
+                    raise ValueError("Padding components must be integers")
+
+            function_arguments['padding_top'] = lair.util.safe_int(components[0])
+            function_arguments['padding_right'] = lair.util.safe_int(components[1])
+            function_arguments['padding_bottom'] = lair.util.safe_int(components[2])
+            function_arguments['padding_left'] = lair.util.safe_int(components[3])
+
+        self._run_workflow_queue(arguments, defaults, function_arguments,
+                                 queue=[*arguments.outpaint_files],
+                                 output_filename_template=lair.config.get('comfy.outpaint.output_filename'))
+
+    def run_workflow_upscale(self, arguments, defaults, function_arguments):
+        self._run_workflow_queue(arguments, defaults, function_arguments,
+                                 queue=[*arguments.scale_files],
+                                 output_filename_template=lair.config.get('comfy.upscale.output_filename'))
+
     def run_workflow_default(self, arguments, defaults, function_arguments):
         # True when there is only a single file output
         batch_size = function_arguments.get('batch_size', defaults.get('batch_size', 1))
@@ -354,7 +420,6 @@ class Comfy():
     def run(self, arguments):
         self.comfy.set_url(arguments.comfy_url)
 
-        # Create a dictionary containing only the supported and defined arguments for the handler
         arguments_dict = vars(arguments)
         # If a prompt-file is provided, set the prompt attribute from that
         if arguments_dict.get('prompt_file') is not None:
@@ -365,5 +430,7 @@ class Comfy():
 
         if arguments.comfy_command == 'upscale':
             self.run_workflow_upscale(arguments, defaults, function_arguments)
+        elif arguments.comfy_command == 'outpaint':
+            self.run_workflow_outpaint(arguments, defaults, function_arguments)
         else:
             self.run_workflow_default(arguments, defaults, function_arguments)
