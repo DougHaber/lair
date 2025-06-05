@@ -117,13 +117,13 @@ class Util():
             except lair.sessions.UnknownSessionException:
                 if arguments.allow_create_session:
                     if arguments.read_only_session:
-                        logger.error(f"Unable to create a new session with the --read-only-session flag.")
+                        logger.error("Unable to create a new session with the --read-only-session flag.")
                         sys.exit(1)
                     elif not session_manager.is_alias_available(arguments.session):
                         if isinstance(lair.util.safe_int(arguments.session), int):
-                            logger.error(f"Failed to create new session. Session aliases may not be integers.")
+                            logger.error("Failed to create new session. Session aliases may not be integers.")
                         else:
-                            logger.error(f"Failed to create new session. Alias is already used.")
+                            logger.error("Failed to create new session. Alias is already used.")
                         sys.exit(1)
 
                     chat_session.session_alias = arguments.session
