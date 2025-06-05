@@ -56,6 +56,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
     - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
     - [upscale - Enlarge Images and Enhance Quality](#upscale---enlarge-images-and-enhance-quality)
+    - [outpaint - Extend Images](#outpaint---extend-images)
 - [Util](#util)
   - [Util Examples](#util-examples)
     - [Generating Content](#generating-content)
@@ -72,6 +73,11 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 Lair is a command-line tool for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Lair aims to make generative AI accessible from the command line and easy to use with shell scripting. It's chat interface provides many keyboard shorcuts and tools for helping experiment with prompt engineering.
 
 The open-source version of Lair is a partial rewrite of the original closed-source project. The original included additional features such as an agent framework, evolutionary programming tools for LLMs, and a utility for generating non-temporal videos from image diffusion models. While some traces of these features may still exist in the code, many are not currently included in the open-source release. Future updates may reintroduce select functionality from the original version.
+
+**Introduction Video**
+
+[![Lair CLI Introduction](images/lair-into-youtube.jpg)](https://www.youtube.com/watch?v=mWQFoS2Xge8)
+
 
 ## Features
 
@@ -1152,6 +1158,25 @@ The `--recursive` / `-r` flag enables recursive processing of directory trees. O
 ```sh
 # Upscale all images in a directory and its subdirectories
 $ lair comfy upscale --recursive images/
+```
+
+#### outpaint - Extend Images
+
+Outpainting expands an image by generating new content outside of its
+original borders. It uses an inpainting model and requires specifying how
+much padding to add around the source image.
+
+**Configuration**
+
+Settings are under the `comfy.outpaint.*` namespace and include options for
+padding, sampler, scheduler and other diffusion parameters. The `--denoise`
+flag controls how strongly the outpainted area is blended with the original
+image.
+
+**Usage Example**
+
+```sh
+$ lair comfy outpaint example.png
 ```
 
 ## Util

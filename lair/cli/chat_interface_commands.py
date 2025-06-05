@@ -233,7 +233,7 @@ class ChatInterfaceCommands():
                 else:
                     self.reporting.print_rich(self.reporting.style(last_prompt))
             else:
-                logger.warn("No last prompt found")
+                logger.warning("No last prompt found")
 
     def command_last_response(self, command, arguments, arguments_str):
         if len(arguments) > 1:
@@ -248,7 +248,7 @@ class ChatInterfaceCommands():
                 else:
                     self.reporting.llm_output(last_response)
             else:
-                logger.warn("No last response found")
+                logger.warning("No last response found")
 
     def command_list_models(self, command, arguments, arguments_str):
         if len(arguments) != 0:
@@ -293,7 +293,7 @@ class ChatInterfaceCommands():
             self.chat_session.session_id = current_session_id
             if self.chat_session.session_alias is not None and \
                not self.session_manager.is_alias_available(self.chat_session.session_alias):
-                logger.warn("Session loaded without alias. The alias is already in use")
+                logger.warning("Session loaded without alias. The alias is already in use")
                 self.chat_session.session_alias = None
             self._rebuild_chat_session()
             self.reporting.system_message(f"Session loaded from {filename}")
@@ -304,7 +304,7 @@ class ChatInterfaceCommands():
         else:
             history = self.chat_session.history
             if history.num_messages() == 0:
-                logger.warn("No messages found")
+                logger.warning("No messages found")
                 return
 
             filename = arguments[0] if len(arguments) == 1 else None

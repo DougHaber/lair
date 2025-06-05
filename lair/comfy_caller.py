@@ -20,6 +20,7 @@ import contextlib
 import importlib
 import io
 import random
+import ctypes
 
 import requests
 
@@ -135,18 +136,47 @@ class ComfyCaller():
         else:
             raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
 
+    def _ensure_watch_thread(self):
+        import comfy_script.runtime as runtime
+        queue = runtime.queue
+        watch = getattr(queue, '_watch_thread', None)
+        if watch is None or not watch.is_alive():
+            queue.start_watch(False, False, False)
+
+    def _kill_thread(self, thread):
+        if thread is None:
+            return
+        try:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
+        except Exception:
+            logger.debug('Failed to terminate ComfyScript thread')
+
+    def _cleanup_watch_thread(self):
+        import comfy_script.runtime as runtime
+        queue = runtime.queue
+        watch = getattr(queue, '_watch_thread', None)
+        if watch and watch.is_alive():
+            self._kill_thread(watch)
+        queue._watch_thread = None
+
     def run_workflow(self, workflow, *args, **kwargs):
         logger.debug(f"run_workflow({workflow}, {kwargs})")
         handler = self.workflows[workflow]
         kwargs = {**self.defaults[workflow], **kwargs}
 
+        self._ensure_watch_thread()
+
         if lair.util.is_debug_enabled():
-            return asyncio.run(handler(*args, **kwargs))
+            result = asyncio.run(handler(*args, **kwargs))
         else:
             # With debug disabled, try to quiet things down.
             # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                return asyncio.run(handler(*args, **kwargs))
+                result = asyncio.run(handler(*args, **kwargs))
+
+        self._cleanup_watch_thread()
+
+        return result
 
     def set_url(self, url):
         if url == self.url:  # If setting the same value, no change is needed

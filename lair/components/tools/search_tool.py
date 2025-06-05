@@ -109,7 +109,7 @@ class SearchTool:
             else:
                 return {"error": "Search failed"}
         except Exception as error:
-            logger.warn(f"search_web(): Encountered error: {error}")
+            logger.warning(f"search_web(): Encountered error: {error}")
             return {"error": str(error)}
 
     def search_news(self, query):
@@ -135,5 +135,5 @@ class SearchTool:
             else:
                 return {"error": "Search failed"}
         except Exception as error:
-            logger.warn(f"search_news(): Encountered error: {error}")
+            logger.warning(f"search_news(): Encountered error: {error}")
             return {"error": str(error)}
