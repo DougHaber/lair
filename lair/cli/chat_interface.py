@@ -82,9 +82,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 if create_session_if_missing:
                     if not self.session_manager.is_alias_available(id_or_alias):
                         if isinstance(lair.util.safe_int(id_or_alias), int):
-                            logger.error(f"Failed to create new session. Session aliases may not be integers.")
+                            logger.error("Failed to create new session. Session aliases may not be integers.")
                         else:
-                            logger.error(f"Failed to create new session. Alias is already used.")
+                            logger.error("Failed to create new session. Alias is already used.")
                         sys.exit(1)
 
                     self.chat_session.session_alias = id_or_alias
@@ -127,7 +127,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _get_keybindings(self):
         key_bindings = prompt_toolkit.key_binding.KeyBindings()
-        get_key = lambda name: lair.config.get(f'chat.keys.{name}').split(' ')
+
+        def get_key(name):
+            return lair.config.get(f'chat.keys.{name}').split(' ')
 
         @key_bindings.add("enter", filter=prompt_toolkit.filters.completion_is_selected)
         def enter_key_on_selected_completion(event):

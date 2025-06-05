@@ -13,6 +13,7 @@
 - documentation: Add AGENTS.md and introduction video link
 - tests: Add pytest suite and extended chat interface coverage
 - docker: Add lair into youtube image
+- deps: Replace pyflakes with ruff for linting
 
 
 # v0.8.1 - Bug fixes

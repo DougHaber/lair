@@ -35,7 +35,7 @@ class ChatInterfaceReports():
         if rows:
             self.reporting.table_system(rows)
         else:
-            self.reporting.system_message(f"No matching keys")
+            self.reporting.system_message("No matching keys")
 
     def print_current_model_report(self):
         active_config = lair.config.active
