@@ -14,6 +14,7 @@
 - tests: Add pytest suite and extended chat interface coverage
 - docker: Add lair into youtube image
 
+
 # v0.8.1 - Bug fixes
 
 ### Bug Fixes
