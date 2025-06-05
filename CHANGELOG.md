@@ -15,6 +15,7 @@
 - docker: Add lair into youtube image
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
+- tests: Add coverage for all chat sub-commands
 
 # v0.8.1 - Bug fixes
 

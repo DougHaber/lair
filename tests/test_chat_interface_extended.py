@@ -2,7 +2,7 @@ import sys
 import types
 import importlib
 
-import pytest
+import pytest  # noqa: F401
 
 
 def make_interface(monkeypatch):
