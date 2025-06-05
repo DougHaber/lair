@@ -39,7 +39,7 @@ class ChatHistory:
     def _validate_config(self):
         max_length = lair.config.get('session.max_history_length')
         if max_length == 0:
-            logger.warn("Invalid value for session.max_history_length. Must be greater than 0. Setting to null.")
+            logger.warning("Invalid value for session.max_history_length. Must be greater than 0. Setting to null.")
             lair.config.active['session.max_history_length'] = None
 
     def add_tool_messages(self, messages):

@@ -2,6 +2,17 @@
 
 ### Bug Fixes
 - comfy: Fix `ltxv-i2v` default model version
+- util: Fix issue where image attachments stopped working
+- comfyscript: Restart watch thread correctly
+
+### New Features
+- comfy: Add `outpaint` workflow for extending images
+- comfy: Add `--denoise` option for outpainting
+
+### Internal
+- documentation: Add AGENTS.md and introduction video link
+- tests: Add pytest suite and extended chat interface coverage
+- docker: Add lair into youtube image
 
 # v0.8.1 - Bug fixes
 

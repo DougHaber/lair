@@ -68,7 +68,7 @@ class ModuleLoader():
     def _validate_module(self, module):
         if not hasattr(module, '_module_info'):
             raise Exception("_module_info not defined")
-        elif isinstance(type(module._module_info), types.FunctionType):
+        elif not isinstance(module._module_info, types.FunctionType):
             raise Exception("_module_info not a function")
         else:
             try:
@@ -88,7 +88,7 @@ class ModuleLoader():
             self._validate_module(module)
             self._register_module(module, module_path)
         except Exception as error:
-            logger.warn("Error loading module from file '%s': %s" % (filename, error))
+            logger.warning("Error loading module from file '%s': %s" % (filename, error))
             return
 
     def load_modules_from_path(self, module_path):

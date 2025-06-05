@@ -94,21 +94,14 @@ class Util():
             attachment_content_parts = []
 
         # Add the regular message as a standard message, or image sections if there are images
+
         if message:
-            if len(attachment_content_parts) < 0:
-                messages.append(lair.util.get_message('user', message))
-            else:
-                content_parts = []
+            messages.append(lair.util.get_message('user', message))
 
-                if message:
-                    content_parts.append({"type": "text", "text": message})
-
-                content_parts.extend(attachment_content_parts)
-
-                messages.append({
-                    'role': 'user',
-                    'content': content_parts,
-                })
+        messages.append({
+            'role': 'user',
+            'content': attachment_content_parts,
+        })
 
         return messages
 

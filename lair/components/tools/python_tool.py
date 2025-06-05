@@ -126,7 +126,7 @@ class PythonTool():
         except Exception as error:
             if container_id:
                 self._cleanup_container(container_id)
-            logger.warn(f"run_python(): Error encountered: {error}")
+            logger.warning(f"run_python(): Error encountered: {error}")
             return self._format_output(error=f'{error}\n{traceback.format_exc()}')
         finally:
             if temp_file_path and os.path.exists(temp_file_path):
