@@ -67,3 +67,11 @@ def test_set_config_from_arguments(monkeypatch):
 def test_set_config_from_arguments_bad(monkeypatch):
     with pytest.raises(SystemExit):
         run.set_config_from_arguments(['invalid'])
+
+def test_parse_arguments_no_subcommand(monkeypatch):
+    monkeypatch.setattr(run, 'init_subcommands', fake_init)
+    argv = ['prog']
+    with pytest.raises(SystemExit) as exc:
+        with mock.patch.object(sys, 'argv', argv):
+            run.parse_arguments()
+    assert exc.value.code == 1

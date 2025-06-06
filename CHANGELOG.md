@@ -16,6 +16,7 @@
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
+- tests: Add completer, attachment, and argument parsing coverage
 
 # v0.8.1 - Bug fixes
 
