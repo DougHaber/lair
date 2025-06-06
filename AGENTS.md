@@ -7,6 +7,16 @@ This repository contains the `lair` Python package. Before submitting any pull r
 2. `ruff lair`
 3. `pytest`
 
+Before running these checks for the first time, install the project's dependencies using Poetry:
+
+```sh
+eval $(poetry env activate)
+poetry install --with dev
+```
+
+These commands create a virtual environment, install `lair` into the path, and fetch all development dependencies so the
+tools above work correctly.
+
 Every pull request must update `CHANGELOG.md` with a short summary of its changes. New entries should be added under the top `# WIP -` heading.
 
 The first command verifies that all Python files compile. The second performs a static analysis pass for common issues. Warnings about unused imports from `__init__` files may be ignored, but new warnings should be investigated. The third command runs the test suite. It MUST pass.  
