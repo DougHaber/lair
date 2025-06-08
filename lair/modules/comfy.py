@@ -375,7 +375,12 @@ class Comfy():
                     logger.warning(f"Skipping existing file: {output_filename}")
                     continue
 
-                output = self.comfy.run_workflow(arguments.comfy_command, cleanup=self.is_chat, **function_arguments)
+                output = self.comfy.run_workflow(
+                    arguments.comfy_command,
+                    cleanup=self.is_chat,
+                    reset=not self.is_chat,
+                    **function_arguments,
+                )
                 if output is None or len(output) == 0:
                     raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
                 else:
@@ -412,7 +417,12 @@ class Comfy():
         single_output = (arguments.repeat == 1 and batch_size == 1)
 
         for i in range(0, arguments.repeat):
-            output = self.comfy.run_workflow(arguments.comfy_command, cleanup=self.is_chat, **function_arguments)
+            output = self.comfy.run_workflow(
+                arguments.comfy_command,
+                cleanup=self.is_chat,
+                reset=not self.is_chat,
+                **function_arguments,
+            )
 
             if output is None or len(output) == 0:
                 raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")

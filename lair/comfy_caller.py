@@ -161,7 +161,26 @@ class ComfyCaller():
             self._kill_thread(watch)
         queue._watch_thread = None
 
-    def run_workflow(self, workflow, *args, cleanup=False, **kwargs):
+    def reset(self):
+        '''Reset the ComfyScript runtime to avoid blocking issues.'''
+        self._cleanup_watch_thread()
+        try:
+            if self.loop.is_running():
+                self.loop.stop()
+        except Exception:
+            logger.debug('Failed to stop event loop')
+        try:
+            self.loop.close()
+        except Exception:
+            logger.debug('Failed to close event loop')
+
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.is_comfy_script_imported = False
+        if self.url:
+            self._import_comfy_script()
+
+    def run_workflow(self, workflow, *args, cleanup=False, reset=False, **kwargs):
         logger.debug(f"run_workflow({workflow}, {kwargs})")
         handler = self.workflows[workflow]
         kwargs = {**self.defaults[workflow], **kwargs}
@@ -177,7 +196,9 @@ class ComfyCaller():
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 result = self.loop.run_until_complete(handler(*args, **kwargs))
 
-        if cleanup:
+        if reset:
+            self.reset()
+        elif cleanup:
             self._cleanup_watch_thread()
 
         return result
