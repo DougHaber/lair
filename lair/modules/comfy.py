@@ -32,6 +32,7 @@ class Comfy():
         sub_parser = parser.add_subparsers(dest='comfy_command', required=True)
 
         self.comfy = lair.comfy_caller.ComfyCaller()
+        self.is_chat = False
         self._image_file_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
 
         self._add_argparse_hunyuan_video_t2v(sub_parser)
@@ -270,6 +271,7 @@ class Comfy():
         return new_parser
 
     def _on_chat_init(self, chat_interface):
+        self.is_chat = True
         def comfy_command(command, arguments, arguments_str):
             try:
                 chat_command_parser = self._get_chat_command_parser()
@@ -373,7 +375,7 @@ class Comfy():
                     logger.warning(f"Skipping existing file: {output_filename}")
                     continue
 
-                output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+                output = self.comfy.run_workflow(arguments.comfy_command, cleanup=self.is_chat, **function_arguments)
                 if output is None or len(output) == 0:
                     raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
                 else:
@@ -410,7 +412,7 @@ class Comfy():
         single_output = (arguments.repeat == 1 and batch_size == 1)
 
         for i in range(0, arguments.repeat):
-            output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+            output = self.comfy.run_workflow(arguments.comfy_command, cleanup=self.is_chat, **function_arguments)
 
             if output is None or len(output) == 0:
                 raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
