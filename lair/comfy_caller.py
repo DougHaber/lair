@@ -41,6 +41,8 @@ class ComfyCaller():
 
         self.workflows = {}
         self.is_comfy_script_imported = False
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
 
         self._init_defaults()
         self._init_workflows()
@@ -159,22 +161,45 @@ class ComfyCaller():
             self._kill_thread(watch)
         queue._watch_thread = None
 
-    def run_workflow(self, workflow, *args, **kwargs):
+    def reset(self):
+        '''Reset the ComfyScript runtime to avoid blocking issues.'''
+        self._cleanup_watch_thread()
+        try:
+            if self.loop.is_running():
+                self.loop.stop()
+        except Exception:
+            logger.debug('Failed to stop event loop')
+        try:
+            self.loop.close()
+        except Exception:
+            logger.debug('Failed to close event loop')
+
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.is_comfy_script_imported = False
+        if self.url:
+            self._import_comfy_script()
+
+    def run_workflow(self, workflow, *args, cleanup=False, reset=False, **kwargs):
         logger.debug(f"run_workflow({workflow}, {kwargs})")
         handler = self.workflows[workflow]
         kwargs = {**self.defaults[workflow], **kwargs}
 
+        asyncio.set_event_loop(self.loop)
         self._ensure_watch_thread()
 
         if lair.util.is_debug_enabled():
-            result = asyncio.run(handler(*args, **kwargs))
+            result = self.loop.run_until_complete(handler(*args, **kwargs))
         else:
             # With debug disabled, try to quiet things down.
             # Unfortunately, its threads print output even after the workflow completes, so some output will still leak.
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                result = asyncio.run(handler(*args, **kwargs))
+                result = self.loop.run_until_complete(handler(*args, **kwargs))
 
-        self._cleanup_watch_thread()
+        if reset:
+            self.reset()
+        elif cleanup:
+            self._cleanup_watch_thread()
 
         return result
 
@@ -187,6 +212,7 @@ class ComfyCaller():
             raise Exception("ComfyCaller(): Modifying a Comfy URL is not supported.")
         else:
             self.url = url
+            asyncio.set_event_loop(self.loop)
             self._import_comfy_script()
 
     def _get_defaults_image(self):

@@ -4,6 +4,8 @@
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
 - comfyscript: Restart watch thread correctly
+- comfyscript: Reuse a persistent event loop to avoid delays between calls
+- comfyscript: Add reset option to fully restart between runs
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
@@ -14,6 +16,7 @@
 - tests: Add pytest suite and extended chat interface coverage
 - docker: Add lair into youtube image
 - deps: Replace pyflakes with ruff for linting
+- deps: Add `rich` to dev dependencies for testing
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
 - tests: Add completer, attachment, and argument parsing coverage
