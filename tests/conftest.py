@@ -9,7 +9,6 @@ modules_to_stub = [
         "trafilatura",
         "PIL",
         "duckduckgo_search",
-        "pdfplumber",
         "requests",
         "libtmux",
         "lmdb",

@@ -3,6 +3,7 @@
 ### Bug Fixes
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
+- tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
 - tests: Support environments where `openai_local` mode is renamed
 
