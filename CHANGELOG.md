@@ -28,6 +28,7 @@
 - documentation: Update AGENTS instructions to use Poetry
 - cleanup: refactor workflow and tool call helpers for readability
 - tests: Add FileTool unit tests
+- tests: Add PythonTool unit tests
 
 # v0.8.1 - Bug fixes
 
