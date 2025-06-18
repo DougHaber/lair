@@ -1,5 +1,4 @@
 import os
-import types
 import time
 import shutil
 import lair
@@ -74,6 +73,7 @@ def test_get_default_switch_session_id(monkeypatch):
     first = ci.chat_session.session_id
     ci._new_chat_session()
     second = ci.chat_session.session_id
+    assert second != first
     ci.last_used_session_id = first
     assert ci._get_default_switch_session_id() == first
     ci.last_used_session_id = 99

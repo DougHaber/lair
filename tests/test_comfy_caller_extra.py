@@ -18,7 +18,7 @@ class DummyNode:
 
 
 def test_monkey_patch_comfy_script(monkeypatch):
-    caller_mod = importlib.import_module("lair.comfy_caller")
+    importlib.import_module("lair.comfy_caller")
     cc = get_ComfyCaller()()
 
     class DummyConnector:
@@ -244,11 +244,11 @@ def test_workflow_image(monkeypatch):
     mod = importlib.import_module("lair.comfy_caller")
     monkeypatch.setattr(mod, "Workflow", DummyAsyncWF, raising=False)
     monkeypatch.setattr(mod, "CheckpointLoaderSimple", lambda n: ("m", "c", "v"), raising=False)
-    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, l: (m + "+l", c + "+l"))
+    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, loras: (m + "+l", c + "+l"))
     monkeypatch.setattr(mod, "CLIPTextEncode", lambda t, c: f"{t}:{c}", raising=False)
     monkeypatch.setattr(mod, "EmptyLatentImage", lambda *a: "latent", raising=False)
     monkeypatch.setattr(mod, "KSampler", lambda *a, **k: "latent2", raising=False)
-    monkeypatch.setattr(mod, "VAEDecode", lambda l, v: "img", raising=False)
+    monkeypatch.setattr(mod, "VAEDecode", lambda latent, v: "img", raising=False)
     monkeypatch.setattr(mod, "SaveImage", lambda img, prefix: DummyAsyncNode(["ok"]), raising=False)
     monkeypatch.setattr(mod.random, "randint", lambda a, b: 5)
     images = asyncio.run(
@@ -288,14 +288,14 @@ def test_workflow_outpaint(monkeypatch):
     mod = importlib.import_module("lair.comfy_caller")
     monkeypatch.setattr(mod, "Workflow", DummyAsyncWF, raising=False)
     monkeypatch.setattr(mod, "CheckpointLoaderSimple", lambda n: ("m", "c", "v"), raising=False)
-    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, l: (m, c))
+    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, loras: (m, c))
     monkeypatch.setattr(mod, "CLIPTextEncode", lambda p, c: f"cond:{p}", raising=False)
     monkeypatch.setattr(cc.__class__, "_image_to_base64", lambda self, img: "b64", raising=False)
     monkeypatch.setattr(mod, "ETNLoadImageBase64", lambda b: ("img", None), raising=False)
     monkeypatch.setattr(mod, "ImagePadForOutpaint", lambda *a, **k: ("pad", "mask"), raising=False)
     monkeypatch.setattr(mod, "VAEEncodeForInpaint", lambda *a, **k: "latent", raising=False)
     monkeypatch.setattr(mod, "KSampler", lambda *a, **k: "latent2", raising=False)
-    monkeypatch.setattr(mod, "VAEDecode", lambda l, v: "img2", raising=False)
+    monkeypatch.setattr(mod, "VAEDecode", lambda latent, v: "img2", raising=False)
     monkeypatch.setattr(mod, "SaveImage", lambda *a, **k: DummyAsyncNode(["img"]), raising=False)
     monkeypatch.setattr(mod.random, "randint", lambda a, b: 42)
     images = asyncio.run(
