@@ -21,6 +21,7 @@ for name in modules_to_stub:
     if name == "duckduckgo_search":
         module.DDGS = object
     elif name == "pdfplumber":
-        # Provide an `open` attribute so monkeypatching succeeds
+        # pdfplumber is only used in tests and may not be installed. Provide a
+        # minimal stub so monkeypatching works without raising AttributeError.
         module.open = lambda *args, **kwargs: None
 
