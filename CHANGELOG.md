@@ -4,6 +4,7 @@
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
 - comfyscript: Restart watch thread correctly
+- tests: Support environments where `openai_local` mode is renamed
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
@@ -17,10 +18,16 @@
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
+- tests: Add extra coverage for chat interface commands
 - tests: Add completer, attachment, and argument parsing coverage
 - tests: Increase coverage for cli.run module
+- tests: Add validation and tool parsing coverage
+- tests: Increase util.core coverage
+- tests: Add ComfyCaller helper and workflow coverage
+- tests: Increase chat interface toolbar and alias handling coverage
 - documentation: Update AGENTS instructions to use Poetry
 - cleanup: refactor workflow and tool call helpers for readability
+- tests: Add FileTool unit tests
 
 # v0.8.1 - Bug fixes
 
