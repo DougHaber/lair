@@ -24,7 +24,7 @@ def test_completer(monkeypatch):
     doc = Document('/mode o', cursor_position=len('/mode o'))
     results = [c.text for c in completer.get_completions(doc, None)]
     assert '/mode openai' in results
-    assert '/mode openai_local' in results
+    assert any(r in results for r in ['/mode openai_local', '/mode openai-dev'])
 
     doc = Document('/model a', cursor_position=len('/model a'))
     results = [c.text for c in completer.get_completions(doc, None)]

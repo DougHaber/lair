@@ -4,6 +4,7 @@
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
 - comfyscript: Restart watch thread correctly
+- tests: Support environments where `openai_local` mode is renamed
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
