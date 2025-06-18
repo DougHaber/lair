@@ -20,4 +20,7 @@ for name in modules_to_stub:
     module = sys.modules.setdefault(name, types.ModuleType(name))
     if name == "duckduckgo_search":
         module.DDGS = object
+    elif name == "pdfplumber":
+        # Provide an `open` attribute so monkeypatching succeeds
+        module.open = lambda *args, **kwargs: None
 
