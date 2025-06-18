@@ -18,6 +18,7 @@
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
 - tests: Add completer, attachment, and argument parsing coverage
+- tests: Add validation and tool parsing coverage
 - documentation: Update AGENTS instructions to use Poetry
 - cleanup: refactor workflow and tool call helpers for readability
 
