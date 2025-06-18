@@ -219,3 +219,4 @@
 ### New Features
 - add `chat` module, w/ auto-complete, file based sessions, & markdown rendering
 - add `util` module for CLI scripting with image support
+- tests: Add additional coverage for chat interface
