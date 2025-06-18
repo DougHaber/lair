@@ -20,4 +20,6 @@ for name in modules_to_stub:
     module = sys.modules.setdefault(name, types.ModuleType(name))
     if name == "duckduckgo_search":
         module.DDGS = object
+    if name == "pdfplumber":
+        module.open = lambda *a, **k: None
 
