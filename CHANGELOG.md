@@ -19,6 +19,7 @@
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
 - tests: Add completer, attachment, and argument parsing coverage
+- tests: Increase util.core coverage
 - tests: Add ComfyCaller helper and workflow coverage
 - tests: Increase chat interface toolbar and alias handling coverage
 - documentation: Update AGENTS instructions to use Poetry
