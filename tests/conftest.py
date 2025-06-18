@@ -20,6 +20,7 @@ for name in modules_to_stub:
     module = sys.modules.setdefault(name, types.ModuleType(name))
     if name == "duckduckgo_search":
         module.DDGS = object
-    if name == "pdfplumber":
-        module.open = lambda *a, **k: None
-
+    elif name == "pdfplumber":
+        # pdfplumber is only used in tests and may not be installed. Provide a
+        # minimal stub so monkeypatching works without raising AttributeError.
+        module.open = lambda *args, **kwargs: None
