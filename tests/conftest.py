@@ -1,18 +1,19 @@
 import sys
 import types
+
 modules_to_stub = [
-        "diffusers",
-        "transformers",
-        "torch",
-        "comfy_script",
-        "lair.comfy_caller",
-        "trafilatura",
-        "PIL",
-        "duckduckgo_search",
-        "requests",
-        "libtmux",
-        "lmdb",
-        "openai",
+    "diffusers",
+    "transformers",
+    "torch",
+    "comfy_script",
+    "lair.comfy_caller",
+    "trafilatura",
+    "PIL",
+    "duckduckgo_search",
+    "requests",
+    "libtmux",
+    "lmdb",
+    "openai",
 ]
 
 for name in modules_to_stub:

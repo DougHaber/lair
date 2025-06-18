@@ -238,8 +238,10 @@ def test_history_edit_paths(monkeypatch, caplog):
     ci.reporting.messages.clear()
     # decode error
     monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *a, **k: "bad")
+
     def bad_decode(_):
         raise ValueError("oops")
+
     monkeypatch.setattr(lair.util, "decode_jsonl", bad_decode)
     with caplog.at_level("ERROR"):
         ci.command_history_edit("/history-edit", [], "")
@@ -287,6 +289,7 @@ def test_list_settings_help(monkeypatch):
     monkeypatch.setattr(ci.reporting, "system_message", lambda m, **k: result.append(m))
     ci.command_list_settings("/list-settings", [], "--help")
     assert result and "usage" in result[0]
+
 
 def test_load_alias_conflict(monkeypatch):
     ci = make_ci()
@@ -361,4 +364,3 @@ def test_set_unknown(monkeypatch):
     ci.reporting.messages.clear()
     ci.command_set("/set", ["bad"], "bad")
     assert ("error", "ERROR: Unknown key: bad") in ci.reporting.messages
-

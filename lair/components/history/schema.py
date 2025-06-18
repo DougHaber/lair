@@ -6,10 +6,7 @@ MESSAGES_SCHEMA = {
     "items": {
         "type": "object",
         "properties": {
-            "role": {
-                "type": "string",
-                "enum": ["system", "user", "assistant", "tool"]
-            },
+            "role": {"type": "string", "enum": ["system", "user", "assistant", "tool"]},
             "content": {
                 "oneOf": [
                     {"type": "string"},
@@ -22,12 +19,9 @@ MESSAGES_SCHEMA = {
                                 "type": {
                                     "type": "string",
                                     "enum": ["text", "image_url"],
-                                    "description": "Defines the type of content block."
+                                    "description": "Defines the type of content block.",
                                 },
-                                "text": {
-                                    "type": "string",
-                                    "description": "Text content, present if type is 'text'."
-                                },
+                                "text": {"type": "string", "description": "Text content, present if type is 'text'."},
                                 "image_url": {
                                     "type": "object",
                                     "description": "Image content, present if type is 'image_url'.",
@@ -35,21 +29,18 @@ MESSAGES_SCHEMA = {
                                         "url": {
                                             "type": "string",
                                             "format": "uri",
-                                            "description": "A valid URI for the image, including base64-encoded data URLs."
+                                            "description": "A valid URI for the image, including base64-encoded data URLs.",
                                         }
                                     },
-                                    "required": ["url"]
-                                }
+                                    "required": ["url"],
+                                },
                             },
                             "required": ["type"],
-                            "anyOf": [
-                                {"required": ["text"]},
-                                {"required": ["image_url"]}
-                            ]
-                        }
-                    }
+                            "anyOf": [{"required": ["text"]}, {"required": ["image_url"]}],
+                        },
+                    },
                 ],
-                "description": "The primary text content of the message, or structured content (text and images)."
+                "description": "The primary text content of the message, or structured content (text and images).",
             },
             "tool_calls": {
                 "type": ["array", "null"],
@@ -57,41 +48,32 @@ MESSAGES_SCHEMA = {
                 "items": {
                     "type": "object",
                     "properties": {
-                        "id": {
-                            "type": "string",
-                            "description": "Unique identifier for the tool call."
-                        },
+                        "id": {"type": "string", "description": "Unique identifier for the tool call."},
                         "type": {
                             "type": "string",
                             "enum": ["function"],
-                            "description": "The type of tool call (e.g., function)."
+                            "description": "The type of tool call (e.g., function).",
                         },
                         "function": {
                             "type": "object",
                             "description": "Function call details.",
                             "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "description": "The function's name being invoked."
-                                },
+                                "name": {"type": "string", "description": "The function's name being invoked."},
                                 "arguments": {
                                     "type": "string",
-                                    "description": "Arguments passed to the function, typically as a JSON string."
-                                }
+                                    "description": "Arguments passed to the function, typically as a JSON string.",
+                                },
                             },
-                            "required": ["name", "arguments"]
+                            "required": ["name", "arguments"],
                         },
-                        "index": {
-                            "type": "integer",
-                            "description": "Index of the tool call in the sequence."
-                        }
+                        "index": {"type": "integer", "description": "Index of the tool call in the sequence."},
                     },
-                    "required": ["id", "type", "function"]
-                }
+                    "required": ["id", "type", "function"],
+                },
             },
             "refusal": {
                 "type": ["string", "null"],
-                "description": "A message explaining why the assistant refused to respond."
+                "description": "A message explaining why the assistant refused to respond.",
             },
             "file_attachments": {
                 "type": ["array", "null"],
@@ -99,40 +81,28 @@ MESSAGES_SCHEMA = {
                 "items": {
                     "type": "object",
                     "properties": {
-                        "id": {
-                            "type": "string",
-                            "description": "Unique identifier for the attached file."
-                        },
-                        "name": {
-                            "type": "string",
-                            "description": "Original filename."
-                        },
-                        "mime_type": {
-                            "type": "string",
-                            "description": "MIME type of the file."
-                        },
-                        "size": {
-                            "type": "integer",
-                            "description": "Size of the file in bytes."
-                        },
+                        "id": {"type": "string", "description": "Unique identifier for the attached file."},
+                        "name": {"type": "string", "description": "Original filename."},
+                        "mime_type": {"type": "string", "description": "MIME type of the file."},
+                        "size": {"type": "integer", "description": "Size of the file in bytes."},
                         "url": {
                             "type": "string",
                             "format": "uri",
-                            "description": "A URL where the file can be accessed (if applicable)."
-                        }
+                            "description": "A URL where the file can be accessed (if applicable).",
+                        },
                     },
-                    "required": ["id", "name", "mime_type", "size"]
-                }
-            }
+                    "required": ["id", "name", "mime_type", "size"],
+                },
+            },
         },
         "required": ["role"],
         "anyOf": [
             {"required": ["content"]},
             {"required": ["tool_calls"]},
             {"required": ["refusal"]},
-            {"required": ["file_attachments"]}
-        ]
-    }
+            {"required": ["file_attachments"]},
+        ],
+    },
 }
 
 

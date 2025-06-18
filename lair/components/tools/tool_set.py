@@ -2,7 +2,7 @@ import lair.components.tools
 from lair.logging import logger
 
 
-class ToolSet():
+class ToolSet:
     def __init__(self, *, tools=None):
         """
         Create a collection of tools
@@ -46,21 +46,21 @@ class ToolSet():
             raise ValueError("ToolSet.add_tool(): Either a definition or a definition_handler must be provided")
 
         self.tools[name] = {
-            'class_name': class_name,
-            'definition': definition,
-            'definition_handler': definition_handler,
-            'flags': flags,
-            'handler': handler,
-            'name': name,
+            "class_name": class_name,
+            "definition": definition,
+            "definition_handler": definition_handler,
+            "flags": flags,
+            "handler": handler,
+            "name": name,
         }
 
     def get_tools(self):
-        if not lair.config.get('tools.enabled'):
+        if not lair.config.get("tools.enabled"):
             return []
 
         enabled_tools = []
         for tool in self.tools.values():
-            if not self.all_flags_enabled(tool['flags']):
+            if not self.all_flags_enabled(tool["flags"]):
                 continue
 
             enabled_tools.append(tool)
@@ -80,13 +80,13 @@ class ToolSet():
         """
         all_tools = []
         for tool in self.tools.values():
-            tool['enabled'] = lair.config.get('tools.enabled') and self.all_flags_enabled(tool['flags']) is True
+            tool["enabled"] = lair.config.get("tools.enabled") and self.all_flags_enabled(tool["flags"]) is True
             all_tools.append(tool)
 
         return all_tools or None
 
     def _get_definition(self, tool):
-        return tool['definition_handler']() if tool['definition_handler'] else tool['definition']
+        return tool["definition_handler"]() if tool["definition_handler"] else tool["definition"]
 
     def get_definitions(self):
         tools = self.get_tools()
@@ -98,6 +98,6 @@ class ToolSet():
             return {"error": f"Unknown tool: {name}"}
 
         try:
-            return self.tools[name]['handler'](**arguments)
+            return self.tools[name]["handler"](**arguments)
         except Exception as error:
             return {"error": f"Call failed: {error}"}

@@ -34,14 +34,14 @@ def safe_int(number):
 
 
 def slurp_file(filename):
-    with open(os.path.expanduser(filename), 'r') as fd:
+    with open(os.path.expanduser(filename), "r") as fd:
         document = fd.read()
 
     return document
 
 
 def save_file(filename, contents):
-    with open(os.path.expanduser(filename), 'w') as fd:
+    with open(os.path.expanduser(filename), "w") as fd:
         fd.write(contents)
 
 
@@ -50,7 +50,7 @@ def parse_yaml_text(text):
 
 
 def parse_yaml_file(filename):
-    with open(filename, 'r') as fd:
+    with open(filename, "r") as fd:
         return yaml.safe_load(fd)
 
 
@@ -61,13 +61,13 @@ def load_json_file(filename):
 def save_json_file(filename, document):
     json_document = safe_dump_json(document)
 
-    with open(filename, 'w') as fd:
+    with open(filename, "w") as fd:
         fd.write(json_document)
 
 
-def get_lib_path(end=''):
+def get_lib_path(end=""):
     """Return the path to the recon library."""
-    return os.path.dirname(__file__) + '/../' + end
+    return os.path.dirname(__file__) + "/../" + end
 
 
 def read_package_file(path, name):
@@ -87,7 +87,7 @@ def is_debug_enabled():
 
 
 def strip_escape_codes(content):
-    return re.sub(r'\033\[[0-9;?]*[a-zA-Z]', '', content)
+    return re.sub(r"\033\[[0-9;?]*[a-zA-Z]", "", content)
 
 
 def get_message(role, message):
@@ -98,14 +98,14 @@ def get_message(role, message):
 
 
 def expand_filename_list(filenames, *, fail_on_not_found=True, sort_results=True):
-    '''Expand user and globs in filenames and return the expanded list'''
+    """Expand user and globs in filenames and return the expanded list"""
     new_filenames = []
 
     for filename in filenames:
         matches = glob.glob(os.path.expanduser(filename))
 
         if not matches and fail_on_not_found:
-            raise Exception('File not found: %s' % filename)
+            raise Exception("File not found: %s" % filename)
 
         new_filenames.extend(matches)
 
@@ -114,37 +114,43 @@ def expand_filename_list(filenames, *, fail_on_not_found=True, sort_results=True
 
 def _get_attachments_content__image_file(filename):
     mime_type = mimetypes.guess_type(filename)[0]  # Extract the MIME type
-    if not mime_type or not mime_type.startswith('image/'):
+    if not mime_type or not mime_type.startswith("image/"):
         raise ValueError(f"File has image extension, but non-image mime type: {filename}  (mime={mime_type})")
 
     parts = []
-    with open(filename, 'rb') as fd:
-        if lair.config.get('misc.provide_attachment_filenames'):
+    with open(filename, "rb") as fd:
+        if lair.config.get("misc.provide_attachment_filenames"):
             parts.append({"type": "text", "text": f"Attached File: {filename} ({mime_type})"})
 
-        base64_str = base64.b64encode(fd.read()).decode('utf-8')
-        parts.append({
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:{mime_type};base64,{base64_str}",
+        base64_str = base64.b64encode(fd.read()).decode("utf-8")
+        parts.append(
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:{mime_type};base64,{base64_str}",
+                },
             }
-        })
+        )
 
     return parts
 
 
 def read_pdf(filename, *, enforce_limits=False):
-    limit = lair.config.get('misc.text_attachment_max_size')
+    limit = lair.config.get("misc.text_attachment_max_size")
 
     with pdfplumber.open(filename) as pdf_reader:
         contents = ""
         for page in pdf_reader.pages:
             contents += page.extract_text(x_tolerance=2, y_tolerance=2)
             if enforce_limits and len(contents) > limit:
-                if not lair.config.get('misc.text_attachment_truncate'):
-                    raise Exception(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+                if not lair.config.get("misc.text_attachment_truncate"):
+                    raise Exception(
+                        f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
+                    )
                 else:
-                    logger.warning(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+                    logger.warning(
+                        f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
+                    )
                     contents = contents[0:limit]
                     break
 
@@ -154,36 +160,40 @@ def read_pdf(filename, *, enforce_limits=False):
 def _get_attachments_content__pdf_file(filename):
     contents = read_pdf(filename)
 
-    if lair.config.get('misc.provide_attachment_filenames'):
-        header = f'User provided file: filename={filename}\n---\n'
+    if lair.config.get("misc.provide_attachment_filenames"):
+        header = f"User provided file: filename={filename}\n---\n"
     else:
-        header = 'User provided file:\n---\n'
+        header = "User provided file:\n---\n"
 
-    return lair.util.get_message('user', header + contents)
+    return lair.util.get_message("user", header + contents)
 
 
 def _get_attachments_content__text_file(filename):
-    limit = lair.config.get('misc.text_attachment_max_size')
+    limit = lair.config.get("misc.text_attachment_max_size")
     do_truncate = False
     if os.path.getsize(filename) > limit:
-        if not lair.config.get('misc.text_attachment_truncate'):
-            raise Exception(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+        if not lair.config.get("misc.text_attachment_truncate"):
+            raise Exception(
+                f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
+            )
         else:
-            logger.warning(f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}")
+            logger.warning(
+                f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
+            )
             do_truncate = True
 
     try:
-        with open(filename, 'r') as fd:
+        with open(filename, "r") as fd:
             contents = fd.read(limit if do_truncate else None)
     except UnicodeDecodeError as error:
         raise Exception(f"File attachment is not text: file={filename}, error={error}")
 
-    if lair.config.get('misc.provide_attachment_filenames'):
-        header = f'User provided file: filename={filename}\n---\n'
+    if lair.config.get("misc.provide_attachment_filenames"):
+        header = f"User provided file: filename={filename}\n---\n"
     else:
-        header = 'User provided file:\n---\n'
+        header = "User provided file:\n---\n"
 
-    return lair.util.get_message('user', header + contents)
+    return lair.util.get_message("user", header + contents)
 
 
 def get_attachments_content(filenames):
@@ -202,9 +212,9 @@ def get_attachments_content(filenames):
     for filename in expand_filename_list(filenames):
         extension = pathlib.Path(filename).suffix[1:]
 
-        if extension.lower() in {'gif', 'jpg', 'jpeg', 'png', 'webp'}:
+        if extension.lower() in {"gif", "jpg", "jpeg", "png", "webp"}:
             content_parts.extend(_get_attachments_content__image_file(filename))
-        elif extension == 'pdf':
+        elif extension == "pdf":
             messages.append(_get_attachments_content__pdf_file(filename))
         else:
             messages.append(_get_attachments_content__text_file(filename))
@@ -213,12 +223,11 @@ def get_attachments_content(filenames):
 
 
 def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
-    '''
+    """
     Edit the content in an external editor
     Return the new content or None if unchanged
-    '''
-    editor_cmd = lair.config.get('misc.editor_command') or \
-        os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
+    """
+    editor_cmd = lair.config.get("misc.editor_command") or os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
     editor_args = shlex.split(editor_cmd)
 
     temp_file = tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix)
@@ -241,7 +250,7 @@ def decode_jsonl(jsonl_str):
     Decode JSONL content and return a list of each decoded line
     """
     records = []
-    for line in jsonl_str.split('\n'):
+    for line in jsonl_str.split("\n"):
         if line:  # Process only non-blank lines
             records.append(json.loads(line))
 
@@ -250,7 +259,7 @@ def decode_jsonl(jsonl_str):
 
 def slice_from_str(original_list, slice_str: str):
     """Apply a slice string (e.g., ':2', '-2:', '1:4:2') to a list and return the new list."""
-    parts = slice_str.split(':')
+    parts = slice_str.split(":")
 
     def safe_int(value):
         """Convert to integer if value is not empty, otherwise return None."""

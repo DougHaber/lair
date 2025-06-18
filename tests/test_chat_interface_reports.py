@@ -1,6 +1,7 @@
 # ruff: noqa: E402
 import sys
-sys.modules.pop('pdfplumber', None)
+
+sys.modules.pop("pdfplumber", None)
 import pdfplumber  # noqa: F401,E402
 import types
 import lair
@@ -78,7 +79,10 @@ def test_print_config_report_differences(monkeypatch):
         ci.print_config_report(show_only_differences=True, filter_regex=r"^model\.name$")
     finally:
         lair.config.set("model.name", old_model, no_event=True)
-    assert ("table", [["model.name", f"{lair.config.get('chat.set_command.modified_style')}:new-model"]]) in ci.reporting.tables
+    assert (
+        "table",
+        [["model.name", f"{lair.config.get('chat.set_command.modified_style')}:new-model"]],
+    ) in ci.reporting.tables
 
 
 def test_print_history_limits():

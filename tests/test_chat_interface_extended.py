@@ -8,9 +8,18 @@ import pytest  # noqa: F401
 def make_interface(monkeypatch):
     # stub heavy optional dependencies before importing lair
     for name in [
-        'diffusers', 'transformers', 'torch', 'comfy_script', 'lair.comfy_caller',
-        'trafilatura', 'PIL', 'duckduckgo_search', 'pdfplumber', 'requests',
-        'libtmux', 'lmdb'
+        "diffusers",
+        "transformers",
+        "torch",
+        "comfy_script",
+        "lair.comfy_caller",
+        "trafilatura",
+        "PIL",
+        "duckduckgo_search",
+        "pdfplumber",
+        "requests",
+        "libtmux",
+        "lmdb",
     ]:
         sys.modules.setdefault(name, types.ModuleType(name))
 
@@ -24,23 +33,23 @@ def make_interface(monkeypatch):
             super().__init__(history=ChatHistory(), tool_set=ToolSet(tools=[]))
 
         def invoke(self, messages=None, disable_system_prompt=False, model=None, temperature=None):
-            return 'ok'
+            return "ok"
 
         def invoke_with_tools(self, messages=None, disable_system_prompt=False):
-            return 'ok', []
+            return "ok", []
 
         def list_models(self, ignore_errors=False):
-            return [{'id': 'model-a'}, {'id': 'model-b'}]
+            return [{"id": "model-a"}, {"id": "model-b"}]
 
     class DummyReporting:
         def __init__(self):
             self.messages = []
 
         def system_message(self, message, **kwargs):
-            self.messages.append(('system', message))
+            self.messages.append(("system", message))
 
         def user_error(self, message):
-            self.messages.append(('error', message))
+            self.messages.append(("error", message))
 
         def print_rich(self, *args, **kwargs):
             pass
@@ -52,10 +61,10 @@ def make_interface(monkeypatch):
             pass
 
         def message(self, message):
-            self.messages.append(('message', message))
+            self.messages.append(("message", message))
 
         def llm_output(self, message):
-            self.messages.append(('llm', message))
+            self.messages.append(("llm", message))
 
         def style(self, text, style=None):
             return text
@@ -91,7 +100,7 @@ def make_interface(monkeypatch):
                 if id_or_alias in self.aliases:
                     return self.aliases[id_or_alias]
             if raise_exception:
-                raise Exception('Unknown')
+                raise Exception("Unknown")
             return None
 
         def switch_to_session(self, id_or_alias, chat_session):
@@ -136,19 +145,19 @@ def make_interface(monkeypatch):
                     del self.aliases[a]
             if new_alias:
                 self.aliases[new_alias] = sid
-            self.sessions[sid]['alias'] = new_alias
+            self.sessions[sid]["alias"] = new_alias
 
         def set_title(self, id_or_alias, title):
             sid = self.get_session_id(id_or_alias)
-            self.sessions[sid]['title'] = title
+            self.sessions[sid]["title"] = title
 
-    monkeypatch.setattr(lair.sessions, 'get_chat_session', lambda t: DummyChatSession())
-    monkeypatch.setattr(lair.sessions, 'SessionManager', SimpleSessionManager)
-    monkeypatch.setattr(lair.reporting, 'Reporting', DummyReporting)
+    monkeypatch.setattr(lair.sessions, "get_chat_session", lambda t: DummyChatSession())
+    monkeypatch.setattr(lair.sessions, "SessionManager", SimpleSessionManager)
+    monkeypatch.setattr(lair.reporting, "Reporting", DummyReporting)
 
-    lair.config.set('chat.history_file', None)
+    lair.config.set("chat.history_file", None)
 
-    ci_mod = importlib.import_module('lair.cli.chat_interface')
+    ci_mod = importlib.import_module("lair.cli.chat_interface")
     importlib.reload(ci_mod)
     return ci_mod.ChatInterface()
 
@@ -157,68 +166,70 @@ def find_handler(ci, name):
     for b in ci._get_keybindings().bindings:
         if b.handler.__name__ == name:
             return b.handler
-    raise AssertionError('handler not found')
+    raise AssertionError("handler not found")
 
 
 def test_keybindings_and_chat(monkeypatch):
     import lair
+
     ci = make_interface(monkeypatch)
 
-    assert ci._handle_request('hello')
+    assert ci._handle_request("hello")
     assert ci.chat_session.history.num_messages() > 0
 
-    clear = find_handler(ci, 'session_clear')
+    clear = find_handler(ci, "session_clear")
     clear(None)
     assert ci.chat_session.history.num_messages() == 0
 
-    new = find_handler(ci, 'session_new')
+    new = find_handler(ci, "session_new")
     new(None)
     first = ci.chat_session.session_id
     new(None)
     assert ci.chat_session.session_id == first + 1
 
-    prev = find_handler(ci, 'session_previous')
+    prev = find_handler(ci, "session_previous")
     prev(None)
     assert ci.chat_session.session_id == first
-    nxt = find_handler(ci, 'session_next')
+    nxt = find_handler(ci, "session_next")
     nxt(None)
     assert ci.chat_session.session_id == first + 1
 
-    toggle = find_handler(ci, 'toggle_word_wrap')
-    current = lair.config.get('style.word_wrap')
+    toggle = find_handler(ci, "toggle_word_wrap")
+    current = lair.config.get("style.word_wrap")
     toggle(None)
-    assert lair.config.get('style.word_wrap') != current
+    assert lair.config.get("style.word_wrap") != current
 
 
 def test_commands(monkeypatch):
     import lair
+
     ci = make_interface(monkeypatch)
 
-    ci.command_model('/model', ['newmodel'], 'newmodel')
-    assert lair.config.get('model.name') == 'newmodel'
+    ci.command_model("/model", ["newmodel"], "newmodel")
+    assert lair.config.get("model.name") == "newmodel"
 
     orig = ci.chat_session.session_id
-    ci.command_session_new('/session-new', [], '')
+    ci.command_session_new("/session-new", [], "")
     new_id = ci.chat_session.session_id
     assert new_id != orig
 
-    ci.command_session('/session', [orig], str(orig))
+    ci.command_session("/session", [orig], str(orig))
     assert ci.chat_session.session_id == orig
 
-    ci.command_session_alias('/session-alias', [orig, 'alias'], f'{orig} alias')
-    assert ci.session_manager.get_session_id('alias') == orig
+    ci.command_session_alias("/session-alias", [orig, "alias"], f"{orig} alias")
+    assert ci.session_manager.get_session_id("alias") == orig
 
-    ci.command_session_delete('/session-delete', [new_id], str(new_id))
+    ci.command_session_delete("/session-delete", [new_id], str(new_id))
     assert ci.session_manager.get_session_id(new_id, raise_exception=False) is None
 
-    ci.chat_session.history.add_message('user', 'a')
-    ci.chat_session.history.add_message('user', 'b')
-    ci.command_history_slice('/history-slice', ['1:'], '1:')
-    msgs = [m['content'] for m in ci.chat_session.history.get_messages()]
-    assert msgs == ['b']
+    ci.chat_session.history.add_message("user", "a")
+    ci.chat_session.history.add_message("user", "b")
+    ci.command_history_slice("/history-slice", ["1:"], "1:")
+    msgs = [m["content"] for m in ci.chat_session.history.get_messages()]
+    assert msgs == ["b"]
 
-    ci.command_set('/set', ['style.word_wrap', 'false'], 'style.word_wrap false')
-    assert lair.config.get('style.word_wrap') is False
+    ci.command_set("/set", ["style.word_wrap", "false"], "style.word_wrap false")
+    assert lair.config.get("style.word_wrap") is False
 
-    assert ci._handle_request('/model model-a')
-    assert ci._handle_request('something')
+    assert ci._handle_request("/model model-a")
+    assert ci._handle_request("something")

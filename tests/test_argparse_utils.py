@@ -9,7 +9,7 @@ from lair.util.argparse import (
 
 def test_required_argument_error():
     parser = ErrorRaisingArgumentParser()
-    parser.add_argument('--foo', required=True)
+    parser.add_argument("--foo", required=True)
     with pytest.raises(argparse.ArgumentError):
         parser.parse_args([])
 
@@ -29,4 +29,4 @@ def test_exit_exception():
 def test_help_flag(monkeypatch):
     parser = ErrorRaisingArgumentParser()
     with pytest.raises(ArgumentParserHelpException):
-        parser.parse_args(['-h'])
+        parser.parse_args(["-h"])

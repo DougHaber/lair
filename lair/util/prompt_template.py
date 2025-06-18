@@ -11,9 +11,9 @@ def fill(prompt_template):
     utc_now = datetime.now(timezone.utc)
 
     context = {
-        'date': utc_now.strftime("%Y-%m-%d UTC"),
-        'datetime': utc_now.strftime("%Y-%m-%d %H:%M:%S UTC"),
-        'get_config': lambda k: lair.config.get(k),
+        "date": utc_now.strftime("%Y-%m-%d UTC"),
+        "datetime": utc_now.strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "get_config": lambda k: lair.config.get(k),
     }
 
     return template.render(context)

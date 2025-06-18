@@ -11,7 +11,6 @@ from lair.logging import logger  # noqa
 
 
 class BaseChatSession(abc.ABC):
-
     @abc.abstractmethod
     def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
         """
@@ -68,12 +67,12 @@ class BaseChatSession(abc.ABC):
         """
         if message:
             if isinstance(message, str):
-                self.history.add_message('user', message)
+                self.history.add_message("user", message)
             elif isinstance(message, list):
                 self.history.add_messages(message)
 
         try:
-            if lair.config.get('tools.enabled'):
+            if lair.config.get("tools.enabled"):
                 answer, tool_messages = self.invoke_with_tools()
             else:
                 answer = self.invoke()
@@ -86,47 +85,49 @@ class BaseChatSession(abc.ABC):
 
         if tool_messages:
             self.history.add_tool_messages(tool_messages)
-        self.history.add_message('assistant', answer)
+        self.history.add_message("assistant", answer)
         self.history.commit()
 
-        if self.session_title is None and lair.config.get('session.auto_generate_titles.enabled'):
+        if self.session_title is None and lair.config.get("session.auto_generate_titles.enabled"):
             self.auto_generate_title()
 
         return answer
 
     def auto_generate_title(self):
-        if self.history.num_messages() < 2 or not lair.config.get('session.auto_generate_titles.enabled'):
+        if self.history.num_messages() < 2 or not lair.config.get("session.auto_generate_titles.enabled"):
             return None
 
         user_message = None
         assistant_reply = None
         for message in self.history.get_messages():
-            if not user_message and message['role'] == 'user' and message['content']:
-                user_message = message['content']
-            elif not assistant_reply and message['role'] == 'assistant' and message['content']:
-                assistant_reply = message['content']
+            if not user_message and message["role"] == "user" and message["content"]:
+                user_message = message["content"]
+            elif not assistant_reply and message["role"] == "assistant" and message["content"]:
+                assistant_reply = message["content"]
 
             if user_message and assistant_reply:
                 break
 
         if not (user_message and assistant_reply):
-            logger.debug(f"auto_generate_title(): failed: Could not find a user message and assistant reply  (session={self.session_id})")
+            logger.debug(
+                f"auto_generate_title(): failed: Could not find a user message and assistant reply  (session={self.session_id})"
+            )
             return None
 
         message = self.invoke(
             disable_system_prompt=True,
-            model=lair.config.get('session.auto_generate_titles.model'),
-            temperature=lair.config.get('session.auto_generate_titles.temperature'),
+            model=lair.config.get("session.auto_generate_titles.model"),
+            temperature=lair.config.get("session.auto_generate_titles.temperature"),
             messages=[
                 {
-                    'role': 'system',
-                    'content': lair.util.prompt_template.fill(lair.config.get('session.auto_generate_titles.template')),
+                    "role": "system",
+                    "content": lair.util.prompt_template.fill(lair.config.get("session.auto_generate_titles.template")),
                 },
                 {
-                    'role': 'user',
-                    'content': f'USER\n{user_message[:128]}\n\nASSISTANT\n{assistant_reply[:128]}',
-                }
-            ]
+                    "role": "user",
+                    "content": f"USER\n{user_message[:128]}\n\nASSISTANT\n{assistant_reply[:128]}",
+                },
+            ],
         )
 
         logger.debug(f"auto_generate_title(): session={self.session_id}, title={message}")
@@ -134,7 +135,7 @@ class BaseChatSession(abc.ABC):
         return message
 
     def get_system_prompt(self):
-        return lair.util.prompt_template.fill(lair.config.get('session.system_prompt_template'))
+        return lair.util.prompt_template.fill(lair.config.get("session.system_prompt_template"))
 
     def save_to_file(self, filename):
         lair.sessions.serializer.save(self, filename)

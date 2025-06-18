@@ -7,7 +7,7 @@ from lair.logging import logger
 
 
 class SearchTool:
-    name = 'search'
+    name = "search"
     SEARCH_WEB_DEFINITION = {
         "type": "function",
         "function": {
@@ -18,15 +18,10 @@ class SearchTool:
             ),
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The search query string."
-                    }
-                },
-                "required": ["query"]
-            }
-        }
+                "properties": {"query": {"type": "string", "description": "The search query string."}},
+                "required": ["query"],
+            },
+        },
     }
     SEARCH_NEWS_DEFINITION = {
         "type": "function",
@@ -38,15 +33,10 @@ class SearchTool:
             ),
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The news search query string."
-                    }
-                },
-                "required": ["query"]
-            }
-        }
+                "properties": {"query": {"type": "string", "description": "The news search query string."}},
+                "required": ["query"],
+            },
+        },
     }
 
     def __init__(self):
@@ -55,24 +45,24 @@ class SearchTool:
     def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='search_web',
-            flags=['tools.search.enabled'],
+            name="search_web",
+            flags=["tools.search.enabled"],
             definition=self.SEARCH_WEB_DEFINITION,
-            handler=self.search_web
+            handler=self.search_web,
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='search_news',
-            flags=['tools.search.enabled'],
+            name="search_news",
+            flags=["tools.search.enabled"],
             definition=self.SEARCH_NEWS_DEFINITION,
-            handler=self.search_news
+            handler=self.search_news,
         )
 
     def _get_content(self, url):
-        max_length = lair.config.get('tools.search.max_length')
+        max_length = lair.config.get("tools.search.max_length")
 
         try:
-            response = requests.get(url, timeout=lair.config.get('tools.search.timeout'))
+            response = requests.get(url, timeout=lair.config.get("tools.search.timeout"))
             response.raise_for_status()
 
             text_content = trafilatura.extract(response.text, include_comments=False, include_tables=False)
@@ -88,19 +78,15 @@ class SearchTool:
             return ""
 
     def search_web(self, query):
-        max_results = lair.config.get('tools.search.max_results')
+        max_results = lair.config.get("tools.search.max_results")
 
         try:
             results = self.ddgs.text(query, max_results=max_results * 4)
             final_results = []
             for result in results:
-                content = self._get_content(result['href'])
+                content = self._get_content(result["href"])
                 if content:
-                    final_results.append({
-                        "title": result['title'],
-                        "url": result['href'],
-                        "content": content
-                    })
+                    final_results.append({"title": result["title"], "url": result["href"], "content": content})
                     if len(final_results) > max_results:
                         break
 
@@ -113,20 +99,17 @@ class SearchTool:
             return {"error": str(error)}
 
     def search_news(self, query):
-        max_results = lair.config.get('tools.search.max_results')
+        max_results = lair.config.get("tools.search.max_results")
 
         try:
             results = self.ddgs.news(query, max_results=max_results * 4)
             final_results = []
             for result in results:
-                content = self._get_content(result['url'])
+                content = self._get_content(result["url"])
                 if content:
-                    final_results.append({
-                        "date": result['date'],
-                        "title": result['title'],
-                        "url": result['url'],
-                        "content": content
-                    })
+                    final_results.append(
+                        {"date": result["date"], "title": result["title"], "url": result["url"], "content": content}
+                    )
                 if len(final_results) > max_results:
                     break
 

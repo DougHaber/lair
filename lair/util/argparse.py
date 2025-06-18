@@ -3,6 +3,7 @@ import argparse
 
 class ArgumentParserExitException(Exception):
     """Custom Exception for argparse to throw on exit, instead of actually exiting"""
+
     pass
 
 
@@ -12,6 +13,7 @@ class ArgumentParserHelpException(Exception):
 
 class ErrorRaisingArgumentParser(argparse.ArgumentParser):
     """Custom ArgumentParser() that throws exceptions so that behaviors could be handled differently"""
+
     def error(self, message):
         """Throw ArgumentError() on errors"""
         raise argparse.ArgumentError(None, message)

@@ -9,8 +9,8 @@ import lair
 from lair.logging import logger
 
 
-class FileTool():
-    name = 'file'
+class FileTool:
+    name = "file"
 
     def __init__(self):
         pass
@@ -18,50 +18,50 @@ class FileTool():
     def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='list_directory',
-            flags=['tools.allow_dangerous_tools', 'tools.file.enabled'],
+            name="list_directory",
+            flags=["tools.allow_dangerous_tools", "tools.file.enabled"],
             definition_handler=lambda: self._generate_list_directory_definition(),
-            handler=lambda *args, **kwargs: self.list_directory(*args, **kwargs)
+            handler=lambda *args, **kwargs: self.list_directory(*args, **kwargs),
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='read_file',
-            flags=['tools.allow_dangerous_tools', 'tools.file.enabled'],
+            name="read_file",
+            flags=["tools.allow_dangerous_tools", "tools.file.enabled"],
             definition_handler=lambda: self._generate_read_file_definition(),
-            handler=lambda *args, **kwargs: self.read_file(*args, **kwargs)
+            handler=lambda *args, **kwargs: self.read_file(*args, **kwargs),
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='write_file',
-            flags=['tools.allow_dangerous_tools', 'tools.file.enabled', 'tools.file.enable_writes'],
+            name="write_file",
+            flags=["tools.allow_dangerous_tools", "tools.file.enabled", "tools.file.enable_writes"],
             definition_handler=lambda: self._generate_write_file_definition(),
-            handler=lambda *args, **kwargs: self.write_file(*args, **kwargs)
+            handler=lambda *args, **kwargs: self.write_file(*args, **kwargs),
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='delete_file',
-            flags=['tools.allow_dangerous_tools', 'tools.file.enabled', 'tools.file.enable_deletes'],
+            name="delete_file",
+            flags=["tools.allow_dangerous_tools", "tools.file.enabled", "tools.file.enable_deletes"],
             definition_handler=lambda: self._generate_delete_file_definition(),
-            handler=lambda *args, **kwargs: self.delete_file(*args, **kwargs)
+            handler=lambda *args, **kwargs: self.delete_file(*args, **kwargs),
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='make_directory',
-            flags=['tools.allow_dangerous_tools', 'tools.file.enabled', 'tools.file.enable_writes'],
+            name="make_directory",
+            flags=["tools.allow_dangerous_tools", "tools.file.enabled", "tools.file.enable_writes"],
             definition_handler=lambda: self._generate_make_directory_definition(),
-            handler=lambda *args, **kwargs: self.make_directory(*args, **kwargs)
+            handler=lambda *args, **kwargs: self.make_directory(*args, **kwargs),
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
-            name='remove_directory',
-            flags=['tools.allow_dangerous_tools', 'tools.file.enabled', 'tools.file.enable_deletes'],
+            name="remove_directory",
+            flags=["tools.allow_dangerous_tools", "tools.file.enabled", "tools.file.enable_deletes"],
             definition_handler=lambda: self._generate_remove_directory_definition(),
-            handler=lambda *args, **kwargs: self.remove_directory(*args, **kwargs)
+            handler=lambda *args, **kwargs: self.remove_directory(*args, **kwargs),
         )
 
     def _resolve_path(self, path):
         """Resolve the provided path relative to the path and ensure it's allowed."""
-        workspace = os.path.abspath(lair.config.get('tools.file.path'))
+        workspace = os.path.abspath(lair.config.get("tools.file.path"))
         if not os.path.isabs(path):
             path = os.path.join(workspace, path)
         absolute_path = os.path.abspath(path)
@@ -70,7 +70,7 @@ class FileTool():
         return absolute_path
 
     def _generate_list_directory_definition(self):
-        workspace = lair.config.get('tools.file.path')
+        workspace = lair.config.get("tools.file.path")
         return {
             "type": "function",
             "function": {
@@ -82,14 +82,11 @@ class FileTool():
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "directory": {
-                            "type": "string",
-                            "description": "Directory path relative to the workspace."
-                        }
+                        "directory": {"type": "string", "description": "Directory path relative to the workspace."}
                     },
-                    "required": ["directory"]
-                }
-            }
+                    "required": ["directory"],
+                },
+            },
         }
 
     def list_directory(self, directory):
@@ -106,21 +103,23 @@ class FileTool():
                 group = grp.getgrgid(st.st_gid).gr_name
                 size = st.st_size
                 last_modified = datetime.datetime.fromtimestamp(st.st_mtime).isoformat()
-                contents.append({
-                    "name": item,
-                    "permissions": permissions,
-                    "owner": owner,
-                    "group": group,
-                    "size": size,
-                    "last_modified": last_modified
-                })
+                contents.append(
+                    {
+                        "name": item,
+                        "permissions": permissions,
+                        "owner": owner,
+                        "group": group,
+                        "size": size,
+                        "last_modified": last_modified,
+                    }
+                )
             return {"contents": contents}
         except Exception as error:
             logger.warning(f"list_directory(): Error encountered: {error}")
             return {"error": str(error)}
 
     def _generate_read_file_definition(self):
-        workspace = lair.config.get('tools.file.path')
+        workspace = lair.config.get("tools.file.path")
         return {
             "type": "function",
             "function": {
@@ -134,17 +133,17 @@ class FileTool():
                     "properties": {
                         "path": {
                             "type": "string",
-                            "description": "File path or glob pattern to read. (Supports all glob styles, including recursive `**`)"
+                            "description": "File path or glob pattern to read. (Supports all glob styles, including recursive `**`)",
                         }
                     },
-                    "required": ["path"]
-                }
-            }
+                    "required": ["path"],
+                },
+            },
         }
 
     def read_file(self, path):
         try:
-            workspace = os.path.abspath(lair.config.get('tools.file.path'))
+            workspace = os.path.abspath(lair.config.get("tools.file.path"))
 
             if not os.path.isabs(path):
                 pattern = os.path.join(workspace, path)
@@ -174,7 +173,7 @@ class FileTool():
             return {"error": str(error)}
 
     def _generate_write_file_definition(self):
-        workspace = lair.config.get('tools.file.path')
+        workspace = lair.config.get("tools.file.path")
         return {
             "type": "function",
             "function": {
@@ -186,18 +185,12 @@ class FileTool():
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "File path relative to the workspace."
-                        },
-                        "content": {
-                            "type": "string",
-                            "description": "Content to write into the file."
-                        }
+                        "path": {"type": "string", "description": "File path relative to the workspace."},
+                        "content": {"type": "string", "description": "Content to write into the file."},
                     },
-                    "required": ["path", "content"]
-                }
-            }
+                    "required": ["path", "content"],
+                },
+            },
         }
 
     def write_file(self, path, content):
@@ -212,7 +205,7 @@ class FileTool():
             return {"error": str(error)}
 
     def _generate_delete_file_definition(self):
-        workspace = lair.config.get('tools.file.path')
+        workspace = lair.config.get("tools.file.path")
         return {
             "type": "function",
             "function": {
@@ -223,15 +216,10 @@ class FileTool():
                 ),
                 "parameters": {
                     "type": "object",
-                    "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "File path relative to the workspace."
-                        }
-                    },
-                    "required": ["path"]
-                }
-            }
+                    "properties": {"path": {"type": "string", "description": "File path relative to the workspace."}},
+                    "required": ["path"],
+                },
+            },
         }
 
     def delete_file(self, path):
@@ -246,7 +234,7 @@ class FileTool():
             return {"error": str(error)}
 
     def _generate_make_directory_definition(self):
-        workspace = lair.config.get('tools.file.path')
+        workspace = lair.config.get("tools.file.path")
         return {
             "type": "function",
             "function": {
@@ -258,14 +246,11 @@ class FileTool():
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "Directory path relative to the workspace."
-                        }
+                        "path": {"type": "string", "description": "Directory path relative to the workspace."}
                     },
-                    "required": ["path"]
-                }
-            }
+                    "required": ["path"],
+                },
+            },
         }
 
     def make_directory(self, path):
@@ -278,7 +263,7 @@ class FileTool():
             return {"error": str(error)}
 
     def _generate_remove_directory_definition(self):
-        workspace = lair.config.get('tools.file.path')
+        workspace = lair.config.get("tools.file.path")
         return {
             "type": "function",
             "function": {
@@ -290,14 +275,11 @@ class FileTool():
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "path": {
-                            "type": "string",
-                            "description": "Directory path relative to the workspace."
-                        }
+                        "path": {"type": "string", "description": "Directory path relative to the workspace."}
                     },
-                    "required": ["path"]
-                }
-            }
+                    "required": ["path"],
+                },
+            },
         }
 
     def remove_directory(self, path):

@@ -21,9 +21,8 @@ import prompt_toolkit.styles
 
 
 class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
-
     def __init__(self, *, starting_session_id_or_alias=None, create_session_if_missing=False):
-        self.chat_session = lair.sessions.get_chat_session(lair.config.get('session.type'))
+        self.chat_session = lair.sessions.get_chat_session(lair.config.get("session.type"))
         self.session_manager = lair.sessions.SessionManager()
         self._init_starting_session(starting_session_id_or_alias, create_session_if_missing)
 
@@ -39,16 +38,16 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         self.history = None
         self.sub_prompt_history = {  # Prompt history for each sub-prompt type
-            'session_set_alias': prompt_toolkit.history.InMemoryHistory(),
-            'session_set_title': prompt_toolkit.history.InMemoryHistory(),
-            'session_switch': prompt_toolkit.history.InMemoryHistory(),
+            "session_set_alias": prompt_toolkit.history.InMemoryHistory(),
+            "session_set_title": prompt_toolkit.history.InMemoryHistory(),
+            "session_switch": prompt_toolkit.history.InMemoryHistory(),
         }
 
         self.prompt_session = None
         self._on_config_update()  # Trigger the initial state updates
 
-        lair.events.subscribe('config.update', lambda d: self._on_config_update(), instance=self)
-        lair.events.fire('chat.init', self)
+        lair.events.subscribe("config.update", lambda d: self._on_config_update(), instance=self)
+        lair.events.fire("chat.init", self)
 
     def _on_config_update(self):
         self._init_history()
@@ -57,7 +56,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self._models = self.chat_session.list_models(ignore_errors=True)
 
     def _init_history(self):
-        history_file = lair.config.get('chat.history_file')
+        history_file = lair.config.get("chat.history_file")
         if history_file:
             self.history = prompt_toolkit.history.FileHistory(os.path.expanduser(history_file))
         else:
@@ -97,175 +96,175 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _get_shortcut_details(self):
         def format_key(name):
-            return lair.config.get(f'chat.keys.{name}') \
-                .replace('escape ', 'ESC-') \
-                .replace('c-', 'C-')
+            return lair.config.get(f"chat.keys.{name}").replace("escape ", "ESC-").replace("c-", "C-")
 
         return {  # shortcut ->  description
-            'F1 - F12': 'Switch to session 1-12',
-            format_key('show_history'): 'Show the full chat history',
-            format_key('show_recent_history'): 'Show the last two messages from the chat history',
-            format_key('list_models'): 'Show all available models',
-            format_key('list_tools'): 'Show all available tools',
-            format_key('session.clear'): 'Clear the current session\'s history',
-            format_key('session.new'): 'Create a new session',
-            format_key('session.next'): 'Cycle to the next session',
-            format_key('session.previous'): 'Cycle to the previous session',
-            format_key('session.set_alias'): 'Set an alias for the current session',
-            format_key('session.set_title'): 'set a title for the current session',
-            format_key('session.show'): 'Display all sessions',
-            format_key('session.switch'): 'Fast switch to a different session',
-            format_key('show_help'): 'Show keys and shortcuts',
-            format_key('toggle_debug'): 'Toggle debugging output',
-            format_key('toggle_markdown'): 'Toggle markdown rendering',
-            format_key('toggle_multiline_input'): 'Toggle multi-line input',
-            format_key('toggle_toolbar'): 'Toggle bottom toolbar',
-            format_key('toggle_tools'): 'Toggle tools',
-            format_key('toggle_verbose'): 'Toggle verbose output',
-            format_key('toggle_word_wrap'): 'Toggle word wrapping',
+            "F1 - F12": "Switch to session 1-12",
+            format_key("show_history"): "Show the full chat history",
+            format_key("show_recent_history"): "Show the last two messages from the chat history",
+            format_key("list_models"): "Show all available models",
+            format_key("list_tools"): "Show all available tools",
+            format_key("session.clear"): "Clear the current session's history",
+            format_key("session.new"): "Create a new session",
+            format_key("session.next"): "Cycle to the next session",
+            format_key("session.previous"): "Cycle to the previous session",
+            format_key("session.set_alias"): "Set an alias for the current session",
+            format_key("session.set_title"): "set a title for the current session",
+            format_key("session.show"): "Display all sessions",
+            format_key("session.switch"): "Fast switch to a different session",
+            format_key("show_help"): "Show keys and shortcuts",
+            format_key("toggle_debug"): "Toggle debugging output",
+            format_key("toggle_markdown"): "Toggle markdown rendering",
+            format_key("toggle_multiline_input"): "Toggle multi-line input",
+            format_key("toggle_toolbar"): "Toggle bottom toolbar",
+            format_key("toggle_tools"): "Toggle tools",
+            format_key("toggle_verbose"): "Toggle verbose output",
+            format_key("toggle_word_wrap"): "Toggle word wrapping",
         }
 
     def _get_keybindings(self):
         key_bindings = prompt_toolkit.key_binding.KeyBindings()
 
         def get_key(name):
-            return lair.config.get(f'chat.keys.{name}').split(' ')
+            return lair.config.get(f"chat.keys.{name}").split(" ")
 
         @key_bindings.add("enter", filter=prompt_toolkit.filters.completion_is_selected)
         def enter_key_on_selected_completion(event):
             current_buffer = event.app.current_buffer
-            current_buffer.insert_text(' ')
+            current_buffer.insert_text(" ")
             current_buffer.cancel_completion()
 
-        @key_bindings.add(*get_key('toggle_debug'), eager=True)
+        @key_bindings.add(*get_key("toggle_debug"), eager=True)
         def toggle_debug(event):
             if lair.util.is_debug_enabled():
-                logger.setLevel('INFO')
+                logger.setLevel("INFO")
                 self._prompt_handler_system_message("Debugging disabled")
             else:
-                logger.setLevel('DEBUG')
+                logger.setLevel("DEBUG")
                 self._prompt_handler_system_message("Debugging enabled")
 
-        @key_bindings.add(*get_key('toggle_toolbar'), eager=True)
+        @key_bindings.add(*get_key("toggle_toolbar"), eager=True)
         def toggle_toolbar(event):
-            if lair.config.active['chat.enable_toolbar']:
-                lair.config.set('chat.enable_toolbar', 'false')
+            if lair.config.active["chat.enable_toolbar"]:
+                lair.config.set("chat.enable_toolbar", "false")
                 self._prompt_handler_system_message("Bottom toolbar disabled")
             else:
-                lair.config.set('chat.enable_toolbar', 'true')
+                lair.config.set("chat.enable_toolbar", "true")
                 self._prompt_handler_system_message("Bottom toolbar enabled")
 
-        @key_bindings.add(*get_key('toggle_multiline_input'), eager=True)
+        @key_bindings.add(*get_key("toggle_multiline_input"), eager=True)
         def toggle_multiline(event):
-            if lair.config.active['chat.multiline_input']:
-                lair.config.set('chat.multiline_input', 'false')
+            if lair.config.active["chat.multiline_input"]:
+                lair.config.set("chat.multiline_input", "false")
                 self._prompt_handler_system_message("Multi-line input disabled")
             else:
-                lair.config.set('chat.multiline_input', 'true')
+                lair.config.set("chat.multiline_input", "true")
                 self._prompt_handler_system_message("Multi-line input enabled")
 
-        @key_bindings.add(*get_key('toggle_markdown'), eager=True)
+        @key_bindings.add(*get_key("toggle_markdown"), eager=True)
         def toggle_markdown(event):
-            if lair.config.active['style.render_markdown']:
-                lair.config.set('style.render_markdown', 'false')
+            if lair.config.active["style.render_markdown"]:
+                lair.config.set("style.render_markdown", "false")
                 self._prompt_handler_system_message("Markdown rendering disabled")
             else:
-                lair.config.set('style.render_markdown', 'true')
+                lair.config.set("style.render_markdown", "true")
                 self._prompt_handler_system_message("Markdown rendering enabled")
 
-        @key_bindings.add(*get_key('toggle_tools'), eager=True)
+        @key_bindings.add(*get_key("toggle_tools"), eager=True)
         def toggle_tools(event):
-            if lair.config.active['tools.enabled']:
-                lair.config.set('tools.enabled', 'false')
+            if lair.config.active["tools.enabled"]:
+                lair.config.set("tools.enabled", "false")
                 self._prompt_handler_system_message("Tools disabled")
             else:
-                lair.config.set('tools.enabled', 'true')
+                lair.config.set("tools.enabled", "true")
                 self._prompt_handler_system_message("Tools enabled")
 
-        @key_bindings.add(*get_key('toggle_verbose'), eager=True)
+        @key_bindings.add(*get_key("toggle_verbose"), eager=True)
         def toggle_verbose(event):
-            if lair.config.active['chat.verbose']:
-                lair.config.set('chat.verbose', 'false')
+            if lair.config.active["chat.verbose"]:
+                lair.config.set("chat.verbose", "false")
                 self._prompt_handler_system_message("Verbose output disabled")
             else:
-                lair.config.set('chat.verbose', 'true')
+                lair.config.set("chat.verbose", "true")
                 self._prompt_handler_system_message("Verbose output enabled")
 
-        @key_bindings.add(*get_key('toggle_word_wrap'), eager=True)
+        @key_bindings.add(*get_key("toggle_word_wrap"), eager=True)
         def toggle_word_wrap(event):
-            if lair.config.active['style.word_wrap']:
-                lair.config.set('style.word_wrap', 'false')
+            if lair.config.active["style.word_wrap"]:
+                lair.config.set("style.word_wrap", "false")
                 self._prompt_handler_system_message("Word wrap disabled")
             else:
-                lair.config.set('style.word_wrap', 'true')
+                lair.config.set("style.word_wrap", "true")
                 self._prompt_handler_system_message("Word wrap enabled")
 
-        @key_bindings.add(*get_key('session.new'), eager=True)
+        @key_bindings.add(*get_key("session.new"), eager=True)
         def session_new(event):
             self._new_chat_session()
-            self._prompt_handler_system_message('New session created')
+            self._prompt_handler_system_message("New session created")
 
-        @key_bindings.add(*get_key('session.next'), eager=True)
+        @key_bindings.add(*get_key("session.next"), eager=True)
         def session_next(event):
             session_id = self.session_manager.get_next_session_id(self.chat_session.session_id)
             if session_id is not None:
                 self._switch_to_session(session_id)
 
-        @key_bindings.add(*get_key('session.clear'), eager=True)
+        @key_bindings.add(*get_key("session.clear"), eager=True)
         def session_clear(event):
             self.chat_session.new_session(preserve_alias=True, preserve_id=True)
             self.session_manager.refresh_from_chat_session(self.chat_session)
-            self._prompt_handler_system_message('Conversation history cleared')
+            self._prompt_handler_system_message("Conversation history cleared")
 
-        @key_bindings.add(*get_key('session.previous'), eager=True)
+        @key_bindings.add(*get_key("session.previous"), eager=True)
         def session_previous(event):
             session_id = self.session_manager.get_previous_session_id(self.chat_session.session_id)
             if session_id is not None:
                 self._switch_to_session(session_id)
 
-        @key_bindings.add(*get_key('session.set_alias'), eager=True)
+        @key_bindings.add(*get_key("session.set_alias"), eager=True)
         def session_set_alias(event):
             prompt_toolkit.application.run_in_terminal(self._handle_session_set_alias)
 
-        @key_bindings.add(*get_key('session.set_title'), eager=True)
+        @key_bindings.add(*get_key("session.set_title"), eager=True)
         def session_set_title(event):
             prompt_toolkit.application.run_in_terminal(self._handle_session_set_title)
 
-        @key_bindings.add(*get_key('session.show'), eager=True)
+        @key_bindings.add(*get_key("session.show"), eager=True)
         def session_status(event):
             prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
 
-        @key_bindings.add(*get_key('session.switch'), eager=True)
+        @key_bindings.add(*get_key("session.switch"), eager=True)
         def session_switch(event):
             prompt_toolkit.application.run_in_terminal(self._handle_session_switch)
 
-        @key_bindings.add(*get_key('show_help'), eager=True)
+        @key_bindings.add(*get_key("show_help"), eager=True)
         def show_help(event):
             prompt_toolkit.application.run_in_terminal(self.print_help)
 
-        @key_bindings.add(*get_key('show_history'), eager=True)
+        @key_bindings.add(*get_key("show_history"), eager=True)
         def show_history(event):
             prompt_toolkit.application.run_in_terminal(self.print_history)
 
-        @key_bindings.add(*get_key('show_recent_history'), eager=True)
+        @key_bindings.add(*get_key("show_recent_history"), eager=True)
         def show_recent_history(event):
             prompt_toolkit.application.run_in_terminal(lambda: self.print_history(num_messages=2))
 
-        @key_bindings.add(*get_key('list_models'), eager=True)
+        @key_bindings.add(*get_key("list_models"), eager=True)
         def list_models(event):
             prompt_toolkit.application.run_in_terminal(lambda: self.print_models_report(update_cache=True))
 
-        @key_bindings.add(*get_key('list_tools'), eager=True)
+        @key_bindings.add(*get_key("list_tools"), eager=True)
         def list_tools(event):
             prompt_toolkit.application.run_in_terminal(self.print_tools_report)
 
         # F1 through F12
         def f_key(event):
             session_id = int(event.key_sequence[0].key[1:])
-            prompt_toolkit.application.run_in_terminal(lambda: self._switch_to_session(session_id, raise_exceptions=False))
+            prompt_toolkit.application.run_in_terminal(
+                lambda: self._switch_to_session(session_id, raise_exceptions=False)
+            )
 
         for i in range(1, 13):
-            key_bindings.add(f'f{i}', eager=True)(lambda event: f_key(event))
+            key_bindings.add(f"f{i}", eager=True)(lambda event: f_key(event))
 
         return key_bindings
 
@@ -280,7 +279,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         This is necessary, since changes to session.type can alter the chat session class used
         """
         old_chat_session = self.chat_session
-        self.chat_session = lair.sessions.get_chat_session(lair.config.get('session.type'))
+        self.chat_session = lair.sessions.get_chat_session(lair.config.get("session.type"))
         self.chat_session.import_state(old_chat_session)
 
     def _switch_to_session(self, id_or_alias, raise_exceptions=True):
@@ -314,8 +313,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         Return a session id to default to for quick-switch
         This will be either the last used session id or the next session_id
         """
-        if self.last_used_session_id is not None and \
-           self.session_manager.get_session_id(self.last_used_session_id, raise_exception=False):
+        if self.last_used_session_id is not None and self.session_manager.get_session_id(
+            self.last_used_session_id, raise_exception=False
+        ):
             # If the last_used_session_id is still valid, return that
             return self.last_used_session_id
         else:
@@ -325,15 +325,18 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         default_session_id = self._get_default_switch_session_id()
 
         key_bindings = prompt_toolkit.key_binding.KeyBindings()
-        @key_bindings.add('tab')
+
+        @key_bindings.add("tab")
         def show_sessions(event):
             prompt_toolkit.application.run_in_terminal(lambda: self.print_sessions_report())
 
         try:
-            id_or_alias = prompt_toolkit.prompt(f'Switch to session (default {default_session_id}): ',
-                                                history=self.sub_prompt_history['session_switch'],
-                                                in_thread=True,
-                                                key_bindings=key_bindings).strip()
+            id_or_alias = prompt_toolkit.prompt(
+                f"Switch to session (default {default_session_id}): ",
+                history=self.sub_prompt_history["session_switch"],
+                in_thread=True,
+                key_bindings=key_bindings,
+            ).strip()
         except (KeyboardInterrupt, EOFError):
             return
 
@@ -348,9 +351,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         session_id = self.chat_session.session_id
 
         try:
-            new_alias = prompt_toolkit.prompt(f'Alias for session {session_id}: ',
-                                              history=self.sub_prompt_history['session_set_alias'],
-                                              in_thread=True).strip()
+            new_alias = prompt_toolkit.prompt(
+                f"Alias for session {session_id}: ",
+                history=self.sub_prompt_history["session_set_alias"],
+                in_thread=True,
+            ).strip()
         except (KeyboardInterrupt, EOFError):
             return
 
@@ -366,9 +371,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         session_id = self.chat_session.session_id
 
         try:
-            new_title = prompt_toolkit.prompt(f'Title for session {session_id}: ',
-                                              history=self.sub_prompt_history['session_set_title'],
-                                              in_thread=True).strip()
+            new_title = prompt_toolkit.prompt(
+                f"Title for session {session_id}: ",
+                history=self.sub_prompt_history["session_set_title"],
+                in_thread=True,
+            ).strip()
         except (KeyboardInterrupt, EOFError):
             return
 
@@ -376,11 +383,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _handle_request_command(self, request):
         """Handle slash commands."""
-        command, *arguments = re.split(r'\s+', request)
-        arguments_str = request[len(command) + 1:].strip()
+        command, *arguments = re.split(r"\s+", request)
+        arguments_str = request[len(command) + 1 :].strip()
         if command in self.commands:
             try:
-                self.commands[command]['callback'](command, arguments, arguments_str)
+                self.commands[command]["callback"](command, arguments, arguments_str)
                 return True
             except Exception as error:
                 self.reporting.error("Command failed: %s" % error)
@@ -391,23 +398,23 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _handle_request_chat(self, request):
         """Handle chat with the current chain."""
-        if lair.config.get('chat.attachments_enabled'):
-            attachment_regex = lair.config.get('chat.attachment_syntax_regex')
+        if lair.config.get("chat.attachments_enabled"):
+            attachment_regex = lair.config.get("chat.attachment_syntax_regex")
             attachments = re.findall(attachment_regex, request)
             content_parts, messages = lair.util.get_attachments_content(attachments)
 
             # Remove the attachments from the user's message
-            request = re.sub(attachment_regex, '', request)
-            if request.strip() == '':
+            request = re.sub(attachment_regex, "", request)
+            if request.strip() == "":
                 request = None
 
             if len(content_parts) > 0:
                 request = [
-                    *([{'type': 'text', 'text': request}] if request else []),
+                    *([{"type": "text", "text": request}] if request else []),
                     *content_parts,
                 ]
             if request:
-                self.chat_session.history.add_message('user', request)
+                self.chat_session.history.add_message("user", request)
 
             self.chat_session.history.add_messages(messages)
 
@@ -423,9 +430,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
           bool: True if a request was properly handled, otherwise False
         """
         try:
-            if request == '':
+            if request == "":
                 return False
-            elif request.startswith('/'):
+            elif request.startswith("/"):
                 return self._handle_request_command(request)
             else:
                 return self._handle_request_chat(request)
@@ -434,7 +441,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             return False
 
     def startup_message(self):
-        self.reporting.system_message('Welcome to the LAIR')
+        self.reporting.system_message("Welcome to the LAIR")
 
     def _flash(self, message, duration=1.2):
         """Flash a message on the bottom toolbar.
@@ -445,25 +452,23 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         columns = shutil.get_terminal_size().columns
 
         message = message[:columns]  # Truncate long messages
-        message += ' ' * (columns - len(message))  # Pad with spaces
+        message += " " * (columns - len(message))  # Pad with spaces
 
         self.flash_message = message
         self.flash_message_expiration = time.time() + duration
 
     def _prompt_handler_system_message(self, message):
-        prompt_toolkit.application.run_in_terminal(
-            lambda: self.reporting.system_message(message)
-        )
+        prompt_toolkit.application.run_in_terminal(lambda: self.reporting.system_message(message))
 
     def _get_embedded_response(self, message, position):
-        regex = lair.config.get('chat.embedded_syntax_regex')
+        regex = lair.config.get("chat.embedded_syntax_regex")
         matches = re.findall(regex, message, re.DOTALL)
 
         if abs(position) > len(matches) - 1:
             return None
 
         for section in matches[position]:
-            if section.endswith('\n'):  # Chomp the extra newline off of strings
+            if section.endswith("\n"):  # Chomp the extra newline off of strings
                 section = section[:-1]
 
             if section:  # Return the first non-empty capture
@@ -473,45 +478,47 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _template_keys(self):
         return {
-            'flags': self._generate_toolbar_template_flags(),
-            'mode': lair.config.active_mode,
-            'model': lair.config.get('model.name'),
-            'session_id': self.chat_session.session_id,
-            'session_alias': self.chat_session.session_alias or '',
+            "flags": self._generate_toolbar_template_flags(),
+            "mode": lair.config.active_mode,
+            "model": lair.config.get("model.name"),
+            "session_id": self.chat_session.session_id,
+            "session_alias": self.chat_session.session_alias or "",
         }
 
     def _generate_prompt(self):
         return prompt_toolkit.formatted_text.HTML(
-            lair.config.active['chat.prompt_template'].format(
+            lair.config.active["chat.prompt_template"].format(
                 **self._template_keys(),
-            ))
+            )
+        )
 
     def _generate_toolbar_template_flags(self):
         def flag(character, parameter):
             if lair.config.active[parameter]:
-                return '<flag.on>%s</flag.on>' % character.upper()
+                return "<flag.on>%s</flag.on>" % character.upper()
             else:
-                return '<flag.off>%s</flag.off>' % character.lower()
+                return "<flag.off>%s</flag.off>" % character.lower()
 
-        return \
-            flag('l', 'chat.multiline_input') + \
-            flag('m', 'style.render_markdown') + \
-            flag('t', 'tools.enabled') + \
-            flag('v', 'chat.verbose') + \
-            flag('w', 'style.word_wrap')
+        return (
+            flag("l", "chat.multiline_input")
+            + flag("m", "style.render_markdown")
+            + flag("t", "tools.enabled")
+            + flag("v", "chat.verbose")
+            + flag("w", "style.word_wrap")
+        )
 
     def _generate_toolbar(self):
-        if not lair.config.active['chat.enable_toolbar']:
-            padding = ' ' * shutil.get_terminal_size().columns
-            return prompt_toolkit.formatted_text.HTML(
-                f'<bottom-toolbar.off>{padding}</bottom-toolbar.off>')
+        if not lair.config.active["chat.enable_toolbar"]:
+            padding = " " * shutil.get_terminal_size().columns
+            return prompt_toolkit.formatted_text.HTML(f"<bottom-toolbar.off>{padding}</bottom-toolbar.off>")
 
         if time.time() < self.flash_message_expiration:
             return prompt_toolkit.formatted_text.HTML(
-                '<bottom-toolbar.flash>%s</bottom-toolbar.flash>' % self.flash_message)
+                "<bottom-toolbar.flash>%s</bottom-toolbar.flash>" % self.flash_message
+            )
 
         try:
-            template = lair.config.active['chat.toolbar_template'].format(
+            template = lair.config.active["chat.toolbar_template"].format(
                 **self._template_keys(),
             )
 
@@ -519,23 +526,26 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         except Exception as error:
             logger.error("Unable to render toolbar: %s" % error)
             logger.error("Disabling toolbar")
-            lair.config.active['chat.enable_toolbar'] = False
-            return ''
+            lair.config.active["chat.enable_toolbar"] = False
+            return ""
 
     def _prompt(self):
         self.is_reading_prompt = True
 
         request = self.prompt_session.prompt(
             self._generate_prompt,
-            multiline=prompt_toolkit.filters.Condition(lambda: lair.config.active['chat.multiline_input']),
-            style=prompt_toolkit.styles.Style.from_dict({
-                'bottom-toolbar': lair.config.active['chat.toolbar_style'],
-                'bottom-toolbar.text': lair.config.active['chat.toolbar_text_style'],
-                'bottom-toolbar.flash': lair.config.active['chat.toolbar_flash_style'],
-                'bottom-toolbar.off': 'fg:black bg:white',
-                'flag.off': lair.config.active['chat.flag_off_style'],
-                'flag.on': lair.config.active['chat.flag_on_style'],
-            })).strip()
+            multiline=prompt_toolkit.filters.Condition(lambda: lair.config.active["chat.multiline_input"]),
+            style=prompt_toolkit.styles.Style.from_dict(
+                {
+                    "bottom-toolbar": lair.config.active["chat.toolbar_style"],
+                    "bottom-toolbar.text": lair.config.active["chat.toolbar_text_style"],
+                    "bottom-toolbar.flash": lair.config.active["chat.toolbar_flash_style"],
+                    "bottom-toolbar.off": "fg:black bg:white",
+                    "flag.off": lair.config.active["chat.flag_off_style"],
+                    "flag.on": lair.config.active["chat.flag_on_style"],
+                }
+            ),
+        ).strip()
 
         self.is_reading_prompt = False
         if self._handle_request(request):
@@ -549,6 +559,6 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 self._prompt()
             except KeyboardInterrupt:
                 if not self.is_reading_prompt:
-                    self.reporting.error('Interrupt received')
+                    self.reporting.error("Interrupt received")
             except EOFError:
                 sys.exit(0)
