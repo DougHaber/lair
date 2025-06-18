@@ -13,11 +13,13 @@
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
 - tests: Add pytest suite and extended chat interface coverage
+- tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
 - tests: Enable coverage and add new utility tests
 - docker: Add lair into youtube image
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
+- tests: Add search tool coverage
 - tests: Add extra coverage for chat interface commands
 - tests: Add completer, attachment, and argument parsing coverage
 - tests: Increase coverage for cli.run module
@@ -29,6 +31,7 @@
 - cleanup: refactor workflow and tool call helpers for readability
 - tests: Add FileTool unit tests
 - tests: Add PythonTool unit tests
+- tests: Increase tmux tool coverage
 
 # v0.8.1 - Bug fixes
 
