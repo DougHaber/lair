@@ -17,6 +17,7 @@
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
 - tests: Add coverage for all chat sub-commands
+- tests: Add extra coverage for chat interface commands
 - tests: Add completer, attachment, and argument parsing coverage
 - documentation: Update AGENTS instructions to use Poetry
 - cleanup: refactor workflow and tool call helpers for readability
