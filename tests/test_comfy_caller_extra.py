@@ -144,3 +144,100 @@ def test_workflow_ltxv_prompt(monkeypatch):
     result = asyncio.run(cc._workflow_ltxv_prompt('file', florence_model_name='m', auto_prompt_extra='', auto_prompt_suffix='', florence_seed=None, image_resize_height=1, image_resize_width=1))
     assert result == [b'final']
 
+
+def test_kill_thread_none():
+    cc = get_ComfyCaller()()
+    assert cc._kill_thread(None) is None
+
+
+def test_get_defaults_image(monkeypatch):
+    cc = get_ComfyCaller()()
+    vals = {
+        'comfy.image.loras': 'a\nb',
+        'comfy.image.batch_size': 1,
+        'comfy.image.cfg': 0.1,
+        'comfy.image.denoise': 0.2,
+        'comfy.image.model_name': 'm',
+        'comfy.image.negative_prompt': 'n',
+        'comfy.image.output_height': 2,
+        'comfy.image.output_width': 3,
+        'comfy.image.prompt': 'p',
+        'comfy.image.sampler': 'sam',
+        'comfy.image.scheduler': 'sch',
+        'comfy.image.seed': None,
+        'comfy.image.steps': 4,
+    }
+    monkeypatch.setattr(importlib.import_module('lair').config, 'get', lambda k, *a, **kw: vals.get(k))
+    defaults = cc._get_defaults_image()
+    assert defaults['loras'] == ['a', 'b']
+    assert defaults['batch_size'] == 1
+
+
+class DummyAsyncWF:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+
+class DummyAsyncNode:
+    def __init__(self, result):
+        self._result = result
+
+    async def wait(self):
+        return self._result
+
+
+def test_workflow_image(monkeypatch):
+    cc = get_ComfyCaller()()
+    mod = importlib.import_module('lair.comfy_caller')
+    monkeypatch.setattr(mod, 'Workflow', DummyAsyncWF, raising=False)
+    monkeypatch.setattr(mod, 'CheckpointLoaderSimple', lambda n: ('m', 'c', 'v'), raising=False)
+    monkeypatch.setattr(cc, '_apply_loras', lambda m, c, l: (m + '+l', c + '+l'))
+    monkeypatch.setattr(mod, 'CLIPTextEncode', lambda t, c: f'{t}:{c}', raising=False)
+    monkeypatch.setattr(mod, 'EmptyLatentImage', lambda *a: 'latent', raising=False)
+    monkeypatch.setattr(mod, 'KSampler', lambda *a, **k: 'latent2', raising=False)
+    monkeypatch.setattr(mod, 'VAEDecode', lambda l, v: 'img', raising=False)
+    monkeypatch.setattr(mod, 'SaveImage', lambda img, prefix: DummyAsyncNode(['ok']), raising=False)
+    monkeypatch.setattr(mod.random, 'randint', lambda a, b: 5)
+    images = asyncio.run(cc._workflow_image(model_name='m', prompt='p', loras=['l'], negative_prompt='n',
+                                           output_width=1, output_height=1, batch_size=1, seed=None,
+                                           steps=1, cfg=1, sampler='sam', scheduler='sch', denoise=0.5))
+    assert images == ['ok']
+
+
+def test_workflow_upscale(monkeypatch):
+    cc = get_ComfyCaller()()
+    mod = importlib.import_module('lair.comfy_caller')
+    monkeypatch.setattr(mod, 'UpscaleModelLoader', lambda n: f'm:{n}', raising=False)
+    monkeypatch.setattr(cc.__class__, '_image_to_base64', lambda self, img: 'b64', raising=False)
+    monkeypatch.setattr(mod, 'ETNLoadImageBase64', lambda b: ('img', None), raising=False)
+    monkeypatch.setattr(mod, 'ImageUpscaleWithModel', lambda model, img: 'up', raising=False)
+    monkeypatch.setattr(mod, 'SaveImage', lambda img, prefix: DummyAsyncNode(['out']), raising=False)
+    res = asyncio.run(cc._workflow_upscale(source_image='src', model_name='m'))
+    assert res == ['out']
+
+
+def test_workflow_outpaint(monkeypatch):
+    cc = get_ComfyCaller()()
+    mod = importlib.import_module('lair.comfy_caller')
+    monkeypatch.setattr(mod, 'Workflow', DummyAsyncWF, raising=False)
+    monkeypatch.setattr(mod, 'CheckpointLoaderSimple', lambda n: ('m', 'c', 'v'), raising=False)
+    monkeypatch.setattr(cc, '_apply_loras', lambda m, c, l: (m, c))
+    monkeypatch.setattr(mod, 'CLIPTextEncode', lambda p, c: f'cond:{p}', raising=False)
+    monkeypatch.setattr(cc.__class__, '_image_to_base64', lambda self, img: 'b64', raising=False)
+    monkeypatch.setattr(mod, 'ETNLoadImageBase64', lambda b: ('img', None), raising=False)
+    monkeypatch.setattr(mod, 'ImagePadForOutpaint', lambda *a, **k: ('pad', 'mask'), raising=False)
+    monkeypatch.setattr(mod, 'VAEEncodeForInpaint', lambda *a, **k: 'latent', raising=False)
+    monkeypatch.setattr(mod, 'KSampler', lambda *a, **k: 'latent2', raising=False)
+    monkeypatch.setattr(mod, 'VAEDecode', lambda l, v: 'img2', raising=False)
+    monkeypatch.setattr(mod, 'SaveImage', lambda *a, **k: DummyAsyncNode(['img']), raising=False)
+    monkeypatch.setattr(mod.random, 'randint', lambda a, b: 42)
+    images = asyncio.run(cc._workflow_outpaint(model_name='m', prompt='p', loras=None, negative_prompt='n',
+                                               grow_mask_by=1, seed=None, source_image='src', steps=1,
+                                               cfg=1, sampler='sam', scheduler='sch', denoise=0.5,
+                                               padding_left=1, padding_top=1, padding_right=1,
+                                               padding_bottom=1, feathering=1))
+    assert images == ['img']
+
