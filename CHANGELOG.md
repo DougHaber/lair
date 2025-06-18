@@ -20,6 +20,7 @@
 - tests: Add coverage for all chat sub-commands
 - tests: Add extra coverage for chat interface commands
 - tests: Add completer, attachment, and argument parsing coverage
+- tests: Increase coverage for cli.run module
 - tests: Add validation and tool parsing coverage
 - tests: Increase util.core coverage
 - tests: Add ComfyCaller helper and workflow coverage
