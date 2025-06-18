@@ -13,6 +13,7 @@
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
 - tests: Add pytest suite and extended chat interface coverage
+- tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
 - tests: Enable coverage and add new utility tests
 - docker: Add lair into youtube image
 - deps: Replace pyflakes with ruff for linting
@@ -29,6 +30,7 @@
 - documentation: Update AGENTS instructions to use Poetry
 - cleanup: refactor workflow and tool call helpers for readability
 - tests: Add FileTool unit tests
+- tests: Increase tmux tool coverage
 
 # v0.8.1 - Bug fixes
 
