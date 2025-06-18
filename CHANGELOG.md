@@ -12,6 +12,7 @@
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
 - tests: Add pytest suite and extended chat interface coverage
+- tests: Enable coverage and add new utility tests
 - docker: Add lair into youtube image
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example

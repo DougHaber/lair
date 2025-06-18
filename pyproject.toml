@@ -27,6 +27,8 @@ libtmux = "^0.46.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
 ruff = "^0.5.1"
+coverage = "^7.4.0"
+pytest-cov = "^4.1.0"
 
 [tool.ruff]
 line-length = 120
@@ -35,6 +37,17 @@ line-length = 120
 "**/__init__.py" = ["F401"]
 "lair/util/__init__.py" = ["F401", "F403"]
 "lair/comfy_caller.py" = ["F403", "F405"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=50"
+
+[tool.coverage.run]
+omit = [
+    "lair/modules/comfy.py",
+    "lair/modules/util.py",
+    "lair/reporting/reporting.py",
+    "lair/sessions/session_manager.py",
+]
 
 [build-system]
 requires = ["poetry-core"]
