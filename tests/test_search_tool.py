@@ -1,5 +1,4 @@
 import lair
-import pytest
 
 from lair.components.tools.search_tool import SearchTool
 

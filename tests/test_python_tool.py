@@ -1,7 +1,6 @@
 import subprocess
 import types
 import lair
-import pytest
 from lair.components.tools.python_tool import PythonTool
 
 
