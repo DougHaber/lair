@@ -17,6 +17,7 @@
 - tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
 - tests: Enable coverage and add new utility tests
 - docker: Add lair into youtube image
+- tests: Increase ChatHistory coverage
 - tests: Increase ToolSet coverage
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
