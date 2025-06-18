@@ -128,6 +128,18 @@ class ComfyCaller():
 
         return lora_model, weight, clip_weight
 
+    def _apply_loras(self, model, clip, loras):
+        """Apply a list of loras to the model and clip."""
+        for lora in loras or []:
+            lora_model, weight, clip_weight = self._parse_lora_argument(lora)
+            model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+
+        return model, clip
+
+    def _ensure_seed(self, seed):
+        """Return a random seed when one is not provided."""
+        return random.randint(0, 2**31 - 1) if seed is None else seed
+
     def _image_to_base64(self, image):
         # Convert an image to base64 based on the type
         if isinstance(image, str):  # If the image is a str, then it is a filename
@@ -226,15 +238,12 @@ class ComfyCaller():
 
     async def _workflow_image(self, *, model_name, prompt, loras, negative_prompt, output_width, output_height,
                               batch_size, seed, steps, cfg, sampler, scheduler, denoise):
-        if seed is None:
-            seed = random.randint(0, 2**31 - 1)
+        seed = self._ensure_seed(seed)
 
         async with Workflow():
             model, clip, vae = CheckpointLoaderSimple(model_name)
 
-            for lora in loras or []:
-                lora_model, weight, clip_weight = self._parse_lora_argument(lora)
-                model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+            model, clip = self._apply_loras(model, clip, loras)
 
             positive_conditioning = CLIPTextEncode(prompt, clip)
             negative_conditioning = CLIPTextEncode(negative_prompt, clip)
@@ -287,10 +296,8 @@ class ComfyCaller():
                                  denoise, seed, florence_seed):
         if image is None:
             raise ValueError("ltxv-i2v: Image must not be None")
-        if seed is None:
-            seed = random.randint(0, 2**31 - 1)
-        if florence_seed is None:
-            florence_seed = random.randint(0, 2**31 - 1)
+        seed = self._ensure_seed(seed)
+        florence_seed = self._ensure_seed(florence_seed)
 
         with Workflow():
             model, _, vae = CheckpointLoaderSimple(model_name)
@@ -414,16 +421,13 @@ class ComfyCaller():
                                           prompt, sampler, sampling_shift, scheduler, seed, steps, tile_overlap,
                                           tile_size, tile_temporal_size, tile_temporal_overlap, tiled_decode_enabled,
                                           width, vae_model_name):
-        if seed is None:
-            seed = random.randint(0, 2**31 - 1)
+        seed = self._ensure_seed(seed)
 
         noise = RandomNoise(seed)
         model = UNETLoader(model_name, model_weight_dtype)
         clip = DualCLIPLoader(clip_name_1, clip_name_2, 'hunyuan_video', None)
 
-        for lora in loras or []:
-            lora_model, weight, clip_weight = self._parse_lora_argument(lora)
-            model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+        model, clip = self._apply_loras(model, clip, loras)
 
         conditioning = CLIPTextEncode(prompt, clip)
         conditioning = FluxGuidance(conditioning, guidance_scale)
@@ -478,15 +482,12 @@ class ComfyCaller():
     async def _workflow_outpaint(self, *, model_name, prompt, loras, negative_prompt, grow_mask_by,
                                  seed, source_image, steps, cfg, sampler, scheduler, denoise,
                                  padding_left, padding_top, padding_right, padding_bottom, feathering):
-        if seed is None:
-            seed = random.randint(0, 2**31 - 1)
+        seed = self._ensure_seed(seed)
 
         async with Workflow():
             model, clip, vae = CheckpointLoaderSimple(model_name)
 
-            for lora in loras or []:
-                lora_model, weight, clip_weight = self._parse_lora_argument(lora)
-                model, clip = LoraLoader(model, clip, lora_model, weight, clip_weight)
+            model, clip = self._apply_loras(model, clip, loras)
 
             positive_conditioning = CLIPTextEncode(prompt, clip)
             negative_conditioning = CLIPTextEncode(negative_prompt, clip)
