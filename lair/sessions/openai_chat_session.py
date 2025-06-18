@@ -57,6 +57,32 @@ class OpenAIChatSession(BaseChatSession):
 
         return answer.choices[0].message.content.strip()
 
+    def _process_tool_calls(self, message, messages, tool_messages):
+        """Handle tool calls returned by the model."""
+        message_dict = message.dict()
+        if lair.config.get('chat.verbose'):
+            self.reporting.assistant_tool_calls(message_dict, show_heading=True)
+
+        messages.append(message_dict)
+        tool_messages.append(message_dict)
+
+        for tool_call in message.tool_calls:
+            name = tool_call.function.name
+            arguments = json.loads(tool_call.function.arguments)
+
+            result = self.tool_set.call_tool(name, arguments, tool_call.id)
+            tool_response_messsage = {
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(result),
+            }
+
+            if lair.config.get('chat.verbose'):
+                self.reporting.tool_message(tool_response_messsage, show_heading=True)
+            messages.append(tool_response_messsage)
+            tool_messages.append(tool_response_messsage)
+            logger.debug(f"Tool result: {tool_response_messsage}")
+
     def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
         '''
         Call the underlying model without altering state (no history)
@@ -92,29 +118,7 @@ class OpenAIChatSession(BaseChatSession):
 
             message = answer.choices[0].message
             if message.tool_calls:
-                message_dict = message.dict()
-                if lair.config.get('chat.verbose'):
-                    self.reporting.assistant_tool_calls(message_dict, show_heading=True)
-
-                messages.append(message_dict)
-                tool_messages.append(message_dict)
-
-                for tool_call in message.tool_calls:
-                    name = tool_call.function.name
-                    arguments = json.loads(tool_call.function.arguments)
-
-                    result = self.tool_set.call_tool(name, arguments, tool_call.id)
-                    tool_response_messsage = {
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": json.dumps(result),
-                    }
-
-                    if lair.config.get('chat.verbose'):
-                        self.reporting.tool_message(tool_response_messsage, show_heading=True)
-                    messages.append(tool_response_messsage)
-                    tool_messages.append(tool_response_messsage)
-                    logger.debug(f"Tool result: {tool_response_messsage}")
+                self._process_tool_calls(message, messages, tool_messages)
                 cycle += 1
             else:
                 self.last_prompt = self.reporting.messages_to_str(messages)
