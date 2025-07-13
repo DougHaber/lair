@@ -191,7 +191,7 @@ class TmuxTool:
             pane.cmd("pipe-pane", "-o", f"cat >> {log_file_name}")
 
             logger.debug(
-                f"TmuxTool(): run(): window_id={window.get('window_id')}, pane_id={pane.get("pane_id")}, "
+                f"TmuxTool(): run(): window_id={window.get('window_id')}, pane_id={pane.get('pane_id')}, "
                 f"logfile={log_file_name}"
             )
 

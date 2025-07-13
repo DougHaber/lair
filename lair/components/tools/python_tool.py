@@ -107,7 +107,7 @@ class PythonTool:
             except subprocess.TimeoutExpired:
                 self._cleanup_container(container_id)
                 return self._format_output(
-                    error=f'ERROR: Timeout after {lair.config.get("tools.python.timeout")} seconds'
+                    error=f"ERROR: Timeout after {lair.config.get('tools.python.timeout')} seconds"
                 )
             try:
                 exit_status = int(wait_proc.stdout.strip())

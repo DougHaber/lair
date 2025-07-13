@@ -335,7 +335,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
     def messages_to_str(self, messages):
         lines = []
         for message in messages:
-            lines.append(f'{message["role"].upper()}: {message["content"]}')
+            lines.append(f"{message['role'].upper()}: {message['content']}")
 
         return "\n".join(lines)
 
