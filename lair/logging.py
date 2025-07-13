@@ -13,15 +13,7 @@ def init_logging(enable_debugging=False):
 
     class LairLogFilter(logging.Filter):
         def filter(self, record):
-            if record.levelname == "ERROR":
-                record.color = "red"
-            elif record.levelname == "DEBUG":
-                record.color = "dim"
-            elif record.levelname == "WARNING":
-                record.color = "yellow"
-            else:
-                record.color = None
-
+            record.color = _log_color(record.levelname)
             record.prefix = f"{record.levelname}: " if record.levelname != "INFO" else ""
             return True
 
@@ -34,13 +26,24 @@ def init_logging(enable_debugging=False):
         logger.error(*args, **kwargs)
         sys.exit(1)
 
-    def emit_with_color(record):
-        message = handler.format(record)
-        if record.color:
-            text = Text(record.prefix + message, style=record.color)
-        else:
-            text = Text(record.prefix + message)
-        console.print(text)
-
-    handler.emit = emit_with_color
+    handler.emit = lambda record: _emit_with_color(handler, record)
     logger.exit_error = exit_error
+
+
+def _log_color(level_name):
+    if level_name == "ERROR":
+        return "red"
+    if level_name == "DEBUG":
+        return "dim"
+    if level_name == "WARNING":
+        return "yellow"
+    return None
+
+
+def _emit_with_color(handler, record):
+    message = handler.format(record)
+    if record.color:
+        text = Text(record.prefix + message, style=record.color)
+    else:
+        text = Text(record.prefix + message)
+    console.print(text)

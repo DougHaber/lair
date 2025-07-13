@@ -130,32 +130,36 @@ class Configuration:
         if key == "_inherit":
             self.active[key] = value
             return
-        elif key not in self.modes["_default"]:
+
+        if key not in self.modes["_default"]:
             raise ConfigUnknownKeyException("Unknown Key: %s" % key)
 
-        no_cast = False
-        current_type = self.types[key]
-        if current_type is bool:
-            if value in {True, "true", "True"}:
-                value = True
-            elif value in {False, "false", "False"}:
-                value = False
-            else:
-                raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
-        elif value is None and current_type is str:
-            value = ""
-        elif (value == "" or value is None) and current_type in {bool, int, float}:
-            value = None
-            no_cast = True
-
         try:
-            if not no_cast and value is not None:
-                value = current_type(value)
+            value = self._cast_value(key, value)
+            if value is not None and not isinstance(value, self.types[key]):
+                value = self.types[key](value)
             self.active[key] = value
             if not no_event:
                 lair.events.fire("config.update")
         except ValueError:
-            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}'")
+            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{self.types[key]}'")
+
+    def _cast_value(self, key, value):
+        current_type = self.types[key]
+        if current_type is bool:
+            if value in {True, "true", "True"}:
+                return True
+            if value in {False, "false", "False"}:
+                return False
+            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
+
+        if value is None and current_type is str:
+            return ""
+
+        if (value == "" or value is None) and current_type in {bool, int, float}:
+            return None
+
+        return value
 
     def reload(self):
         """Ensure `_active` is properly reset instead of modifying mode definitions."""

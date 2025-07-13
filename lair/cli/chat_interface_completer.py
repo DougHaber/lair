@@ -48,27 +48,30 @@ class ChatInterfaceCompleter(Completer):
         if current_prompt.startswith(components[1]):
             yield Completion(f"/prompt {current_prompt}", display=current_prompt, start_position=-len(text))
 
+    def _get_set_value_completion(self, components, text):
+        key = components[1]
+        value_raw = lair.config.get(key, allow_not_found=True)
+        value = str(value_raw)
+
+        if value_raw is None and not components[2]:
+            yield Completion(f"/set {key}", display="<null>", start_position=-len(text))
+        elif value_raw is not None and value.startswith(components[2]) and components[2] != value:
+            yield Completion(f"/set {key} {value}", display=value, start_position=-len(text))
+
+    def _get_set_key_completion(self, prefix, text):
+        for key in lair.config.active.keys():
+            if key.startswith("_"):
+                continue
+            if key.startswith(prefix) and prefix != key:
+                yield Completion(f"/set {key}", display=key, start_position=-len(text))
+
     def get_completions__set(self, text):
         components = re.split(r"\s+", text, maxsplit=3)
-        num_components = len(components)
 
-        if num_components == 3:  # Provide the current value as an auto-complete choice
-            key = components[1]
-            value_raw = lair.config.get(key, allow_not_found=True)
-            value = str(value_raw)
-
-            if value_raw is None:
-                if not components[2]:
-                    # If the current value is None, show a <null> choice
-                    yield Completion(f"/set {key}", display="<null>", start_position=-len(text))
-            elif value.startswith(components[2]) and components[2] != value:
-                yield Completion(f"/set {key} {value}", display=value, start_position=-len(text))
+        if len(components) == 3:
+            yield from self._get_set_value_completion(components, text)
         else:
-            for key in lair.config.active.keys():
-                if key.startswith("_"):
-                    continue
-                elif key.startswith(components[1]) and components[1] != key:
-                    yield Completion(f"/set {key}", display=key, start_position=-len(text))
+            yield from self._get_set_key_completion(components[1], text)
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor

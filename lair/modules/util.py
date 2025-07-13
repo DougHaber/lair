@@ -121,26 +121,26 @@ class Util:
             return None
 
         session_manager = lair.sessions.SessionManager()
-        if arguments.session:
-            try:
-                session_manager.switch_to_session(arguments.session, chat_session)
-            except lair.sessions.UnknownSessionException:
-                if arguments.allow_create_session:
-                    if arguments.read_only_session:
-                        logger.error("Unable to create a new session with the --read-only-session flag.")
-                        sys.exit(1)
-                    elif not session_manager.is_alias_available(arguments.session):
-                        if isinstance(lair.util.safe_int(arguments.session), int):
-                            logger.error("Failed to create new session. Session aliases may not be integers.")
-                        else:
-                            logger.error("Failed to create new session. Alias is already used.")
-                        sys.exit(1)
+        try:
+            session_manager.switch_to_session(arguments.session, chat_session)
+        except lair.sessions.UnknownSessionException:
+            if not arguments.allow_create_session:
+                logger.error(f"Unknown session: {arguments.session}")
+                sys.exit(1)
 
-                    chat_session.session_alias = arguments.session
-                    session_manager.add_from_chat_session(chat_session)
+            if arguments.read_only_session:
+                logger.error("Unable to create a new session with the --read-only-session flag.")
+                sys.exit(1)
+
+            if not session_manager.is_alias_available(arguments.session):
+                if isinstance(lair.util.safe_int(arguments.session), int):
+                    logger.error("Failed to create new session. Session aliases may not be integers.")
                 else:
-                    logger.error(f"Unknown session: {arguments.session}")
-                    sys.exit(1)
+                    logger.error("Failed to create new session. Alias is already used.")
+                sys.exit(1)
+
+            chat_session.session_alias = arguments.session
+            session_manager.add_from_chat_session(chat_session)
 
         return session_manager
 
