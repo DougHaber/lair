@@ -33,21 +33,37 @@ pytest-cov = "^4.1.0"
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint.mccabe]
+max-complexity = 7
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle
+  "F",   # Pyflakes
+  "I",   # isort
+  "S",   # security
+  # "PYI", # stub files
+  # "UP",  # pyupgrade
+  # "B",   # bugbear
+  # "SIM", # simplify
+  # "Q",   # quotes
+  "C",   # complexity
+  # "ANN", # annotations
+  # "D",   # docstrings
+  # "N",   # naming
+  # "T",   # debugger/print
+]
+
 [tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["F401"]
-"lair/util/__init__.py" = ["F401", "F403"]
-"lair/comfy_caller.py" = ["F403", "F405"]
+"tests/**/*.py" = ["S101"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=80"
-
-[tool.coverage.run]
-omit = [
-    "lair/modules/comfy.py",
-    "lair/modules/util.py",
-    "lair/reporting/reporting.py",
-    "lair/sessions/session_manager.py",
-]
+addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=65"
 
 [build-system]
 requires = ["poetry-core"]
