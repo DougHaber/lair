@@ -2,10 +2,10 @@ import os
 import re
 import time
 
+import libtmux
+
 import lair
 from lair.logging import logger
-
-import libtmux
 
 
 class TmuxTool:

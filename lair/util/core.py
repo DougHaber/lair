@@ -5,18 +5,18 @@ import importlib.resources
 import json
 import logging
 import mimetypes
-import pathlib
 import os
+import pathlib
 import re
 import shlex
 import subprocess
 import tempfile
 
-import lair
-from lair.logging import logger
-
 import pdfplumber
 import yaml
+
+import lair
+from lair.logging import logger
 
 
 def safe_dump_json(document):

@@ -1,10 +1,10 @@
 import abc
 import copy
-from typing import Union, List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import lair
-import lair.sessions.serializer
 import lair.reporting
+import lair.sessions.serializer
 import lair.util.prompt_template
 from lair.components.history import ChatHistory
 from lair.logging import logger  # noqa

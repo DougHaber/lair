@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 
-import lair
-
 import jinja2
+
+import lair
 
 
 def fill(prompt_template):

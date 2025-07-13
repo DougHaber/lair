@@ -1,6 +1,6 @@
+import os
 import subprocess
 import tempfile
-import os
 import traceback
 
 import lair

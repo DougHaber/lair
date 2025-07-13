@@ -1,13 +1,12 @@
-import os
 import json
+import os
 
 import lmdb
 
 import lair
-import lair.util
 import lair.sessions.serializer
+import lair.util
 from lair.logging import logger
-
 
 # For clarity:
 #   A `chat_session` is a ChatSession object

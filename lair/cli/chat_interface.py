@@ -4,13 +4,6 @@ import shutil
 import sys
 import time
 
-import lair
-import lair.sessions
-from lair.cli.chat_interface_commands import ChatInterfaceCommands
-from lair.cli.chat_interface_completer import ChatInterfaceCompleter
-from lair.cli.chat_interface_reports import ChatInterfaceReports
-from lair.logging import logger  # noqa
-
 import prompt_toolkit
 import prompt_toolkit.filters
 import prompt_toolkit.formatted_text
@@ -18,6 +11,13 @@ import prompt_toolkit.history
 import prompt_toolkit.key_binding
 import prompt_toolkit.keys
 import prompt_toolkit.styles
+
+import lair
+import lair.sessions
+from lair.cli.chat_interface_commands import ChatInterfaceCommands
+from lair.cli.chat_interface_completer import ChatInterfaceCompleter
+from lair.cli.chat_interface_reports import ChatInterfaceReports
+from lair.logging import logger  # noqa
 
 
 class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):

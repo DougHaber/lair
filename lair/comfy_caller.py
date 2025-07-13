@@ -17,16 +17,15 @@
 import asyncio
 import base64
 import contextlib
+import ctypes
 import importlib
 import io
 import random
-import ctypes
 
 import requests
 
 import lair
 from lair.logging import logger  # noqa
-
 
 # This never executes, but it helps trick code editors into accepting the symbols.
 # Without this, all the symbols would be highlighted as being unknown.
@@ -54,8 +53,9 @@ class ComfyCaller:
         ComfyScript provides no mechanism to accomplish this, so a monkey patch is necessary.
         A PR against ComfyScript would be a better solution.
         """
-        import aiohttp
         import ssl
+
+        import aiohttp
 
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
@@ -78,7 +78,7 @@ class ComfyCaller:
         # ComfyScript behaves poorly with output and writes debugging with print() statements that can not be properly disabled.
         # To deal with this, STDOUT is ignored on import.
         with contextlib.redirect_stdout(io.StringIO()):
-            from comfy_script.runtime import load, Workflow
+            from comfy_script.runtime import Workflow, load
 
             globals()["load"] = load
             globals()["Workflow"] = Workflow

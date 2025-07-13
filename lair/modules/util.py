@@ -3,8 +3,8 @@ import sys
 
 import lair
 import lair.cli
-import lair.util
 import lair.reporting
+import lair.util
 from lair.logging import logger  # noqa
 
 

@@ -4,14 +4,14 @@ import re
 import sys
 import traceback
 
-import lair
-
 import rich
 import rich.columns
 import rich.highlighter
 import rich.markdown
 import rich.text
 import rich.traceback
+
+import lair
 
 
 class ReportingSingletoneMeta(type):

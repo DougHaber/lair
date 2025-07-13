@@ -1,8 +1,8 @@
 import logging
 import sys
+
 from rich.console import Console
 from rich.text import Text
-
 
 logger = logging.getLogger("lair")
 console = Console()

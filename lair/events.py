@@ -4,7 +4,6 @@ from contextlib import contextmanager
 
 from lair.logging import logger
 
-
 _event_handlers = {}  # event_name -> {handler, ...}
 _subscriptions = {}  # subscription_id -> (event_name, handler)
 _next_subscription_id = itertools.count(1)  # Thread-safe ID generator

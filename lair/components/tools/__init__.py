@@ -4,7 +4,6 @@ from .search_tool import SearchTool
 from .tmux_tool import TmuxTool
 from .tool_set import ToolSet
 
-
 DEFAULT_TOOLS = [
     FileTool,
     PythonTool,

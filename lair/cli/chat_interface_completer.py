@@ -1,9 +1,8 @@
 import re
 
-import lair
+from prompt_toolkit.completion import Completer, Completion
 
-from prompt_toolkit.completion import Completer
-from prompt_toolkit.completion import Completion
+import lair
 
 
 class ChatInterfaceCompleter(Completer):

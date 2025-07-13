@@ -1,15 +1,16 @@
 import datetime
 import json
 import os
+
+import openai
 import zoneinfo
 
 import lair
 import lair.components.tools
 import lair.reporting
 from lair.logging import logger
-from .base_chat_session import BaseChatSession
 
-import openai
+from .base_chat_session import BaseChatSession
 
 
 class OpenAIChatSession(BaseChatSession):
