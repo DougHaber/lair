@@ -85,6 +85,8 @@ chat.verbose: true
 comfy.url: http://127.0.0.1:8188
 # If using comfy over HTTPS, this allows for disabling certificate verification
 comfy.verify_ssl: true
+# Maximum amount of time to wait for responses from the ComfyUI server
+comfy.timeout: 65
 
 comfy.image.batch_size: 1
 comfy.image.cfg: 8.0
