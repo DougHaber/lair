@@ -38,6 +38,7 @@
 - tests: Add ComfyCaller SSL and URL handling coverage
 - tests: Add PythonTool unit tests
 - tests: Increase tmux tool coverage
+- internal: Fix import order to satisfy new ruff checks
 
 # v0.8.1 - Bug fixes
 

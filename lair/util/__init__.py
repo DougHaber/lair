@@ -19,9 +19,9 @@ from lair.util.core import (
     safe_int,
     save_file,
     save_json_file,
+    slice_from_str,
     slurp_file,
     strip_escape_codes,
-    slice_from_str,
 )
 
 __all__ = [
