@@ -20,7 +20,7 @@ import contextlib
 import ctypes
 import importlib
 import io
-import random
+import secrets
 
 import requests
 
@@ -217,7 +217,7 @@ class ComfyCaller:
 
     def _ensure_seed(self, seed):
         """Return a random seed when one is not provided."""
-        return random.randint(0, 2**31 - 1) if seed is None else seed
+        return secrets.randbelow(2**31) if seed is None else seed
 
     def _image_to_base64(self, image):
         # Convert an image to base64 based on the type
@@ -306,11 +306,9 @@ class ComfyCaller:
     def view(self, filename, type="temp"):
         response = requests.get(
             f"{self.url}/api/view",
-            params={
-                "filename": filename,
-                "type": type,
-            },
+            params={"filename": filename, "type": type},
             verify=lair.config.get("comfy.verify_ssl", True),
+            timeout=lair.config.get("comfy.timeout"),
         )
         if response.status_code != 200:
             raise Exception(f"/api/view returned unexpected status code: {response.status_code}")
@@ -506,7 +504,7 @@ class ComfyCaller:
         if image is None:
             raise ValueError("ltxv-prompt: Image must not be None")
         if florence_seed is None:
-            florence_seed = random.randint(0, 2**31 - 1)
+            florence_seed = secrets.randbelow(2**31)
 
         with Workflow():
             image, _ = ETNLoadImageBase64(self._image_to_base64(image))

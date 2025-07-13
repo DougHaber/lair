@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import tempfile
 import traceback
@@ -11,7 +12,7 @@ class PythonTool:
     name = "python"
 
     def __init__(self):
-        pass
+        self._docker = shutil.which("docker") or "docker"
 
     def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
@@ -53,7 +54,7 @@ class PythonTool:
 
     def _cleanup_container(self, container_id):
         """Force remove a container by id."""
-        subprocess.run(["docker", "rm", "-f", container_id], capture_output=True, text=True)
+        subprocess.run([self._docker, "rm", "-f", container_id], capture_output=True, text=True)
 
     def _format_output(self, *, error=None, stdout=None, stderr=None, exit_status=None):
         output = {}
@@ -77,17 +78,18 @@ class PythonTool:
             with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as temp_file:
                 temp_file.write(script)
                 temp_file_path = os.path.abspath(temp_file.name)
+            container_script_path = os.path.join(tempfile.gettempdir(), os.path.basename(temp_file_path))
 
             run_proc = subprocess.run(
                 [
-                    "docker",
+                    self._docker,
                     "run",
                     "-d",
                     "-v",
-                    f"{temp_file_path}:/tmp/script.py:ro",
+                    f"{temp_file_path}:{container_script_path}:ro",
                     lair.config.get("tools.python.docker_image"),
                     "python",
-                    "/tmp/script.py",
+                    container_script_path,
                 ],
                 capture_output=True,
                 text=True,
@@ -99,7 +101,7 @@ class PythonTool:
 
             try:  # Wait for the container to finish execution, with a timeout.
                 wait_proc = subprocess.run(
-                    ["docker", "wait", container_id],
+                    [self._docker, "wait", container_id],
                     capture_output=True,
                     text=True,
                     timeout=lair.config.get("tools.python.timeout"),
@@ -107,14 +109,14 @@ class PythonTool:
             except subprocess.TimeoutExpired:
                 self._cleanup_container(container_id)
                 return self._format_output(
-                    error=f'ERROR: Timeout after {lair.config.get("tools.python.timeout")} seconds'
+                    error=f"ERROR: Timeout after {lair.config.get('tools.python.timeout')} seconds"
                 )
             try:
                 exit_status = int(wait_proc.stdout.strip())
             except ValueError:
                 exit_status = None
 
-            logs_proc = subprocess.run(["docker", "logs", container_id], capture_output=True, text=True)
+            logs_proc = subprocess.run([self._docker, "logs", container_id], capture_output=True, text=True)
 
             self._cleanup_container(container_id)
 

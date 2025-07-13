@@ -7,6 +7,7 @@ import asyncio
 import pytest
 
 from tests.test_comfy_caller import get_ComfyCaller
+import lair
 
 
 class DummyNode:
@@ -106,14 +107,15 @@ def test_view(monkeypatch):
             self.status_code = code
             self.content = content
 
-    def fake_get(url, params, verify):
-        responses.append((url, params, verify))
+    def fake_get(url, params, verify, timeout=None):
+        responses.append((url, params, verify, timeout))
         return Resp(200, b"data")
 
     monkeypatch.setattr(importlib.import_module("lair.comfy_caller").requests, "get", fake_get, raising=False)
     result = cc.view("file")
     assert result == b"data"
     assert responses[0][0] == "http://server/api/view"
+    assert responses[0][3] == lair.config.get("comfy.timeout")
 
     monkeypatch.setattr(
         importlib.import_module("lair.comfy_caller").requests, "get", lambda *a, **k: Resp(404), raising=False
@@ -179,7 +181,7 @@ def test_workflow_ltxv_prompt(monkeypatch):
     monkeypatch.setattr(
         caller_mod, "StringFunctionPysssss", lambda *a, **k: DummyNode({"text": ["final"]}), raising=False
     )
-    monkeypatch.setattr(caller_mod.random, "randint", lambda a, b: 42)
+    monkeypatch.setattr(caller_mod.secrets, "randbelow", lambda a: 42)
 
     result = asyncio.run(
         cc._workflow_ltxv_prompt(
@@ -250,7 +252,7 @@ def test_workflow_image(monkeypatch):
     monkeypatch.setattr(mod, "KSampler", lambda *a, **k: "latent2", raising=False)
     monkeypatch.setattr(mod, "VAEDecode", lambda latent, v: "img", raising=False)
     monkeypatch.setattr(mod, "SaveImage", lambda img, prefix: DummyAsyncNode(["ok"]), raising=False)
-    monkeypatch.setattr(mod.random, "randint", lambda a, b: 5)
+    monkeypatch.setattr(mod.secrets, "randbelow", lambda a: 5)
     images = asyncio.run(
         cc._workflow_image(
             model_name="m",
@@ -297,7 +299,7 @@ def test_workflow_outpaint(monkeypatch):
     monkeypatch.setattr(mod, "KSampler", lambda *a, **k: "latent2", raising=False)
     monkeypatch.setattr(mod, "VAEDecode", lambda latent, v: "img2", raising=False)
     monkeypatch.setattr(mod, "SaveImage", lambda *a, **k: DummyAsyncNode(["img"]), raising=False)
-    monkeypatch.setattr(mod.random, "randint", lambda a, b: 42)
+    monkeypatch.setattr(mod.secrets, "randbelow", lambda a: 42)
     images = asyncio.run(
         cc._workflow_outpaint(
             model_name="m",

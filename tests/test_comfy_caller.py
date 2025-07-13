@@ -73,7 +73,7 @@ def test_apply_loras(monkeypatch):
 def test_ensure_seed(monkeypatch):
     cc = get_ComfyCaller()()
     caller_mod = importlib.import_module("lair.comfy_caller")
-    monkeypatch.setattr(caller_mod.random, "randint", lambda a, b: 42)
+    monkeypatch.setattr(caller_mod.secrets, "randbelow", lambda a: 42)
     assert cc._ensure_seed(None) == 42
     assert cc._ensure_seed(9) == 9
 
