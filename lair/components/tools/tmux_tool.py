@@ -336,42 +336,14 @@ class TmuxTool:
         if not self.session.windows:
             raise Exception("No active tmux windows available.")
 
-        # Use the provided max_size or the default one, but never exceed the limit
         max_size = min(
             max_size or lair.config.get("tools.tmux.read_new_output.max_size_default"),
             lair.config.get("tools.tmux.read_new_output.max_size_limit"),
         )
 
-        window = self.active_window if window_id is None else self._get_window_by_id(window_id)
-        pane = window.attached_pane or window.active_pane
-        pane_id = pane.get("pane_id")
-
-        if pane_id not in self.log_files:
-            raise Exception("Connection to pane lost.")
-        log_file = self.log_files[pane_id]
-        offset = self.log_offsets.get(pane_id, 0)
-
-        with open(log_file, "rb") as f:
-            f.seek(offset)
-            new_data = f.read()
-            new_offset = f.tell()
-
-        new_data = new_data.decode("utf-8", errors="replace")
-        new_data = new_data.replace("\r\n", "\n")
-
-        if offset == 0:
-            # If this is the first read, remove the first two lines
-            # The first line is the command sent by run() being typed
-            # The second is it echoing back with the prompt
-            new_data = "\n".join(new_data.splitlines()[2:])
-        elif prune_line and lair.config.get("tools.tmux.read_new_output.remove_echoed_commands"):
-            # If the first line matches the last sent input, prune it
-            new_data = re.sub(rf"^{re.escape(prune_line)}\n", "", new_data)
-
-        if lair.config.get("tools.tmux.read_new_output.strip_escape_codes"):
-            new_data = lair.util.strip_escape_codes(new_data)
-        if new_data.startswith("\r"):  # Skip the initial \r, since it adds no value
-            new_data = new_data[1:]
+        pane_id, log_file, offset = self._get_pane_info(window_id)
+        new_data, new_offset = self._read_pane_file(log_file, offset)
+        new_data = self._clean_new_data(new_data, offset, prune_line)
 
         self.log_offsets[pane_id] = new_offset
 
@@ -379,6 +351,37 @@ class TmuxTool:
             new_data = new_data[-max_size:]
 
         return {"output": new_data}
+
+    def _get_pane_info(self, window_id):
+        window = self.active_window if window_id is None else self._get_window_by_id(window_id)
+        pane = window.attached_pane or window.active_pane
+        pane_id = pane.get("pane_id")
+        if pane_id not in self.log_files:
+            raise Exception("Connection to pane lost.")
+        log_file = self.log_files[pane_id]
+        offset = self.log_offsets.get(pane_id, 0)
+        return pane_id, log_file, offset
+
+    def _read_pane_file(self, log_file, offset):
+        with open(log_file, "rb") as f:
+            f.seek(offset)
+            new_data = f.read()
+            new_offset = f.tell()
+        return new_data, new_offset
+
+    def _clean_new_data(self, new_data, offset, prune_line):
+        text = new_data.decode("utf-8", errors="replace").replace("\r\n", "\n")
+
+        if offset == 0:
+            text = "\n".join(text.splitlines()[2:])
+        elif prune_line and lair.config.get("tools.tmux.read_new_output.remove_echoed_commands"):
+            text = re.sub(rf"^{re.escape(prune_line)}\n", "", text)
+
+        if lair.config.get("tools.tmux.read_new_output.strip_escape_codes"):
+            text = lair.util.strip_escape_codes(text)
+        if text.startswith("\r"):
+            text = text[1:]
+        return text
 
     def _generate_kill_definition(self):
         return {

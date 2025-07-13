@@ -131,28 +131,21 @@ class Reporting(metaclass=ReportingSingletoneMeta):
                 table.add_column(column_name if markup else self.style(column_name))
 
         for row in rows:
-            new_row = []
-            for idx, cell in enumerate(row):
-                # If column_names and column_formatters are provided and a formatter exists for this column,
-                # use it. Do not strip markup from its output.
-                if (
-                    column_names
-                    and column_formatters
-                    and idx < len(column_names)
-                    and column_names[idx] in column_formatters
-                ):
-                    formatted_cell = column_formatters[column_names[idx]](cell)
-                else:
-                    if not markup:
-                        formatted_cell = (
-                            cell if isinstance(cell, rich.text.Text) else self.style(self.format_value(cell))
-                        )
-                    else:
-                        formatted_cell = cell
-                new_row.append(formatted_cell)
-            table.add_row(*new_row)
+            formatted = [
+                self._format_cell(cell, idx, column_names, column_formatters, markup) for idx, cell in enumerate(row)
+            ]
+            table.add_row(*formatted)
 
         self.print_rich(table)
+
+    def _format_cell(self, cell, idx, column_names, column_formatters, markup):
+        if column_names and column_formatters and idx < len(column_names) and column_names[idx] in column_formatters:
+            return column_formatters[column_names[idx]](cell)
+
+        if not markup:
+            return cell if isinstance(cell, rich.text.Text) else self.style(self.format_value(cell))
+
+        return cell
 
     def table_from_dicts_system(self, *args, **kwargs):
         kwargs["style"] = lair.config.get("style.system_message")

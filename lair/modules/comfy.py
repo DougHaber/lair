@@ -535,29 +535,30 @@ class Comfy:
             source_filename = queue.pop(0)
             if os.path.isdir(source_filename):
                 if arguments.recursive:
-                    for filename in os.listdir(source_filename):
-                        path = pathlib.Path(source_filename) / filename
-                        if path.is_dir() or path.suffix.lower() in self._image_file_extensions:
-                            queue.append(str(path.absolute()))
+                    self._extend_queue_from_dir(source_filename, queue)
                 else:
                     logger.warning(f"Path ignored: Use --recursive to process directories: {source_filename}")
             else:
-                function_arguments["source_image"] = source_filename
-                output_filename = output_filename_template.format(
-                    basename=os.path.splitext(source_filename)[0],
-                )
+                self._process_file(source_filename, arguments, function_arguments, output_filename_template)
 
-                if os.path.exists(output_filename) and arguments.skip_existing:
-                    logger.warning(f"Skipping existing file: {output_filename}")
-                    continue
+    def _extend_queue_from_dir(self, directory, queue):
+        for filename in os.listdir(directory):
+            path = pathlib.Path(directory) / filename
+            if path.is_dir() or path.suffix.lower() in self._image_file_extensions:
+                queue.append(str(path.absolute()))
 
-                output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
-                if output is None or len(output) == 0:
-                    raise ValueError(
-                        "Workflow returned no output. This could indicate an invalid parameter was provided."
-                    )
-                else:
-                    self._save_output(output, output_filename, single_output=True)
+    def _process_file(self, filename, arguments, function_arguments, template):
+        function_arguments["source_image"] = filename
+        output_filename = template.format(basename=os.path.splitext(filename)[0])
+
+        if os.path.exists(output_filename) and arguments.skip_existing:
+            logger.warning(f"Skipping existing file: {output_filename}")
+            return
+
+        output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+        if not output:
+            raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
+        self._save_output(output, output_filename, single_output=True)
 
     def run_workflow_outpaint(self, arguments, defaults, function_arguments):
         if arguments.padding:

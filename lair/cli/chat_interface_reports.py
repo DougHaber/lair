@@ -5,20 +5,11 @@ from lair.logging import logger  # noqa
 
 
 class ChatInterfaceReports:
-    def print_config_report(self, *, show_only_differences=False, filter_regex=None, baseline=None):
-        if baseline:
-            if baseline not in lair.config.modes:
-                logger.error(f"Unknown mode: {baseline}")
-                return
-            else:
-                self.reporting.system_message(f"Current mode: {lair.config.active_mode}, Baseline mode: {baseline}")
-        else:
-            self.reporting.system_message(f"Current mode: {lair.config.active_mode}")
-
+    def _iter_config_rows(self, show_only_differences, filter_regex, baseline):
         default_settings = lair.config.default_settings if baseline is None else lair.config.modes[baseline]
         modified_style = lair.config.get("chat.set_command.modified_style")
         unmodified_style = lair.config.get("chat.set_command.unmodified_style")
-        rows = []
+
         for key, value in sorted(lair.config.active.items()):
             if key.startswith("_") or (filter_regex is not None and not re.search(filter_regex, key)):
                 continue
@@ -29,7 +20,19 @@ class ChatInterfaceReports:
                 display_value = self.reporting.style(str(value), style=unmodified_style)
             else:
                 display_value = self.reporting.style(str(value), style=modified_style)
-            rows.append([key, display_value])
+
+            yield [key, display_value]
+
+    def print_config_report(self, *, show_only_differences=False, filter_regex=None, baseline=None):
+        if baseline:
+            if baseline not in lair.config.modes:
+                logger.error(f"Unknown mode: {baseline}")
+                return
+            self.reporting.system_message(f"Current mode: {lair.config.active_mode}, Baseline mode: {baseline}")
+        else:
+            self.reporting.system_message(f"Current mode: {lair.config.active_mode}")
+
+        rows = list(self._iter_config_rows(show_only_differences, filter_regex, baseline))
 
         if rows:
             self.reporting.table_system(rows)
