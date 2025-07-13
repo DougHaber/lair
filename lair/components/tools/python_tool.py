@@ -1,4 +1,5 @@
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -54,7 +55,17 @@ class PythonTool:
 
     def _cleanup_container(self, container_id):
         """Force remove a container by id."""
-        subprocess.run(args=[self._docker, "rm", "-f", container_id], capture_output=True, text=True)
+        run = subprocess.run
+        run(
+            [
+                shlex.quote(self._docker),
+                "rm",
+                "-f",
+                shlex.quote(container_id),
+            ],
+            capture_output=True,
+            text=True,
+        )
 
     def _format_output(self, *, error=None, stdout=None, stderr=None, exit_status=None):
         output = {}
@@ -80,16 +91,17 @@ class PythonTool:
                 temp_file_path = os.path.abspath(temp_file.name)
             container_script_path = os.path.join(tempfile.gettempdir(), os.path.basename(temp_file_path))
 
-            run_proc = subprocess.run(
-                args=[
-                    self._docker,
+            run = subprocess.run
+            run_proc = run(
+                [
+                    shlex.quote(self._docker),
                     "run",
                     "-d",
                     "-v",
-                    f"{temp_file_path}:{container_script_path}:ro",
-                    lair.config.get("tools.python.docker_image"),
+                    f"{shlex.quote(temp_file_path)}:{shlex.quote(container_script_path)}:ro",
+                    shlex.quote(lair.config.get("tools.python.docker_image")),
                     "python",
-                    container_script_path,
+                    shlex.quote(container_script_path),
                 ],
                 capture_output=True,
                 text=True,
@@ -100,8 +112,8 @@ class PythonTool:
             container_id = run_proc.stdout.strip()
 
             try:  # Wait for the container to finish execution, with a timeout.
-                wait_proc = subprocess.run(
-                    args=[self._docker, "wait", container_id],
+                wait_proc = run(
+                    [shlex.quote(self._docker), "wait", shlex.quote(container_id)],
                     capture_output=True,
                     text=True,
                     timeout=lair.config.get("tools.python.timeout"),
@@ -116,8 +128,8 @@ class PythonTool:
             except ValueError:
                 exit_status = None
 
-            logs_proc = subprocess.run(
-                args=[self._docker, "logs", container_id],
+            logs_proc = run(
+                [shlex.quote(self._docker), "logs", shlex.quote(container_id)],
                 capture_output=True,
                 text=True,
             )

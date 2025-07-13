@@ -1,5 +1,6 @@
 import importlib.metadata
 
+from lair import events
 from lair.config import Configuration
 
 
@@ -9,4 +10,4 @@ def version():
 
 config = Configuration()
 
-__all__ = ["version", "config"]
+__all__ = ["version", "config", "events"]
