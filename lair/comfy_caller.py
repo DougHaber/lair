@@ -26,11 +26,88 @@ import requests
 
 import lair
 from lair.logging import logger  # noqa
+from typing import Any, TYPE_CHECKING
 
-# This never executes, but it helps trick code editors into accepting the symbols.
-# Without this, all the symbols would be highlighted as being unknown.
-if False:
-    from comfy_script.runtime.nodes import *
+if TYPE_CHECKING:
+    from comfy_script.runtime import Workflow
+    from comfy_script.runtime.nodes import (
+        BasicGuider,
+        BasicScheduler,
+        CLIPLoader,
+        CLIPTextEncode,
+        CheckpointLoaderSimple,
+        DownloadAndLoadFlorence2Model,
+        DualCLIPLoader,
+        ETNLoadImageBase64,
+        EmptyHunyuanLatentVideo,
+        EmptyLatentImage,
+        Florence2Run,
+        FluxGuidance,
+        ImagePadForOutpaint,
+        ImageResizeKJ,
+        ImageUpscaleWithModel,
+        KSampler,
+        KSamplerSelect,
+        LTXVConditioning,
+        LTXVImgToVideo,
+        LTXVPreprocess,
+        LTXVScheduler,
+        LoraLoader,
+        ModelSamplingSD3,
+        RandomNoise,
+        SamplerCustom,
+        SamplerCustomAdvanced,
+        SaveAnimatedWEBP,
+        SaveImage,
+        StringFunctionPysssss,
+        StringReplaceMtb,
+        UNETLoader,
+        UpscaleModelLoader,
+        VAEDecode,
+        VAEDecodeTiled,
+        VAEEncodeForInpaint,
+        VAELoader,
+        VHSVideoCombine,
+    )
+else:
+    Workflow: Any = None
+    LoraLoader: Any = None
+    CheckpointLoaderSimple: Any = None
+    CLIPTextEncode: Any = None
+    EmptyLatentImage: Any = None
+    KSampler: Any = None
+    VAEDecode: Any = None
+    SaveImage: Any = None
+    ETNLoadImageBase64: Any = None
+    LTXVPreprocess: Any = None
+    ImageResizeKJ: Any = None
+    CLIPLoader: Any = None
+    DownloadAndLoadFlorence2Model: Any = None
+    Florence2Run: Any = None
+    StringReplaceMtb: Any = None
+    StringFunctionPysssss: Any = None
+    LTXVImgToVideo: Any = None
+    LTXVConditioning: Any = None
+    KSamplerSelect: Any = None
+    LTXVScheduler: Any = None
+    SamplerCustom: Any = None
+    VHSVideoCombine: Any = None
+    RandomNoise: Any = None
+    UNETLoader: Any = None
+    DualCLIPLoader: Any = None
+    FluxGuidance: Any = None
+    ModelSamplingSD3: Any = None
+    BasicGuider: Any = None
+    BasicScheduler: Any = None
+    EmptyHunyuanLatentVideo: Any = None
+    SamplerCustomAdvanced: Any = None
+    VAELoader: Any = None
+    VAEDecodeTiled: Any = None
+    SaveAnimatedWEBP: Any = None
+    ImagePadForOutpaint: Any = None
+    VAEEncodeForInpaint: Any = None
+    ImageUpscaleWithModel: Any = None
+    UpscaleModelLoader: Any = None
 
 
 class ComfyCaller:

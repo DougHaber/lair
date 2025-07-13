@@ -36,3 +36,18 @@ def get_tool_classes_from_str(tool_names_str):
             raise ValueError("Unknown tool name: %s" % tool_names_str)
 
         classes.append(TOOLS[name])
+
+    return classes
+
+
+__all__ = [
+    "FileTool",
+    "PythonTool",
+    "SearchTool",
+    "TmuxTool",
+    "ToolSet",
+    "DEFAULT_TOOLS",
+    "TOOLS",
+    "get_tool_class_by_name",
+    "get_tool_classes_from_str",
+]
