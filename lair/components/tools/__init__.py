@@ -37,7 +37,7 @@ def get_tool_classes_from_str(tool_names_str):
 
         classes.append(TOOLS[name])
 
-    return classes
+    return None
 
 
 __all__ = [

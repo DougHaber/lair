@@ -18,6 +18,8 @@ import yaml
 import lair
 from lair.logging import logger
 
+subprocess_run = subprocess.run
+
 
 def safe_dump_json(document):
     def fix_date(x):
@@ -239,7 +241,8 @@ def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
         temp_file.write(content)
         temp_file.close()
 
-        subprocess.run(args=editor_args + [str(temp_path)], check=True)
+        run = subprocess.run
+        run(editor_args + [str(temp_path)], check=True)
         modified_content = temp_path.read_text()
 
         return modified_content if modified_content != content else None

@@ -128,145 +128,152 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         def get_key(name):
             return lair.config.get(f"chat.keys.{name}").split(" ")
 
-        @key_bindings.add("enter", filter=prompt_toolkit.filters.completion_is_selected)
-        def enter_key_on_selected_completion(event):
-            current_buffer = event.app.current_buffer
-            current_buffer.insert_text(" ")
-            current_buffer.cancel_completion()
+        key_bindings.add(
+            "enter",
+            filter=prompt_toolkit.filters.completion_is_selected,
+        )(self._enter_key_on_selected_completion)
 
-        @key_bindings.add(*get_key("toggle_debug"), eager=True)
-        def toggle_debug(event):
-            if lair.util.is_debug_enabled():
-                logger.setLevel("INFO")
-                self._prompt_handler_system_message("Debugging disabled")
-            else:
-                logger.setLevel("DEBUG")
-                self._prompt_handler_system_message("Debugging enabled")
-
-        @key_bindings.add(*get_key("toggle_toolbar"), eager=True)
-        def toggle_toolbar(event):
-            if lair.config.active["chat.enable_toolbar"]:
-                lair.config.set("chat.enable_toolbar", "false")
-                self._prompt_handler_system_message("Bottom toolbar disabled")
-            else:
-                lair.config.set("chat.enable_toolbar", "true")
-                self._prompt_handler_system_message("Bottom toolbar enabled")
-
-        @key_bindings.add(*get_key("toggle_multiline_input"), eager=True)
-        def toggle_multiline(event):
-            if lair.config.active["chat.multiline_input"]:
-                lair.config.set("chat.multiline_input", "false")
-                self._prompt_handler_system_message("Multi-line input disabled")
-            else:
-                lair.config.set("chat.multiline_input", "true")
-                self._prompt_handler_system_message("Multi-line input enabled")
-
-        @key_bindings.add(*get_key("toggle_markdown"), eager=True)
-        def toggle_markdown(event):
-            if lair.config.active["style.render_markdown"]:
-                lair.config.set("style.render_markdown", "false")
-                self._prompt_handler_system_message("Markdown rendering disabled")
-            else:
-                lair.config.set("style.render_markdown", "true")
-                self._prompt_handler_system_message("Markdown rendering enabled")
-
-        @key_bindings.add(*get_key("toggle_tools"), eager=True)
-        def toggle_tools(event):
-            if lair.config.active["tools.enabled"]:
-                lair.config.set("tools.enabled", "false")
-                self._prompt_handler_system_message("Tools disabled")
-            else:
-                lair.config.set("tools.enabled", "true")
-                self._prompt_handler_system_message("Tools enabled")
-
-        @key_bindings.add(*get_key("toggle_verbose"), eager=True)
-        def toggle_verbose(event):
-            if lair.config.active["chat.verbose"]:
-                lair.config.set("chat.verbose", "false")
-                self._prompt_handler_system_message("Verbose output disabled")
-            else:
-                lair.config.set("chat.verbose", "true")
-                self._prompt_handler_system_message("Verbose output enabled")
-
-        @key_bindings.add(*get_key("toggle_word_wrap"), eager=True)
-        def toggle_word_wrap(event):
-            if lair.config.active["style.word_wrap"]:
-                lair.config.set("style.word_wrap", "false")
-                self._prompt_handler_system_message("Word wrap disabled")
-            else:
-                lair.config.set("style.word_wrap", "true")
-                self._prompt_handler_system_message("Word wrap enabled")
-
-        @key_bindings.add(*get_key("session.new"), eager=True)
-        def session_new(event):
-            self._new_chat_session()
-            self._prompt_handler_system_message("New session created")
-
-        @key_bindings.add(*get_key("session.next"), eager=True)
-        def session_next(event):
-            session_id = self.session_manager.get_next_session_id(self.chat_session.session_id)
-            if session_id is not None:
-                self._switch_to_session(session_id)
-
-        @key_bindings.add(*get_key("session.clear"), eager=True)
-        def session_clear(event):
-            self.chat_session.new_session(preserve_alias=True, preserve_id=True)
-            self.session_manager.refresh_from_chat_session(self.chat_session)
-            self._prompt_handler_system_message("Conversation history cleared")
-
-        @key_bindings.add(*get_key("session.previous"), eager=True)
-        def session_previous(event):
-            session_id = self.session_manager.get_previous_session_id(self.chat_session.session_id)
-            if session_id is not None:
-                self._switch_to_session(session_id)
-
-        @key_bindings.add(*get_key("session.set_alias"), eager=True)
-        def session_set_alias(event):
-            prompt_toolkit.application.run_in_terminal(self._handle_session_set_alias)
-
-        @key_bindings.add(*get_key("session.set_title"), eager=True)
-        def session_set_title(event):
-            prompt_toolkit.application.run_in_terminal(self._handle_session_set_title)
-
-        @key_bindings.add(*get_key("session.show"), eager=True)
-        def session_status(event):
-            prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
-
-        @key_bindings.add(*get_key("session.switch"), eager=True)
-        def session_switch(event):
-            prompt_toolkit.application.run_in_terminal(self._handle_session_switch)
-
-        @key_bindings.add(*get_key("show_help"), eager=True)
-        def show_help(event):
-            prompt_toolkit.application.run_in_terminal(self.print_help)
-
-        @key_bindings.add(*get_key("show_history"), eager=True)
-        def show_history(event):
-            prompt_toolkit.application.run_in_terminal(self.print_history)
-
-        @key_bindings.add(*get_key("show_recent_history"), eager=True)
-        def show_recent_history(event):
-            prompt_toolkit.application.run_in_terminal(lambda: self.print_history(num_messages=2))
-
-        @key_bindings.add(*get_key("list_models"), eager=True)
-        def list_models(event):
-            prompt_toolkit.application.run_in_terminal(lambda: self.print_models_report(update_cache=True))
-
-        @key_bindings.add(*get_key("list_tools"), eager=True)
-        def list_tools(event):
-            prompt_toolkit.application.run_in_terminal(self.print_tools_report)
-
-        # F1 through F12
-        def f_key(event):
-            session_id = int(event.key_sequence[0].key[1:])
-            prompt_toolkit.application.run_in_terminal(
-                lambda: self._switch_to_session(session_id, raise_exceptions=False)
-            )
+        key_bindings.add(*get_key("toggle_debug"), eager=True)(self.toggle_debug)
+        key_bindings.add(*get_key("toggle_toolbar"), eager=True)(self.toggle_toolbar)
+        key_bindings.add(
+            *get_key("toggle_multiline_input"),
+            eager=True,
+        )(self.toggle_multiline_input)
+        key_bindings.add(*get_key("toggle_markdown"), eager=True)(self.toggle_markdown)
+        key_bindings.add(*get_key("toggle_tools"), eager=True)(self.toggle_tools)
+        key_bindings.add(*get_key("toggle_verbose"), eager=True)(self.toggle_verbose)
+        key_bindings.add(*get_key("toggle_word_wrap"), eager=True)(self.toggle_word_wrap)
+        key_bindings.add(*get_key("session.new"), eager=True)(self.session_new)
+        key_bindings.add(*get_key("session.next"), eager=True)(self.session_next)
+        key_bindings.add(*get_key("session.clear"), eager=True)(self.session_clear)
+        key_bindings.add(*get_key("session.previous"), eager=True)(self.session_previous)
+        key_bindings.add(*get_key("session.set_alias"), eager=True)(self.session_set_alias)
+        key_bindings.add(*get_key("session.set_title"), eager=True)(self.session_set_title)
+        key_bindings.add(*get_key("session.show"), eager=True)(self.session_status)
+        key_bindings.add(*get_key("session.switch"), eager=True)(self.session_switch)
+        key_bindings.add(*get_key("show_help"), eager=True)(self.show_help)
+        key_bindings.add(*get_key("show_history"), eager=True)(self.show_history)
+        key_bindings.add(*get_key("show_recent_history"), eager=True)(self.show_recent_history)
+        key_bindings.add(*get_key("list_models"), eager=True)(self.list_models)
+        key_bindings.add(*get_key("list_tools"), eager=True)(self.list_tools)
 
         for i in range(1, 13):
-            key_bindings.add(f"f{i}", eager=True)(lambda event: f_key(event))
+            key_bindings.add(f"f{i}", eager=True)(self._f_key)
 
         return key_bindings
+
+    # Key binding handlers -------------------------------------------------
+
+    def _enter_key_on_selected_completion(self, event):
+        current_buffer = event.app.current_buffer
+        current_buffer.insert_text(" ")
+        current_buffer.cancel_completion()
+
+    def toggle_debug(self, event):
+        if lair.util.is_debug_enabled():
+            logger.setLevel("INFO")
+            self._prompt_handler_system_message("Debugging disabled")
+        else:
+            logger.setLevel("DEBUG")
+            self._prompt_handler_system_message("Debugging enabled")
+
+    def toggle_toolbar(self, event):
+        if lair.config.active["chat.enable_toolbar"]:
+            lair.config.set("chat.enable_toolbar", "false")
+            self._prompt_handler_system_message("Bottom toolbar disabled")
+        else:
+            lair.config.set("chat.enable_toolbar", "true")
+            self._prompt_handler_system_message("Bottom toolbar enabled")
+
+    def toggle_multiline_input(self, event):
+        if lair.config.active["chat.multiline_input"]:
+            lair.config.set("chat.multiline_input", "false")
+            self._prompt_handler_system_message("Multi-line input disabled")
+        else:
+            lair.config.set("chat.multiline_input", "true")
+            self._prompt_handler_system_message("Multi-line input enabled")
+
+    def toggle_markdown(self, event):
+        if lair.config.active["style.render_markdown"]:
+            lair.config.set("style.render_markdown", "false")
+            self._prompt_handler_system_message("Markdown rendering disabled")
+        else:
+            lair.config.set("style.render_markdown", "true")
+            self._prompt_handler_system_message("Markdown rendering enabled")
+
+    def toggle_tools(self, event):
+        if lair.config.active["tools.enabled"]:
+            lair.config.set("tools.enabled", "false")
+            self._prompt_handler_system_message("Tools disabled")
+        else:
+            lair.config.set("tools.enabled", "true")
+            self._prompt_handler_system_message("Tools enabled")
+
+    def toggle_verbose(self, event):
+        if lair.config.active["chat.verbose"]:
+            lair.config.set("chat.verbose", "false")
+            self._prompt_handler_system_message("Verbose output disabled")
+        else:
+            lair.config.set("chat.verbose", "true")
+            self._prompt_handler_system_message("Verbose output enabled")
+
+    def toggle_word_wrap(self, event):
+        if lair.config.active["style.word_wrap"]:
+            lair.config.set("style.word_wrap", "false")
+            self._prompt_handler_system_message("Word wrap disabled")
+        else:
+            lair.config.set("style.word_wrap", "true")
+            self._prompt_handler_system_message("Word wrap enabled")
+
+    def session_new(self, event):
+        self._new_chat_session()
+        self._prompt_handler_system_message("New session created")
+
+    def session_next(self, event):
+        session_id = self.session_manager.get_next_session_id(self.chat_session.session_id)
+        if session_id is not None:
+            self._switch_to_session(session_id)
+
+    def session_clear(self, event):
+        self.chat_session.new_session(preserve_alias=True, preserve_id=True)
+        self.session_manager.refresh_from_chat_session(self.chat_session)
+        self._prompt_handler_system_message("Conversation history cleared")
+
+    def session_previous(self, event):
+        session_id = self.session_manager.get_previous_session_id(self.chat_session.session_id)
+        if session_id is not None:
+            self._switch_to_session(session_id)
+
+    def session_set_alias(self, event):
+        prompt_toolkit.application.run_in_terminal(self._handle_session_set_alias)
+
+    def session_set_title(self, event):
+        prompt_toolkit.application.run_in_terminal(self._handle_session_set_title)
+
+    def session_status(self, event):
+        prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
+
+    def session_switch(self, event):
+        prompt_toolkit.application.run_in_terminal(self._handle_session_switch)
+
+    def show_help(self, event):
+        prompt_toolkit.application.run_in_terminal(self.print_help)
+
+    def show_history(self, event):
+        prompt_toolkit.application.run_in_terminal(self.print_history)
+
+    def show_recent_history(self, event):
+        prompt_toolkit.application.run_in_terminal(lambda: self.print_history(num_messages=2))
+
+    def list_models(self, event):
+        prompt_toolkit.application.run_in_terminal(lambda: self.print_models_report(update_cache=True))
+
+    def list_tools(self, event):
+        prompt_toolkit.application.run_in_terminal(self.print_tools_report)
+
+    def _f_key(self, event):
+        session_id = int(event.key_sequence[0].key[1:])
+        prompt_toolkit.application.run_in_terminal(lambda: self._switch_to_session(session_id, raise_exceptions=False))
 
     def _new_chat_session(self):
         self.chat_session.new_session()
