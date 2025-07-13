@@ -142,7 +142,10 @@ class TmuxTool:
                         },
                         "return_mode": {
                             "type": "string",
-                            "description": "Output mode: 'stream' (new terminal content) or 'screen' (string capture of the entire window).",
+                            "description": (
+                                "Output mode: 'stream' (new terminal content) or "
+                                "'screen' (string capture of the entire window)."
+                            ),
                             "enum": ["screen", "stream"],
                             "default": "stream",
                         },
@@ -191,7 +194,7 @@ class TmuxTool:
             pane.cmd("pipe-pane", "-o", f"cat >> {log_file_name}")
 
             logger.debug(
-                f"TmuxTool(): run(): window_id={window.get('window_id')}, pane_id={pane.get("pane_id")}, "
+                f"TmuxTool(): run(): window_id={window.get('window_id')}, pane_id={pane.get('pane_id')}, "
                 f"logfile={log_file_name}"
             )
 
@@ -220,11 +223,13 @@ class TmuxTool:
                     "properties": {
                         "keys": {
                             "type": "string",
-                            "description": "The key sequence to send. (libtmux style, literal=True by default)",
+                            "description": ("The key sequence to send. (libtmux style, literal=True by default)"),
                         },
                         "delay": {
                             "type": "number",
-                            "description": "Delay (in seconds) before capturing output. Set longer for long-running commands.",
+                            "description": (
+                                "Delay (in seconds) before capturing output. Set longer for long-running commands."
+                            ),
                             "default": 0.2,
                         },
                         "enter": {
@@ -239,7 +244,10 @@ class TmuxTool:
                         },
                         "return_mode": {
                             "type": "string",
-                            "description": "Output mode: 'stream' (new terminal content) or 'screen' (string capture of the entire window).",
+                            "description": (
+                                "Output mode: 'stream' (new terminal content) or "
+                                "'screen' (string capture of the entire window)."
+                            ),
                             "enum": ["screen", "stream"],
                             "default": "stream",
                         },
@@ -305,7 +313,9 @@ class TmuxTool:
             "type": "function",
             "function": {
                 "name": "read_new_output",
-                "description": "Read new output from the active window. Only new output since the last read is returned",
+                "description": (
+                    "Read new output from the active window. Only new output since the last read is returned"
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {

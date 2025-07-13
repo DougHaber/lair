@@ -63,7 +63,8 @@ class ChatHistory:
                 )
             else:
                 raise ValueError(
-                    "ChatHistory(): add_tool_messages() received a message with a role that wasn't 'tool' or 'assistant'"
+                    "ChatHistory(): add_tool_messages() received a message with "
+                    "a role that wasn't 'tool' or 'assistant'"
                 )
 
     def add_message(self, role, message, *, meta=None):
@@ -141,6 +142,8 @@ class ChatHistory:
             self.clear()
         else:
             logger.debug(
-                f"Rolling back history (finalized_index={self.finalized_index}, removing={len(self._history) - self.finalized_index})"
+                "Rolling back history "
+                f"(finalized_index={self.finalized_index}, "
+                f"removing={len(self._history) - self.finalized_index})"
             )
             self._history = self._history[0 : self.finalized_index]

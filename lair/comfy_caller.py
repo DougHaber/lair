@@ -75,8 +75,9 @@ class ComfyCaller:
         if self.is_comfy_script_imported is True:
             return
 
-        # ComfyScript behaves poorly with output and writes debugging with print() statements that can not be properly disabled.
-        # To deal with this, STDOUT is ignored on import.
+        # ComfyScript behaves poorly with output and writes debugging with
+        # print() statements that can not be properly disabled. To deal with
+        # this, STDOUT is ignored on import.
         with contextlib.redirect_stdout(io.StringIO()):
             from comfy_script.runtime import Workflow, load
 

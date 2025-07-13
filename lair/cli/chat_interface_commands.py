@@ -54,7 +54,10 @@ class ChatInterfaceCommands:
                 "callback": lambda command, arguments, arguments_str: self.command_history_slice(
                     command, arguments, arguments_str
                 ),
-                "description": "Modify the history with a Python style slice string  (usage: /history-slice [slice], Slice format: start:stop:step)",
+                "description": (
+                    "Modify the history with a Python style slice string "
+                    "(usage: /history-slice [slice], Slice format: start:stop:step)"
+                ),
             },
             "/last-prompt": {
                 "callback": lambda command, arguments, arguments_str: self.command_last_prompt(
@@ -90,7 +93,9 @@ class ChatInterfaceCommands:
                 "callback": lambda command, arguments, arguments_str: self.command_load(
                     command, arguments, arguments_str
                 ),
-                "description": "Load a session from a file  (usage: /load [filename?], default filename is chat_session.json)",
+                "description": (
+                    "Load a session from a file  (usage: /load [filename?], default filename is chat_session.json)"
+                ),
             },
             "/messages": {
                 "callback": lambda command, arguments, arguments_str: self.command_messages(
@@ -126,7 +131,10 @@ class ChatInterfaceCommands:
                 "callback": lambda command, arguments, arguments_str: self.command_save(
                     command, arguments, arguments_str
                 ),
-                "description": "Save the current session to a file  (usage: /save [filename?], default filename is chat_session.json)",
+                "description": (
+                    "Save the current session to a file  (usage: /save [filename?], "
+                    "default filename is chat_session.json)"
+                ),
             },
             "/session": {
                 "callback": lambda command, arguments, arguments_str: self.command_session(
@@ -162,7 +170,10 @@ class ChatInterfaceCommands:
                 "callback": lambda command, arguments, arguments_str: self.command_set(
                     command, arguments, arguments_str
                 ),
-                "description": "Show configuration or set a configuration value for the current mode  (usage: /set ([key?] [value?])",
+                "description": (
+                    "Show configuration or set a configuration value for the current mode  "
+                    "(usage: /set ([key?] [value?])"
+                ),
             },
         }
 

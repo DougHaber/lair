@@ -133,7 +133,10 @@ class FileTool:
                     "properties": {
                         "path": {
                             "type": "string",
-                            "description": "File path or glob pattern to read. (Supports all glob styles, including recursive `**`)",
+                            "description": (
+                                "File path or glob pattern to read. (Supports all glob styles, "
+                                "including recursive `**`)"
+                            ),
                         }
                     },
                     "required": ["path"],

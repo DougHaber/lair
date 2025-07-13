@@ -110,7 +110,8 @@ class BaseChatSession(abc.ABC):
 
         if not (user_message and assistant_reply):
             logger.debug(
-                f"auto_generate_title(): failed: Could not find a user message and assistant reply  (session={self.session_id})"
+                "auto_generate_title(): failed: Could not find a user message "
+                f"and assistant reply  (session={self.session_id})"
             )
             return None
 
