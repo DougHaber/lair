@@ -39,7 +39,7 @@ line-length = 120
 "lair/comfy_caller.py" = ["F403", "F405"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=50"
+addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=80"
 
 [tool.coverage.run]
 omit = [
