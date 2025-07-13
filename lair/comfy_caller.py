@@ -21,26 +21,26 @@ import ctypes
 import importlib
 import io
 import secrets
+from typing import TYPE_CHECKING, Any
 
 import requests
 
 import lair
 from lair.logging import logger  # noqa
-from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from comfy_script.runtime import Workflow
     from comfy_script.runtime.nodes import (
         BasicGuider,
         BasicScheduler,
+        CheckpointLoaderSimple,
         CLIPLoader,
         CLIPTextEncode,
-        CheckpointLoaderSimple,
         DownloadAndLoadFlorence2Model,
         DualCLIPLoader,
-        ETNLoadImageBase64,
         EmptyHunyuanLatentVideo,
         EmptyLatentImage,
+        ETNLoadImageBase64,
         Florence2Run,
         FluxGuidance,
         ImagePadForOutpaint,
@@ -48,11 +48,11 @@ if TYPE_CHECKING:
         ImageUpscaleWithModel,
         KSampler,
         KSamplerSelect,
+        LoraLoader,
         LTXVConditioning,
         LTXVImgToVideo,
         LTXVPreprocess,
         LTXVScheduler,
-        LoraLoader,
         ModelSamplingSD3,
         RandomNoise,
         SamplerCustom,

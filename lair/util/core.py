@@ -239,7 +239,10 @@ def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
         temp_file.write(content)
         temp_file.close()
 
-        subprocess.run(editor_args + [str(temp_path)], check=True)
+        subprocess.run(  # noqa: S603 - editor command from trusted configuration
+            editor_args + [str(temp_path)],
+            check=True,
+        )
         modified_content = temp_path.read_text()
 
         return modified_content if modified_content != content else None

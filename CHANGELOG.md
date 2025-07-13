@@ -14,6 +14,7 @@
 
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
+- cli: Refactor chat keybindings to reduce complexity
 - tests: Add pytest suite and extended chat interface coverage
 - tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
 - tests: Enable coverage and add new utility tests
