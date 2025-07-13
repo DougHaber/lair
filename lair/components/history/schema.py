@@ -29,7 +29,9 @@ MESSAGES_SCHEMA = {
                                         "url": {
                                             "type": "string",
                                             "format": "uri",
-                                            "description": "A valid URI for the image, including base64-encoded data URLs.",
+                                            "description": (
+                                                "A valid URI for the image, including base64-encoded data URLs."
+                                            ),
                                         }
                                     },
                                     "required": ["url"],

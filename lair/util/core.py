@@ -145,11 +145,13 @@ def read_pdf(filename, *, enforce_limits=False):
             if enforce_limits and len(contents) > limit:
                 if not lair.config.get("misc.text_attachment_truncate"):
                     raise Exception(
-                        f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
+                        "Attachment size exceeds limit: "
+                        f"file={filename}, size={os.path.getsize(filename)}, limit={limit}"
                     )
                 else:
                     logger.warning(
-                        f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
+                        "Attachment size exceeds limit: "
+                        f"file={filename}, size={os.path.getsize(filename)}, limit={limit}"
                     )
                     contents = contents[0:limit]
                     break

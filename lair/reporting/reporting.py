@@ -107,11 +107,14 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         Args:
             rows (Iterable): A 2-dimensional array of row data.
-            column_names (Optional[List[str]]): A list of names for the columns. When provided, these names are used in the header,
-                and also as keys for column_formatters if specified.
-            column_formatters (Optional[Dict[str, Callable]]): A dictionary mapping column names to formatter functions.
-                For any cell in a column with an associated formatter, the cell value is passed to the formatter,
-                and its return value is used directly (without applying self.style()).
+            column_names (Optional[List[str]]): A list of names for the columns.
+                When provided, these names are used in the header, and also as
+                keys for column_formatters if specified.
+            column_formatters (Optional[Dict[str, Callable]]): A dictionary
+                mapping column names to formatter functions. For any cell in a
+                column with an associated formatter, the cell value is passed to
+                the formatter, and its return value is used directly (without
+                applying self.style()).
                 Note: This option only takes effect if column_names is provided.
             style (Optional[str]): Base rich style to apply to the table.
             markup (bool): If False, all column names and row data (except those formatted via column_formatters)
@@ -335,7 +338,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
     def messages_to_str(self, messages):
         lines = []
         for message in messages:
-            lines.append(f'{message["role"].upper()}: {message["content"]}')
+            lines.append(f"{message['role'].upper()}: {message['content']}")
 
         return "\n".join(lines)
 

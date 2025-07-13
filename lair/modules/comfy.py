@@ -45,10 +45,10 @@ class Comfy:
 
         command_parser.add_argument("-b", "--batch-size", type=int, help="Batch size (default: 1)")
         command_parser.add_argument(
-            "-c", "--cfg", type=float, help=f'Classifier-free guidance scale (default: {defaults["cfg"]})'
+            "-c", "--cfg", type=float, help=f"Classifier-free guidance scale (default: {defaults['cfg']})"
         )
         command_parser.add_argument(
-            "-H", "--output-height", type=int, help=f'Output file height (default: {defaults["output_height"]})'
+            "-H", "--output-height", type=int, help=f"Output file height (default: {defaults['output_height']})"
         )
         command_parser.add_argument(
             "-l",
@@ -56,26 +56,33 @@ class Comfy:
             nargs="*",
             type=str,
             dest="loras",
-            help="Loras to use. Can be specified multiple times. These are processed in order. Command line usage overrides LoRAs in the settings. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})",
+            help=(
+                "Loras to use. Can be specified multiple times. These are processed in order. "
+                "Command line usage overrides LoRAs in the settings. "
+                "(format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})"
+            ),
         )
         command_parser.add_argument(
             "-m",
             "--model-name",
             type=str,
-            help=f'Name of the image diffusion model (default: {defaults["model_name"]})',
+            help=f"Name of the image diffusion model (default: {defaults['model_name']})",
         )
         command_parser.add_argument(
             "-n", "--negative-prompt", type=str, help="Negative prompt to use for image diffusion"
         )
         command_parser.add_argument(
-            "-N", "--steps", type=int, help=f'Number of sampling steps (default: {defaults["steps"]})'
+            "-N", "--steps", type=int, help=f"Number of sampling steps (default: {defaults['steps']})"
         )
         command_parser.add_argument(
             "-o",
             "--output-file",
             default=output_file,
             type=str,
-            help=f"File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})",
+            help=(
+                f"File to write output to. When generating multiple images, "
+                f"the basename becomes a prefix. (default: {output_file})"
+            ),
         )
         command_parser.add_argument("-p", "--prompt", type=str, help="Prompt to use for image diffusion.")
         command_parser.add_argument("-P", "--prompt-file", type=str, help="File name to read a prompt from.")
@@ -84,28 +91,33 @@ class Comfy:
             "--repeat",
             default=1,
             type=int,
-            help="Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)",
+            help=(
+                "Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)"
+            ),
         )
         command_parser.add_argument(
-            "-s", "--sampler", type=str, help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})'
+            "-s", "--sampler", type=str, help=f"Sampler to use for image diffusion (default: {defaults['sampler']})"
         )
         command_parser.add_argument(
             "-S",
             "--scheduler",
             type=str,
-            help=f'Scheduler to use for image diffusion (default: {defaults["scheduler"]})',
+            help=f"Scheduler to use for image diffusion (default: {defaults['scheduler']})",
         )
         command_parser.add_argument(
             "-u", "--comfy-url", default=comfy_url, help=f"URL for the Comfy UI API (default: {comfy_url})"
         )
         command_parser.add_argument(
-            "-w", "--output-width", type=int, help=f'Output file width (default: {defaults["output_width"]})'
+            "-w", "--output-width", type=int, help=f"Output file width (default: {defaults['output_width']})"
         )
         command_parser.add_argument(
             "-x",
             "--seed",
             type=int,
-            help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})',
+            help=(
+                "The seed to use when sampling (default: "
+                f"{defaults['seed'] if defaults['seed'] is not None else 'random'})"
+            ),
         )
 
     def _add_argparse_hunyuan_video_t2v(self, sub_parser):
@@ -116,25 +128,25 @@ class Comfy:
 
         command_parser.add_argument("-b", "--batch-size", type=int, help="Batch size (default: 1)")
         command_parser.add_argument(
-            "-c", "--clip-name-1", type=str, help=f'Name of the first clip model (default: {defaults["clip_name_1"]})'
+            "-c", "--clip-name-1", type=str, help=f"Name of the first clip model (default: {defaults['clip_name_1']})"
         )
         command_parser.add_argument(
-            "-C", "--clip-name-2", type=str, help=f'Name of the second clip model (default: {defaults["clip_name_2"]})'
+            "-C", "--clip-name-2", type=str, help=f"Name of the second clip model (default: {defaults['clip_name_2']})"
         )
         command_parser.add_argument(
-            "-f", "--frame-rate", type=int, help=f'Batch size (default: {defaults["frame_rate"]})'
+            "-f", "--frame-rate", type=int, help=f"Batch size (default: {defaults['frame_rate']})"
         )
         command_parser.add_argument(
             "-F",
             "--num-frames",
             type=int,
-            help=f'Number of frames to generate (default: {defaults["num_frames"]}, must be N * 4 + 1)',
+            help=f"Number of frames to generate (default: {defaults['num_frames']}, must be N * 4 + 1)",
         )
         command_parser.add_argument(
-            "-g", "--guidance_scale", type=float, help=f'Guidance scale (default: {defaults["guidance_scale"]})'
+            "-g", "--guidance_scale", type=float, help=f"Guidance scale (default: {defaults['guidance_scale']})"
         )
         command_parser.add_argument(
-            "-H", "--output-height", type=int, dest="height", help=f'Output file height (default: {defaults["height"]})'
+            "-H", "--output-height", type=int, dest="height", help=f"Output file height (default: {defaults['height']})"
         )
         command_parser.add_argument(
             "-l",
@@ -142,26 +154,33 @@ class Comfy:
             nargs="*",
             type=str,
             dest="loras",
-            help="Loras to use. Can be specified multiple times. These are processed in order. Command line usage overrides LoRAs in the settings. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})",
+            help=(
+                "Loras to use. Can be specified multiple times. These are processed in order. "
+                "Command line usage overrides LoRAs in the settings. "
+                "(format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})"
+            ),
         )
         command_parser.add_argument(
             "-m",
             "--model-name",
             type=str,
-            help=f'Name of the image diffusion model (default: {defaults["model_name"]})',
+            help=f"Name of the image diffusion model (default: {defaults['model_name']})",
         )
         command_parser.add_argument(
             "-M",
             "--model-weight-dtype",
             type=str,
-            help=f'Dtype to use for the model (default: {defaults["model_weight_dtype"]})',
+            help=f"Dtype to use for the model (default: {defaults['model_weight_dtype']})",
         )
         command_parser.add_argument(
             "-o",
             "--output-file",
             default=output_file,
             type=str,
-            help=f"File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})",
+            help=(
+                f"File to write output to. When generating multiple images, "
+                f"the basename becomes a prefix. (default: {output_file})"
+            ),
         )
         command_parser.add_argument(
             "-p", "--prompt", type=str, help="Prompt to use. (auto-prompt is disabled when this is provided)"
@@ -177,28 +196,33 @@ class Comfy:
             "--repeat",
             default=1,
             type=int,
-            help="Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)",
+            help=(
+                "Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)"
+            ),
         )
         command_parser.add_argument(
-            "-s", "--sampler", type=str, help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})'
+            "-s", "--sampler", type=str, help=f"Sampler to use for image diffusion (default: {defaults['sampler']})"
         )
         command_parser.add_argument(
             "-S",
             "--scheduler",
             type=str,
-            help=f'Scheduler to use for image diffusion (default: {defaults["scheduler"]})',
+            help=f"Scheduler to use for image diffusion (default: {defaults['scheduler']})",
         )
         command_parser.add_argument(
             "-u", "--comfy-url", default=comfy_url, help=f"URL for the Comfy UI API (default: {comfy_url})"
         )
         command_parser.add_argument(
-            "-w", "--output-width", type=int, dest="width", help=f'Output file width (default: {defaults["width"]})'
+            "-w", "--output-width", type=int, dest="width", help=f"Output file width (default: {defaults['width']})"
         )
         command_parser.add_argument(
             "-x",
             "--seed",
             type=int,
-            help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})',
+            help=(
+                "The seed to use when sampling (default: "
+                f"{defaults['seed'] if defaults['seed'] is not None else 'random'})"
+            ),
         )
 
     def _add_argparse_ltxv_i2v(self, sub_parser):
@@ -211,55 +235,64 @@ class Comfy:
             "-a",
             "--auto-prompt-extra",
             type=str,
-            help="Content to add after the generated prompt (When --prompt or --prompt-file is provided, this is ignored)",
+            help=(
+                "Content to add after the generated prompt (When --prompt or "
+                "--prompt-file is provided, this is ignored)"
+            ),
         )
         command_parser.add_argument(
             "-A",
             "--auto-prompt-suffix",
             type=str,
-            help="Content to add to the end of the generated prompt (When --prompt or --prompt-file is provided, this is ignored)",
+            help=(
+                "Content to add to the end of the generated prompt (When --prompt "
+                "or --prompt-file is provided, this is ignored)"
+            ),
         )
         command_parser.add_argument("-b", "--batch-size", type=int, help="Batch size (default: 1)")
         command_parser.add_argument(
-            "-c", "--cfg", type=float, help=f'Classifier-free guidance scale (default: {defaults["cfg"]})'
+            "-c", "--cfg", type=float, help=f"Classifier-free guidance scale (default: {defaults['cfg']})"
         )
         command_parser.add_argument(
-            "-C", "--clip-name", type=str, help=f'Name of the clip model (default: {defaults["clip_name"]})'
+            "-C", "--clip-name", type=str, help=f"Name of the clip model (default: {defaults['clip_name']})"
         )
         command_parser.add_argument(
             "-f",
             "--frame-rate-saving",
             type=int,
-            help=f'Frame rate for saving -- different than conditioning (default: {defaults["frame_rate_save"]})',
+            help=f"Frame rate for saving -- different than conditioning (default: {defaults['frame_rate_save']})",
         )
         command_parser.add_argument(
             "-F",
             "--num-frames",
             type=int,
-            help=f'Number of frames to generate (default: {defaults["num_frames"]}, must be N * 8 + 1)',
+            help=f"Number of frames to generate (default: {defaults['num_frames']}, must be N * 8 + 1)",
         )
         command_parser.add_argument("-i", "--image", type=str, required=True, help="Input image file to use (required)")
         command_parser.add_argument(
             "-m",
             "--model-name",
             type=str,
-            help=f'Name of the image diffusion model (default: {defaults["model_name"]})',
+            help=f"Name of the image diffusion model (default: {defaults['model_name']})",
         )
         command_parser.add_argument(
             "-n", "--negative-prompt", type=str, help="Negative prompt to use for image diffusion"
         )
         command_parser.add_argument(
-            "-N", "--steps", type=int, help=f'Number of sampling steps (default: {defaults["steps"]})'
+            "-N", "--steps", type=int, help=f"Number of sampling steps (default: {defaults['steps']})"
         )
         command_parser.add_argument(
             "-o",
             "--output-file",
             default=output_file,
             type=str,
-            help=f"File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})",
+            help=(
+                f"File to write output to. When generating multiple images, "
+                f"the basename becomes a prefix. (default: {output_file})"
+            ),
         )
         command_parser.add_argument(
-            "-O", "--output-format", type=str, help=f'Output format to use (default: {defaults["output_format"]}'
+            "-O", "--output-format", type=str, help=f"Output format to use (default: {defaults['output_format']}"
         )
         command_parser.add_argument(
             "-p", "--prompt", type=str, help="Prompt to use. (auto-prompt is disabled when this is provided)"
@@ -275,22 +308,26 @@ class Comfy:
             "--repeat",
             default=1,
             type=int,
-            help="Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)",
+            help=(
+                "Number of times to repeat. Total images generated is number of repeats times batch size. (default: 1)"
+            ),
         )
         command_parser.add_argument(
             "-R",
             "--frame-rate-conditioning",
             type=int,
-            help=f'Frame rate for conditioning -- different than saving (default: {defaults["frame_rate_conditioning"]})',
+            help=(
+                f"Frame rate for conditioning -- different than saving (default: {defaults['frame_rate_conditioning']})"
+            ),
         )
         command_parser.add_argument(
-            "-s", "--sampler", type=str, help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})'
+            "-s", "--sampler", type=str, help=f"Sampler to use for image diffusion (default: {defaults['sampler']})"
         )
         command_parser.add_argument(
             "-S",
             "--scheduler",
             type=str,
-            help=f'Scheduler to use for image diffusion (default: {defaults["scheduler"]})',
+            help=f"Scheduler to use for image diffusion (default: {defaults['scheduler']})",
         )
         command_parser.add_argument(
             "-u", "--comfy-url", default=comfy_url, help=f"URL for the Comfy UI API (default: {comfy_url})"
@@ -299,7 +336,10 @@ class Comfy:
             "-x",
             "--seed",
             type=int,
-            help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})',
+            help=(
+                "The seed to use when sampling (default: "
+                f"{defaults['seed'] if defaults['seed'] is not None else 'random'})"
+            ),
         )
 
     def _add_argparse_ltxv_prompt(self, sub_parser):
@@ -320,7 +360,10 @@ class Comfy:
             "--output-file",
             default=output_file,
             type=str,
-            help=f"File to write output to. When generating multiple images, the basename becomes a prefix. (default: {output_file})",
+            help=(
+                f"File to write output to. When generating multiple images, "
+                f"the basename becomes a prefix. (default: {output_file})"
+            ),
         )
         command_parser.add_argument(
             "-r", "--repeat", default=1, type=int, help="Number of times to repeat. (default: 1)"
@@ -333,29 +376,35 @@ class Comfy:
             "--seed",
             type=int,
             dest="florence_seed",
-            help=f'The seed to use with the Florence model (default: {defaults["florence_seed"] if defaults["florence_seed"] is not None else "random"})',
+            help=(
+                "The seed to use with the Florence model (default: "
+                f"{defaults['florence_seed'] if defaults['florence_seed'] is not None else 'random'})"
+            ),
         )
 
     def _add_argparse_outpaint(self, sub_parser):
         command_parser = sub_parser.add_parser("outpaint", help="Outpaint images")
         defaults = self.comfy.defaults["outpaint"]
         comfy_url = lair.config.get("comfy.url")
-        padding_default = f'{defaults["padding_top"]}x{defaults["padding_right"]}x{defaults["padding_bottom"]}x{defaults["padding_left"]}'
+        padding_default = (
+            f"{defaults['padding_top']}x{defaults['padding_right']}x"
+            f"{defaults['padding_bottom']}x{defaults['padding_left']}"
+        )
 
         command_parser.add_argument(
-            "-c", "--cfg", type=float, help=f'Classifier-free guidance scale (default: {defaults["cfg"]})'
+            "-c", "--cfg", type=float, help=f"Classifier-free guidance scale (default: {defaults['cfg']})"
         )
         command_parser.add_argument(
-            "-d", "--denoise", type=float, help=f'Denoise level (default: {defaults["denoise"]})'
+            "-d", "--denoise", type=float, help=f"Denoise level (default: {defaults['denoise']})"
         )
         command_parser.add_argument(
-            "-f", "--feathering", type=float, help=f'Feathering pixels (default: {defaults["feathering"]})'
+            "-f", "--feathering", type=float, help=f"Feathering pixels (default: {defaults['feathering']})"
         )
         command_parser.add_argument(
             "-g",
             "--grow-mask_by",
             type=float,
-            help=f'How many pixels to use for the grow_mask_by setting (default: {defaults["grow_mask_by"]})',
+            help=f"How many pixels to use for the grow_mask_by setting (default: {defaults['grow_mask_by']})",
         )
         command_parser.add_argument(
             "-l",
@@ -363,19 +412,23 @@ class Comfy:
             nargs="*",
             type=str,
             dest="loras",
-            help="Loras to use. Can be specified multiple times. These are processed in order. Command line usage overrides LoRAs in the settings. (format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})",
+            help=(
+                "Loras to use. Can be specified multiple times. These are processed in order. "
+                "Command line usage overrides LoRAs in the settings. "
+                "(format either: {name}, {name}:{weight}, or {name}:{weight}:{clip_weight})"
+            ),
         )
         command_parser.add_argument(
             "-m",
             "--model-name",
             type=str,
-            help=f'Name of the image diffusion model (default: {defaults["model_name"]})',
+            help=f"Name of the image diffusion model (default: {defaults['model_name']})",
         )
         command_parser.add_argument(
             "-n", "--negative-prompt", type=str, help="Negative prompt to use for image diffusion"
         )
         command_parser.add_argument(
-            "-N", "--steps", type=int, help=f'Number of sampling steps (default: {defaults["steps"]})'
+            "-N", "--steps", type=int, help=f"Number of sampling steps (default: {defaults['steps']})"
         )
         command_parser.add_argument("-p", "--prompt", type=str, help="Prompt to use for image diffusion.")
         command_parser.add_argument("-P", "--prompt-file", type=str, help="File name to read a prompt from.")
@@ -394,13 +447,13 @@ class Comfy:
             help="Do not perform upscaling for files that already have an output file",
         )
         command_parser.add_argument(
-            "-s", "--sampler", type=str, help=f'Sampler to use for image diffusion (default: {defaults["sampler"]})'
+            "-s", "--sampler", type=str, help=f"Sampler to use for image diffusion (default: {defaults['sampler']})"
         )
         command_parser.add_argument(
             "-S",
             "--scheduler",
             type=str,
-            help=f'Scheduler to use for image diffusion (default: {defaults["scheduler"]})',
+            help=f"Scheduler to use for image diffusion (default: {defaults['scheduler']})",
         )
         command_parser.add_argument(
             "-u", "--comfy-url", default=comfy_url, help=f"URL for the Comfy UI API (default: {comfy_url})"
@@ -409,7 +462,10 @@ class Comfy:
             "-x",
             "--seed",
             type=int,
-            help=f'The seed to use when sampling (default: {defaults["seed"] if defaults["seed"] is not None else "random"})',
+            help=(
+                "The seed to use when sampling (default: "
+                f"{defaults['seed'] if defaults['seed'] is not None else 'random'})"
+            ),
         )
         command_parser.add_argument("outpaint_files", type=str, nargs="+", help="File(s) to outpaint")
 
@@ -419,7 +475,7 @@ class Comfy:
         comfy_url = lair.config.get("comfy.url")
 
         command_parser.add_argument(
-            "-m", "--model-name", type=str, help=f'Upscale model  (default: {defaults["model_name"]})'
+            "-m", "--model-name", type=str, help=f"Upscale model  (default: {defaults['model_name']})"
         )
         command_parser.add_argument(
             "-r", "--recursive", action="store_true", help="Recursively process all files in provided paths"

@@ -20,7 +20,11 @@ class Util:
             type=str,
             dest="attachments",
             action="append",
-            help="Specify one or more image files to attach to the request. Multiple files may be provided by repeating the argument. Ensure the model you are interacting with supports file attachments. Globs are supported.",
+            help=(
+                "Specify one or more image files to attach to the request. Multiple files "
+                "may be provided by repeating the argument. Ensure the model you are interacting "
+                "with supports file attachments. Globs are supported."
+            ),
         )
         (parser.add_argument("-c", "--content", type=str, help="Content to use"),)
         parser.add_argument("-C", "--content-file", type=str, help="Filename containing content use")
