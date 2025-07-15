@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import zoneinfo
+from typing import Any, Dict, List, Optional
 
 import openai
 
@@ -10,12 +11,14 @@ import lair.components.tools
 import lair.reporting
 from lair.logging import logger
 
+from lair.components.history import ChatHistory
+from lair.components.tools import ToolSet
 from .base_chat_session import BaseChatSession
 
 
 class OpenAIChatSession(BaseChatSession):
-    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
-        super().__init__(history=history)
+    def __init__(self, *, history: Optional[ChatHistory] = None, tool_set: Optional[ToolSet] = None):
+        super().__init__(history=history, tool_set=tool_set)
         self.openai = None
         self.recreate_openai_client()
 
@@ -31,7 +34,13 @@ class OpenAIChatSession(BaseChatSession):
     def recreate_openai_client(self):
         self._get_openai_client()
 
-    def invoke(self, messages: list = None, disable_system_prompt=False, model=None, temperature=None):
+    def invoke(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        disable_system_prompt: bool = False,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+    ):
         """
         Call the underlying model without altering state (no history)
         """
@@ -83,7 +92,7 @@ class OpenAIChatSession(BaseChatSession):
             tool_messages.append(tool_response_messsage)
             logger.debug(f"Tool result: {tool_response_messsage}")
 
-    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+    def invoke_with_tools(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
