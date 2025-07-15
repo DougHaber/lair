@@ -7,12 +7,13 @@ import lair.reporting
 import lair.sessions.serializer
 import lair.util.prompt_template
 from lair.components.history import ChatHistory
+from lair.components.tools import ToolSet
 from lair.logging import logger  # noqa
 
 
 class BaseChatSession(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
+    def __init__(self, *, history: Optional[ChatHistory] = None, tool_set: Optional[ToolSet] = None):
         """
         Arguments:
            history: History class to provide. Defaults to a new ChatHistory()
@@ -27,10 +28,10 @@ class BaseChatSession(abc.ABC):
         self.session_title = None  # Short title for the session
 
         self.history = history or ChatHistory()
-        self.tool_set = tool_set or lair.components.tools.ToolSet()
+        self.tool_set = tool_set or ToolSet()
 
     @abc.abstractmethod
-    def invoke(self, messages: list = None, disable_system_prompt=False):
+    def invoke(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
@@ -40,7 +41,7 @@ class BaseChatSession(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+    def invoke_with_tools(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
