@@ -61,7 +61,7 @@ def test_run_python_timeout(monkeypatch):
     monkeypatch.setattr("lair.components.tools.python_tool.subprocess.run", fake_run)
     out = tool.run_python("print(1)")
     assert out["error"].startswith("ERROR: Timeout")
-    assert ["docker", "rm", "-f", "cid"] in calls
+    assert [tool._docker, "rm", "-f", "cid"] in calls
 
 
 def test_run_python_success(monkeypatch):
@@ -87,7 +87,7 @@ def test_run_python_success(monkeypatch):
     assert out["stdout"] == "out"
     assert out["stderr"] == "err"
     assert "exit_status" not in out
-    assert ["docker", "rm", "-f", "cid"] in calls
+    assert [tool._docker, "rm", "-f", "cid"] in calls
 
 
 def test_run_python_exception(monkeypatch):
