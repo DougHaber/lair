@@ -29,8 +29,8 @@ import lair
 from lair.logging import logger  # noqa
 
 if TYPE_CHECKING:
-    from comfy_script.runtime import Workflow
-    from comfy_script.runtime.nodes import (
+    from comfy_script.runtime import Workflow  # type: ignore[import-untyped]
+    from comfy_script.runtime.nodes import (  # type: ignore[import-untyped]
         BasicGuider,
         BasicScheduler,
         CheckpointLoaderSimple,
@@ -156,7 +156,7 @@ class ComfyCaller:
         # print() statements that can not be properly disabled. To deal with
         # this, STDOUT is ignored on import.
         with contextlib.redirect_stdout(io.StringIO()):
-            from comfy_script.runtime import Workflow, load
+            from comfy_script.runtime import Workflow, load  # type: ignore[import-untyped]
 
             globals()["load"] = load
             globals()["Workflow"] = Workflow
@@ -228,7 +228,7 @@ class ComfyCaller:
             raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
 
     def _ensure_watch_thread(self):
-        import comfy_script.runtime as runtime
+        import comfy_script.runtime as runtime  # type: ignore[import-untyped]
 
         queue = runtime.queue
         watch = getattr(queue, "_watch_thread", None)
@@ -244,7 +244,7 @@ class ComfyCaller:
             logger.debug("Failed to terminate ComfyScript thread")
 
     def _cleanup_watch_thread(self):
-        import comfy_script.runtime as runtime
+        import comfy_script.runtime as runtime  # type: ignore[import-untyped]
 
         queue = runtime.queue
         watch = getattr(queue, "_watch_thread", None)

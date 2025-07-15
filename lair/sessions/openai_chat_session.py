@@ -4,8 +4,10 @@ import os
 import zoneinfo
 
 import openai
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import lair
+import lair.components.history
 import lair.components.tools
 import lair.reporting
 from lair.logging import logger
@@ -14,9 +16,14 @@ from .base_chat_session import BaseChatSession
 
 
 class OpenAIChatSession(BaseChatSession):
-    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
-        super().__init__(history=history)
-        self.openai = None
+    def __init__(
+        self,
+        *,
+        history: Optional[lair.components.history.ChatHistory] = None,
+        tool_set: Optional[lair.components.tools.ToolSet] = None,
+    ):
+        super().__init__(history=history, tool_set=tool_set)
+        self.openai: Optional[openai.OpenAI] = None
         self.recreate_openai_client()
 
         lair.events.subscribe("config.update", lambda d: self.recreate_openai_client(), instance=self)
@@ -31,7 +38,13 @@ class OpenAIChatSession(BaseChatSession):
     def recreate_openai_client(self):
         self._get_openai_client()
 
-    def invoke(self, messages: list = None, disable_system_prompt=False, model=None, temperature=None):
+    def invoke(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        disable_system_prompt: bool = False,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+    ) -> str:
         """
         Call the underlying model without altering state (no history)
         """
@@ -46,16 +59,17 @@ class OpenAIChatSession(BaseChatSession):
         messages_str = self.reporting.messages_to_str(messages)
         self.last_prompt = messages_str
 
+        assert self.openai is not None
         model_name = lair.config.get("model.name")
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
         answer = self.openai.chat.completions.create(
-            messages=messages,
+            messages=cast(List[Any], messages),
             model=model_name,
             temperature=temperature if temperature is not None else lair.config.get("model.temperature"),
             max_completion_tokens=lair.config.get("model.max_tokens"),
         )
 
-        return answer.choices[0].message.content.strip()
+        return (answer.choices[0].message.content or "").strip()
 
     def _process_tool_calls(self, message, messages, tool_messages):
         """Handle tool calls returned by the model."""
@@ -83,7 +97,11 @@ class OpenAIChatSession(BaseChatSession):
             tool_messages.append(tool_response_messsage)
             logger.debug(f"Tool result: {tool_response_messsage}")
 
-    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+    def invoke_with_tools(
+        self,
+        messages: Optional[List[Dict[str, Any]]] = None,
+        disable_system_prompt: bool = False,
+    ) -> Tuple[str, List[Dict[str, Any]]]:
         """
         Call the underlying model without altering state (no history)
 
@@ -100,7 +118,7 @@ class OpenAIChatSession(BaseChatSession):
 
             messages.extend(self.history.get_messages())
 
-        tool_messages = []
+        tool_messages: List[Dict[str, Any]] = []
 
         cycle = 0
         while True:
@@ -108,8 +126,9 @@ class OpenAIChatSession(BaseChatSession):
                 "OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d"
                 % (lair.config.get("model.name"), len(messages), cycle)
             )
+            assert self.openai is not None
             answer = self.openai.chat.completions.create(
-                messages=messages,
+                messages=cast(List[Any], messages),
                 model=lair.config.get("model.name"),
                 temperature=lair.config.get("model.temperature"),
                 max_completion_tokens=lair.config.get("model.max_tokens"),
@@ -123,7 +142,7 @@ class OpenAIChatSession(BaseChatSession):
             else:
                 self.last_prompt = self.reporting.messages_to_str(messages)
 
-                return message.content.strip(), tool_messages
+                return (message.content or "").strip(), tool_messages
 
     def list_models(self, *, ignore_errors=False):
         """
@@ -154,7 +173,8 @@ class OpenAIChatSession(BaseChatSession):
                 If an error occurs during model retrieval and `ignore_errors` is False.
         """
         try:
-            models = []
+            assert self.openai is not None
+            models: List[Dict[str, Any]] = []
             for model in self.openai.models.list():
                 models.append(
                     {

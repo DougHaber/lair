@@ -1,7 +1,7 @@
 import json
 import os
 
-import lmdb
+import lmdb  # type: ignore[import-untyped]
 
 import lair
 import lair.sessions.serializer

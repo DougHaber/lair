@@ -8,6 +8,7 @@
 - comfyscript: Restart watch thread correctly
 - tests: Support environments where `openai_local` mode is renamed
 - tests: Add coverage for comfy_caller workflows
+- sessions: Fix mypy issues in OpenAIChatSession and related modules
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images

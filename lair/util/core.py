@@ -14,6 +14,7 @@ import tempfile
 
 import pdfplumber
 import yaml
+from typing import Optional
 
 import lair
 from lair.logging import logger
@@ -226,7 +227,7 @@ def get_attachments_content(filenames):
     return content_parts, messages
 
 
-def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
+def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | None:
     """
     Edit the content in an external editor
     Return the new content or None if unchanged

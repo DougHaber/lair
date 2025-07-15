@@ -14,8 +14,11 @@ import rich.traceback
 import lair
 
 
+from typing import Any, Dict
+
+
 class ReportingSingletoneMeta(type):
-    _instances = {}
+    _instances: Dict[type, "Reporting"] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
