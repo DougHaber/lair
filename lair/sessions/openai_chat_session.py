@@ -8,15 +8,22 @@ import openai
 import lair
 import lair.components.tools
 import lair.reporting
+from lair.components.history import ChatHistory
 from lair.logging import logger
+from typing import Any, cast
 
 from .base_chat_session import BaseChatSession
 
 
 class OpenAIChatSession(BaseChatSession):
-    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
-        super().__init__(history=history)
-        self.openai = None
+    def __init__(
+        self,
+        *,
+        history: ChatHistory | None = None,
+        tool_set: lair.components.tools.ToolSet | None = None,
+    ) -> None:
+        super().__init__(history=history, tool_set=tool_set)
+        self.openai: openai.OpenAI | None = None
         self.recreate_openai_client()
 
         lair.events.subscribe("config.update", lambda d: self.recreate_openai_client(), instance=self)
@@ -31,10 +38,17 @@ class OpenAIChatSession(BaseChatSession):
     def recreate_openai_client(self):
         self._get_openai_client()
 
-    def invoke(self, messages: list = None, disable_system_prompt=False, model=None, temperature=None):
+    def invoke(
+        self,
+        messages: list[dict[str, Any]] | None = None,
+        disable_system_prompt: bool = False,
+        model: str | None = None,
+        temperature: float | None = None,
+    ) -> str:
         """
         Call the underlying model without altering state (no history)
         """
+        assert self.openai is not None
         if messages is None:
             messages = []
 
@@ -49,13 +63,15 @@ class OpenAIChatSession(BaseChatSession):
         model_name = lair.config.get("model.name")
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
         answer = self.openai.chat.completions.create(
-            messages=messages,
+            messages=cast(list[Any], messages),
             model=model_name,
             temperature=temperature if temperature is not None else lair.config.get("model.temperature"),
             max_completion_tokens=lair.config.get("model.max_tokens"),
         )
 
-        return answer.choices[0].message.content.strip()
+        message_content = answer.choices[0].message.content
+        assert message_content is not None
+        return message_content.strip()
 
     def _process_tool_calls(self, message, messages, tool_messages):
         """Handle tool calls returned by the model."""
@@ -83,7 +99,11 @@ class OpenAIChatSession(BaseChatSession):
             tool_messages.append(tool_response_messsage)
             logger.debug(f"Tool result: {tool_response_messsage}")
 
-    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+    def invoke_with_tools(
+        self,
+        messages: list[dict[str, Any]] | None = None,
+        disable_system_prompt: bool = False,
+    ) -> tuple[str, list[dict[str, Any]]]:
         """
         Call the underlying model without altering state (no history)
 
@@ -92,6 +112,7 @@ class OpenAIChatSession(BaseChatSession):
               - str: The response for the model
               - list[dict]: New messages from assistant & tool responses
         """
+        assert self.openai is not None
         if messages is None:
             messages = []
 
@@ -100,7 +121,7 @@ class OpenAIChatSession(BaseChatSession):
 
             messages.extend(self.history.get_messages())
 
-        tool_messages = []
+        tool_messages: list[dict[str, Any]] = []
 
         cycle = 0
         while True:
@@ -109,7 +130,7 @@ class OpenAIChatSession(BaseChatSession):
                 % (lair.config.get("model.name"), len(messages), cycle)
             )
             answer = self.openai.chat.completions.create(
-                messages=messages,
+                messages=cast(list[Any], messages),
                 model=lair.config.get("model.name"),
                 temperature=lair.config.get("model.temperature"),
                 max_completion_tokens=lair.config.get("model.max_tokens"),
@@ -123,7 +144,9 @@ class OpenAIChatSession(BaseChatSession):
             else:
                 self.last_prompt = self.reporting.messages_to_str(messages)
 
-                return message.content.strip(), tool_messages
+                message_content = message.content
+                assert message_content is not None
+                return message_content.strip(), tool_messages
 
     def list_models(self, *, ignore_errors=False):
         """

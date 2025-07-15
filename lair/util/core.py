@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 
 import pdfplumber
-import yaml
+from typing import Optional
 
 import lair
 from lair.logging import logger
@@ -47,13 +47,43 @@ def save_file(filename, contents):
         fd.write(contents)
 
 
-def parse_yaml_text(text):
-    return yaml.safe_load(text)
+def parse_yaml_text(text: str) -> dict:
+    result: dict[str, object] = {}
+    stack: list[tuple[int, dict[str, object]]] = [(-1, result)]
+
+    for raw_line in text.splitlines():
+        line = raw_line.split("#", 1)[0].rstrip()
+        if not line:
+            continue
+
+        indent = len(raw_line) - len(raw_line.lstrip())
+        while stack and indent <= stack[-1][0]:
+            stack.pop()
+        current = stack[-1][1]
+
+        key, _, remainder = line.lstrip().partition(":")
+        key = key.strip()
+        value = remainder.strip().strip("'\"")
+
+        if not remainder or value == "":
+            new_dict: dict[str, object] = {}
+            current[key] = new_dict
+            stack.append((indent, new_dict))
+        else:
+            if value.lower() == "true":
+                parsed: bool | str = True
+            elif value.lower() == "false":
+                parsed = False
+            else:
+                parsed = value
+            current[key] = parsed
+
+    return result
 
 
-def parse_yaml_file(filename):
+def parse_yaml_file(filename: str) -> dict:
     with open(filename, "r") as fd:
-        return yaml.safe_load(fd)
+        return parse_yaml_text(fd.read())
 
 
 def load_json_file(filename):
@@ -226,7 +256,7 @@ def get_attachments_content(filenames):
     return content_parts, messages
 
 
-def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
+def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | None:
     """
     Edit the content in an external editor
     Return the new content or None if unchanged

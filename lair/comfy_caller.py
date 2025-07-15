@@ -29,46 +29,46 @@ import lair
 from lair.logging import logger  # noqa
 
 if TYPE_CHECKING:
-    from comfy_script.runtime import Workflow
-    from comfy_script.runtime.nodes import (
-        BasicGuider,
-        BasicScheduler,
-        CheckpointLoaderSimple,
-        CLIPLoader,
-        CLIPTextEncode,
-        DownloadAndLoadFlorence2Model,
-        DualCLIPLoader,
-        EmptyHunyuanLatentVideo,
-        EmptyLatentImage,
-        ETNLoadImageBase64,
-        Florence2Run,
-        FluxGuidance,
-        ImagePadForOutpaint,
-        ImageResizeKJ,
-        ImageUpscaleWithModel,
-        KSampler,
-        KSamplerSelect,
-        LoraLoader,
-        LTXVConditioning,
-        LTXVImgToVideo,
-        LTXVPreprocess,
-        LTXVScheduler,
-        ModelSamplingSD3,
-        RandomNoise,
-        SamplerCustom,
-        SamplerCustomAdvanced,
-        SaveAnimatedWEBP,
-        SaveImage,
-        StringFunctionPysssss,
-        StringReplaceMtb,
-        UNETLoader,
-        UpscaleModelLoader,
-        VAEDecode,
-        VAEDecodeTiled,
-        VAEEncodeForInpaint,
-        VAELoader,
-        VHSVideoCombine,
-    )
+    from typing import Any
+
+    Workflow = Any
+    BasicGuider = Any
+    BasicScheduler = Any
+    CheckpointLoaderSimple = Any
+    CLIPLoader = Any
+    CLIPTextEncode = Any
+    DownloadAndLoadFlorence2Model = Any
+    DualCLIPLoader = Any
+    EmptyHunyuanLatentVideo = Any
+    EmptyLatentImage = Any
+    ETNLoadImageBase64 = Any
+    Florence2Run = Any
+    FluxGuidance = Any
+    ImagePadForOutpaint = Any
+    ImageResizeKJ = Any
+    ImageUpscaleWithModel = Any
+    KSampler = Any
+    KSamplerSelect = Any
+    LoraLoader = Any
+    LTXVConditioning = Any
+    LTXVImgToVideo = Any
+    LTXVPreprocess = Any
+    LTXVScheduler = Any
+    ModelSamplingSD3 = Any
+    RandomNoise = Any
+    SamplerCustom = Any
+    SamplerCustomAdvanced = Any
+    SaveAnimatedWEBP = Any
+    SaveImage = Any
+    StringFunctionPysssss = Any
+    StringReplaceMtb = Any
+    UNETLoader = Any
+    UpscaleModelLoader = Any
+    VAEDecode = Any
+    VAEDecodeTiled = Any
+    VAEEncodeForInpaint = Any
+    VAELoader = Any
+    VHSVideoCombine = Any
 else:
     Workflow: Any = None
     LoraLoader: Any = None
@@ -156,7 +156,9 @@ class ComfyCaller:
         # print() statements that can not be properly disabled. To deal with
         # this, STDOUT is ignored on import.
         with contextlib.redirect_stdout(io.StringIO()):
-            from comfy_script.runtime import Workflow, load
+            runtime_module = importlib.import_module("comfy_script.runtime")
+            Workflow = getattr(runtime_module, "Workflow")
+            load = getattr(runtime_module, "load")
 
             globals()["load"] = load
             globals()["Workflow"] = Workflow
@@ -228,7 +230,7 @@ class ComfyCaller:
             raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
 
     def _ensure_watch_thread(self):
-        import comfy_script.runtime as runtime
+        runtime = importlib.import_module("comfy_script.runtime")
 
         queue = runtime.queue
         watch = getattr(queue, "_watch_thread", None)
@@ -244,7 +246,7 @@ class ComfyCaller:
             logger.debug("Failed to terminate ComfyScript thread")
 
     def _cleanup_watch_thread(self):
-        import comfy_script.runtime as runtime
+        runtime = importlib.import_module("comfy_script.runtime")
 
         queue = runtime.queue
         watch = getattr(queue, "_watch_thread", None)

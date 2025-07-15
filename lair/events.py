@@ -4,13 +4,15 @@ from contextlib import contextmanager
 
 from lair.logging import logger
 
-_event_handlers = {}  # event_name -> {handler, ...}
-_subscriptions = {}  # subscription_id -> (event_name, handler)
+from typing import Any, Callable
+
+_event_handlers: dict[str, set[Callable[[Any], Any]]] = {}
+_subscriptions: dict[int, tuple[str, Callable[[Any], Any]]] = {}
 _next_subscription_id = itertools.count(1)  # Thread-safe ID generator
-_instance_subscriptions = weakref.WeakKeyDictionary()  # Tracks subscriptions by object
+_instance_subscriptions: weakref.WeakKeyDictionary[object, set[int]] = weakref.WeakKeyDictionary()
 
 _deferring = False
-_deferred_events = []
+_deferred_events: list[tuple[str, Any]] = []
 _squash_duplicates = True
 
 

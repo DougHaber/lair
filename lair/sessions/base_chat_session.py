@@ -12,7 +12,12 @@ from lair.logging import logger  # noqa
 
 class BaseChatSession(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, *, history=None, tool_set: lair.components.tools.ToolSet = None):
+    def __init__(
+        self,
+        *,
+        history: ChatHistory | None = None,
+        tool_set: lair.components.tools.ToolSet | None = None,
+    ) -> None:
         """
         Arguments:
            history: History class to provide. Defaults to a new ChatHistory()
@@ -30,7 +35,7 @@ class BaseChatSession(abc.ABC):
         self.tool_set = tool_set or lair.components.tools.ToolSet()
 
     @abc.abstractmethod
-    def invoke(self, messages: list = None, disable_system_prompt=False):
+    def invoke(self, messages: list | None = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
@@ -40,7 +45,7 @@ class BaseChatSession(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def invoke_with_tools(self, messages: list = None, disable_system_prompt=False):
+    def invoke_with_tools(self, messages: list | None = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
