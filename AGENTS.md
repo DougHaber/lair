@@ -62,5 +62,7 @@ Before submitting any pull requests that modify Python code or documentation, yo
 1. `python -m compileall -q lair`
 2. `ruff check lair`
 3. `ruff format lair`
-4. `pytest`
-5. Code coverage must meet the configured threshold (run via pytest with coverage)
+4. `mypy lair`
+5. `pytest`
+
+All tests and validations must pass without issues. Never turn off any validations, tests, or coverage requirements.
