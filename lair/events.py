@@ -5,10 +5,12 @@ from typing import Any, Callable, Dict, List, Set, Tuple
 
 from lair.logging import logger
 
-_event_handlers: Dict[str, Set[Callable[[Any], None]]] = {}
-_subscriptions: Dict[int, Tuple[str, Callable[[Any], None]]] = {}
+_event_handlers: Dict[str, Set[Callable[[Any], None]]] = {}  # event_name -> {handler, ...}
+_subscriptions: Dict[int, Tuple[str, Callable[[Any], None]]] = {}  # subscription_id -> (event_name, handler)
 _next_subscription_id = itertools.count(1)  # Thread-safe ID generator
-_instance_subscriptions: weakref.WeakKeyDictionary[object, Set[int]] = weakref.WeakKeyDictionary()
+_instance_subscriptions: weakref.WeakKeyDictionary[object, Set[int]] = (
+    weakref.WeakKeyDictionary()
+)  # Tracks subscriptions by object
 
 _deferring = False
 _deferred_events: List[Tuple[str, Any]] = []
