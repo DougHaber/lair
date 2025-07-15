@@ -43,16 +43,16 @@ select = [
   "F",   # Pyflakes
   "I",   # isort
   "S",   # security
-  # "PYI", # stub files
-  # "UP",  # pyupgrade
-  # "B",   # bugbear
-  # "SIM", # simplify
-  # "Q",   # quotes
+  "PYI", # stub files
+  "UP",  # pyupgrade
+  "B",   # bugbear
+  "SIM", # simplify
+  "Q",   # quotes
   "C",   # complexity
   # "ANN", # annotations
   # "D",   # docstrings
-  # "N",   # naming
-  # "T",   # debugger/print
+  "N",   # naming
+  "T",   # debugger/print
 ]
 
 [tool.ruff.lint.per-file-ignores]
