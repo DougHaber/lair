@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import zoneinfo
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import openai
 
@@ -19,7 +19,7 @@ from .base_chat_session import BaseChatSession
 class OpenAIChatSession(BaseChatSession):
     def __init__(self, *, history: Optional[ChatHistory] = None, tool_set: Optional[ToolSet] = None):
         super().__init__(history=history, tool_set=tool_set)
-        self.openai = None
+        self.openai: openai.OpenAI | None = None
         self.recreate_openai_client()
 
         lair.events.subscribe("config.update", lambda d: self.recreate_openai_client(), instance=self)
@@ -57,14 +57,15 @@ class OpenAIChatSession(BaseChatSession):
 
         model_name = lair.config.get("model.name")
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
+        assert self.openai is not None
         answer = self.openai.chat.completions.create(
-            messages=messages,
+            messages=cast(Any, messages),
             model=model_name,
             temperature=temperature if temperature is not None else lair.config.get("model.temperature"),
             max_completion_tokens=lair.config.get("model.max_tokens"),
         )
 
-        return answer.choices[0].message.content.strip()
+        return (answer.choices[0].message.content or "").strip()
 
     def _process_tool_calls(self, message, messages, tool_messages):
         """Handle tool calls returned by the model."""
@@ -109,7 +110,7 @@ class OpenAIChatSession(BaseChatSession):
 
             messages.extend(self.history.get_messages())
 
-        tool_messages = []
+        tool_messages: list[dict[str, Any]] = []
 
         cycle = 0
         while True:
@@ -117,8 +118,9 @@ class OpenAIChatSession(BaseChatSession):
                 "OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d"
                 % (lair.config.get("model.name"), len(messages), cycle)
             )
+            assert self.openai is not None
             answer = self.openai.chat.completions.create(
-                messages=messages,
+                messages=cast(Any, messages),
                 model=lair.config.get("model.name"),
                 temperature=lair.config.get("model.temperature"),
                 max_completion_tokens=lair.config.get("model.max_tokens"),
@@ -132,7 +134,7 @@ class OpenAIChatSession(BaseChatSession):
             else:
                 self.last_prompt = self.reporting.messages_to_str(messages)
 
-                return message.content.strip(), tool_messages
+                return (message.content or "").strip(), tool_messages
 
     def list_models(self, *, ignore_errors=False):
         """
@@ -164,6 +166,7 @@ class OpenAIChatSession(BaseChatSession):
         """
         try:
             models = []
+            assert self.openai is not None
             for model in self.openai.models.list():
                 models.append(
                     {

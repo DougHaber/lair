@@ -1,17 +1,22 @@
 import itertools
 import weakref
 from contextlib import contextmanager
+from typing import Any, Callable
 
 from lair.logging import logger
 
-_event_handlers = {}  # event_name -> {handler, ...}
-_subscriptions = {}  # subscription_id -> (event_name, handler)
-_next_subscription_id = itertools.count(1)  # Thread-safe ID generator
-_instance_subscriptions = weakref.WeakKeyDictionary()  # Tracks subscriptions by object
+EventHandler = Callable[[dict[str, Any]], Any]
 
-_deferring = False
-_deferred_events = []
-_squash_duplicates = True
+_event_handlers: dict[str, set[EventHandler]] = {}  # event_name -> {handler, ...}
+_subscriptions: dict[int, tuple[str, EventHandler]] = {}  # subscription_id -> (event_name, handler)
+_next_subscription_id: itertools.count = itertools.count(1)  # Thread-safe ID generator
+_instance_subscriptions: weakref.WeakKeyDictionary[object, set[int]] = (
+    weakref.WeakKeyDictionary()
+)  # Tracks subscriptions by object
+
+_deferring: bool = False
+_deferred_events: list[tuple[str, dict[str, Any]]] = []
+_squash_duplicates: bool = True
 
 
 def subscribe(event_name, handler, instance=None):

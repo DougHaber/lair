@@ -15,7 +15,7 @@ import lair
 
 
 class ReportingSingletoneMeta(type):
-    _instances = {}
+    _instances: dict[type, "Reporting"] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

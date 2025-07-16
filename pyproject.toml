@@ -71,3 +71,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 lair = "lair.cli.run:start"
+
+[tool.mypy]
+mypy_path = "stubs"

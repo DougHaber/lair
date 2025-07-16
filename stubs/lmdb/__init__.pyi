@@ -1,0 +1,3 @@
+from typing import Any
+
+def open(*args: Any, **kwargs: Any) -> Any: ...
