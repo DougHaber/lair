@@ -1,6 +1,7 @@
 import os
 import lair
 import pytest
+import libtmux
 from lair.components.tools.tmux_tool import TmuxTool
 
 
@@ -237,3 +238,81 @@ def test_kill_attach_and_list(tool):
     assert "No active tmux windows" in err["error"]
     err2 = tool.attach_window(window_id="@1")
     assert "No tmux windows" in err2["error"]
+
+
+class NamedDummySession(DummySession):
+    def __init__(self, name="session"):
+        super().__init__()
+        self.name = name
+
+
+class DummyServer:
+    def __init__(self, sessions=None, fail_list=False):
+        self.sessions = sessions or []
+        self.fail_list = fail_list
+        self.created = 0
+
+    def new_session(self, session_name, attach=False):
+        self.created += 1
+        sess = NamedDummySession(session_name)
+        self.sessions.append(sess)
+        return sess
+
+    def list_sessions(self):
+        if self.fail_list:
+            raise RuntimeError("boom")
+        return self.sessions
+
+
+def test_connect_to_tmux_select_and_create(monkeypatch):
+    existing = NamedDummySession(lair.config.get("tools.tmux.session_name"))
+    server = DummyServer([existing])
+    monkeypatch.setattr(libtmux, "Server", lambda: server)
+    tool = TmuxTool()
+    tool._connect_to_tmux()
+    assert tool.session is existing
+
+    server2 = DummyServer([])
+    monkeypatch.setattr(libtmux, "Server", lambda: server2)
+    tool._connect_to_tmux()
+    assert server2.created == 1 and tool.session in server2.sessions
+
+
+def test_ensure_connection_error(monkeypatch):
+    tool = TmuxTool()
+    calls = []
+
+    def connect():
+        calls.append(1)
+        if len(calls) == 1:
+            tool.server = DummyServer(fail_list=True)
+        else:
+            raise RuntimeError("again")
+
+    monkeypatch.setattr(tool, "_connect_to_tmux", connect)
+    with pytest.raises(Exception):
+        tool._ensure_connection()
+    assert len(calls) == 2
+
+
+def test_run_and_send_keys_error(monkeypatch, tool):
+    tool._ensure_connection = lambda: (_ for _ in ()).throw(Exception("bad"))
+    assert tool.run()["error"] == "bad"
+    assert tool.send_keys("ls")["error"] == "bad"
+
+
+def test_clean_new_data_strip(monkeypatch, tool):
+    lair.config.set("tools.tmux.read_new_output.strip_escape_codes", True, no_event=True)
+    cleaned = tool._clean_new_data(b"\r\x1b[31mred\x1b[0m\n", 1, None)
+    assert cleaned == "red\n"
+
+
+def test_kill_attach_list_error_paths(tool):
+    tool.session.new_window("one")
+    err = tool.kill(window_id="@99")
+    assert "Requested window id not found" in err["error"]
+    err2 = tool.attach_window(window_id="@99")
+    assert "Requested window id not found" in err2["error"]
+    tool._ensure_connection = lambda: (_ for _ in ()).throw(Exception("down"))
+    out = tool.list_windows()
+    assert out["error"] == "down"
