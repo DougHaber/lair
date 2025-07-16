@@ -11,6 +11,7 @@ import re
 import shlex
 import subprocess
 import tempfile
+from typing import Optional
 
 import pdfplumber
 import yaml
@@ -226,7 +227,7 @@ def get_attachments_content(filenames):
     return content_parts, messages
 
 
-def edit_content_in_editor(content: str, suffix: str = None) -> str | None:
+def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | None:
     """
     Edit the content in an external editor
     Return the new content or None if unchanged

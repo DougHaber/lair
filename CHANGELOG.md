@@ -41,6 +41,7 @@
 - tests: Add PythonTool unit tests
 - tests: Increase tmux tool coverage
 - internal: Fix import order to satisfy new ruff checks
+- internal: Add type annotations to fix mypy errors
 
 # v0.8.1 - Bug fixes
 

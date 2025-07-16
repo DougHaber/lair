@@ -1,7 +1,10 @@
 import json
 import os
 
-import lmdb
+import importlib
+from typing import Any
+
+lmdb: Any = importlib.import_module("lmdb")
 
 import lair
 import lair.sessions.serializer
