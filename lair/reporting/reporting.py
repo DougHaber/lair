@@ -11,11 +11,13 @@ import rich.markdown
 import rich.text
 import rich.traceback
 
+from typing import Any
+
 import lair
 
 
 class ReportingSingletoneMeta(type):
-    _instances = {}
+    _instances: dict[type, Any] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

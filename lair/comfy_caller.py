@@ -21,93 +21,51 @@ import ctypes
 import importlib
 import io
 import secrets
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import requests
 
 import lair
 from lair.logging import logger  # noqa
 
-if TYPE_CHECKING:
-    from comfy_script.runtime import Workflow
-    from comfy_script.runtime.nodes import (
-        BasicGuider,
-        BasicScheduler,
-        CheckpointLoaderSimple,
-        CLIPLoader,
-        CLIPTextEncode,
-        DownloadAndLoadFlorence2Model,
-        DualCLIPLoader,
-        EmptyHunyuanLatentVideo,
-        EmptyLatentImage,
-        ETNLoadImageBase64,
-        Florence2Run,
-        FluxGuidance,
-        ImagePadForOutpaint,
-        ImageResizeKJ,
-        ImageUpscaleWithModel,
-        KSampler,
-        KSamplerSelect,
-        LoraLoader,
-        LTXVConditioning,
-        LTXVImgToVideo,
-        LTXVPreprocess,
-        LTXVScheduler,
-        ModelSamplingSD3,
-        RandomNoise,
-        SamplerCustom,
-        SamplerCustomAdvanced,
-        SaveAnimatedWEBP,
-        SaveImage,
-        StringFunctionPysssss,
-        StringReplaceMtb,
-        UNETLoader,
-        UpscaleModelLoader,
-        VAEDecode,
-        VAEDecodeTiled,
-        VAEEncodeForInpaint,
-        VAELoader,
-        VHSVideoCombine,
-    )
-else:
-    Workflow: Any = None
-    LoraLoader: Any = None
-    CheckpointLoaderSimple: Any = None
-    CLIPTextEncode: Any = None
-    EmptyLatentImage: Any = None
-    KSampler: Any = None
-    VAEDecode: Any = None
-    SaveImage: Any = None
-    ETNLoadImageBase64: Any = None
-    LTXVPreprocess: Any = None
-    ImageResizeKJ: Any = None
-    CLIPLoader: Any = None
-    DownloadAndLoadFlorence2Model: Any = None
-    Florence2Run: Any = None
-    StringReplaceMtb: Any = None
-    StringFunctionPysssss: Any = None
-    LTXVImgToVideo: Any = None
-    LTXVConditioning: Any = None
-    KSamplerSelect: Any = None
-    LTXVScheduler: Any = None
-    SamplerCustom: Any = None
-    VHSVideoCombine: Any = None
-    RandomNoise: Any = None
-    UNETLoader: Any = None
-    DualCLIPLoader: Any = None
-    FluxGuidance: Any = None
-    ModelSamplingSD3: Any = None
-    BasicGuider: Any = None
-    BasicScheduler: Any = None
-    EmptyHunyuanLatentVideo: Any = None
-    SamplerCustomAdvanced: Any = None
-    VAELoader: Any = None
-    VAEDecodeTiled: Any = None
-    SaveAnimatedWEBP: Any = None
-    ImagePadForOutpaint: Any = None
-    VAEEncodeForInpaint: Any = None
-    ImageUpscaleWithModel: Any = None
-    UpscaleModelLoader: Any = None
+Workflow: Any = None
+LoraLoader: Any = None
+CheckpointLoaderSimple: Any = None
+CLIPTextEncode: Any = None
+EmptyLatentImage: Any = None
+KSampler: Any = None
+VAEDecode: Any = None
+SaveImage: Any = None
+ETNLoadImageBase64: Any = None
+LTXVPreprocess: Any = None
+ImageResizeKJ: Any = None
+CLIPLoader: Any = None
+DownloadAndLoadFlorence2Model: Any = None
+Florence2Run: Any = None
+StringReplaceMtb: Any = None
+StringFunctionPysssss: Any = None
+LTXVImgToVideo: Any = None
+LTXVConditioning: Any = None
+KSamplerSelect: Any = None
+LTXVScheduler: Any = None
+SamplerCustom: Any = None
+VHSVideoCombine: Any = None
+RandomNoise: Any = None
+UNETLoader: Any = None
+DualCLIPLoader: Any = None
+FluxGuidance: Any = None
+ModelSamplingSD3: Any = None
+BasicGuider: Any = None
+BasicScheduler: Any = None
+EmptyHunyuanLatentVideo: Any = None
+SamplerCustomAdvanced: Any = None
+VAELoader: Any = None
+VAEDecodeTiled: Any = None
+SaveAnimatedWEBP: Any = None
+ImagePadForOutpaint: Any = None
+VAEEncodeForInpaint: Any = None
+ImageUpscaleWithModel: Any = None
+UpscaleModelLoader: Any = None
 
 
 class ComfyCaller:
@@ -156,10 +114,12 @@ class ComfyCaller:
         # print() statements that can not be properly disabled. To deal with
         # this, STDOUT is ignored on import.
         with contextlib.redirect_stdout(io.StringIO()):
-            from comfy_script.runtime import Workflow, load
+            runtime_module = importlib.import_module("comfy_script.runtime")
+            load = getattr(runtime_module, "load")
+            Workflow_local = getattr(runtime_module, "Workflow")
 
             globals()["load"] = load
-            globals()["Workflow"] = Workflow
+            globals()["Workflow"] = Workflow_local
 
             if lair.config.get("comfy.verify_ssl") is False:
                 self._monkey_patch_comfy_script()
@@ -228,7 +188,7 @@ class ComfyCaller:
             raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
 
     def _ensure_watch_thread(self):
-        import comfy_script.runtime as runtime
+        runtime = importlib.import_module("comfy_script.runtime")
 
         queue = runtime.queue
         watch = getattr(queue, "_watch_thread", None)
@@ -244,7 +204,7 @@ class ComfyCaller:
             logger.debug("Failed to terminate ComfyScript thread")
 
     def _cleanup_watch_thread(self):
-        import comfy_script.runtime as runtime
+        runtime = importlib.import_module("comfy_script.runtime")
 
         queue = runtime.queue
         watch = getattr(queue, "_watch_thread", None)
