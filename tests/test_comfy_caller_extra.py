@@ -322,3 +322,214 @@ def test_workflow_outpaint(monkeypatch):
         )
     )
     assert images == ["img"]
+
+
+def test_import_comfy_script_already(monkeypatch):
+    cc = get_ComfyCaller()()
+    cc.is_comfy_script_imported = True
+    called = []
+    monkeypatch.setattr(importlib, "import_module", lambda *a, **k: called.append(True))
+    cc._import_comfy_script()
+    assert called == []
+
+
+def test_get_defaults_hunyuan_video_t2v(monkeypatch):
+    cc = get_ComfyCaller()()
+    vals = {
+        "comfy.hunyuan_video.loras": "x\ny",
+        "comfy.hunyuan_video.batch_size": 1,
+        "comfy.hunyuan_video.clip_name_1": "c1",
+        "comfy.hunyuan_video.clip_name_2": "c2",
+        "comfy.hunyuan_video.denoise": 0.1,
+        "comfy.hunyuan_video.height": 2,
+        "comfy.hunyuan_video.frame_rate": 3,
+        "comfy.hunyuan_video.guidance_scale": 0.2,
+        "comfy.hunyuan_video.model_name": "m",
+        "comfy.hunyuan_video.model_weight_dtype": "fp16",
+        "comfy.hunyuan_video.num_frames": 4,
+        "comfy.hunyuan_video.prompt": "p",
+        "comfy.hunyuan_video.sampler": "sam",
+        "comfy.hunyuan_video.sampling_shift": 0,
+        "comfy.hunyuan_video.scheduler": "sch",
+        "comfy.hunyuan_video.seed": None,
+        "comfy.hunyuan_video.steps": 5,
+        "comfy.hunyuan_video.tiled_decode.enabled": False,
+        "comfy.hunyuan_video.tiled_decode.overlap": 1,
+        "comfy.hunyuan_video.tiled_decode.tile_size": 2,
+        "comfy.hunyuan_video.tiled_decode.temporal_overlap": 3,
+        "comfy.hunyuan_video.tiled_decode.temporal_size": 4,
+        "comfy.hunyuan_video.vae_model_name": "vae",
+        "comfy.hunyuan_video.width": 6,
+    }
+    monkeypatch.setattr(importlib.import_module("lair").config, "get", lambda k, *a, **kw: vals.get(k))
+    defaults = cc._get_defaults_hunyuan_video_t2v()
+    assert defaults["loras"] == ["x", "y"]
+    assert defaults["batch_size"] == 1
+
+
+class DummySyncWF:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        pass
+
+
+def _setup_ltxv_i2v(monkeypatch, cc, prompt_provided):
+    mod = importlib.import_module("lair.comfy_caller")
+    monkeypatch.setattr(mod, "Workflow", DummySyncWF, raising=False)
+    monkeypatch.setattr(cc.__class__, "_image_to_base64", lambda self, img: "b64", raising=False)
+    monkeypatch.setattr(mod, "CheckpointLoaderSimple", lambda m: ("model", "clip", "vae"), raising=False)
+    monkeypatch.setattr(mod, "ETNLoadImageBase64", lambda b64: ("img", None), raising=False)
+    monkeypatch.setattr(mod, "LTXVPreprocess", lambda img, n: img, raising=False)
+    monkeypatch.setattr(mod, "ImageResizeKJ", lambda *a, **k: ("img2", 1, 1), raising=False)
+    monkeypatch.setattr(mod, "CLIPLoader", lambda *a, **k: "clip", raising=False)
+    if not prompt_provided:
+        monkeypatch.setattr(mod, "DownloadAndLoadFlorence2Model", lambda *a, **k: "model2", raising=False)
+        monkeypatch.setattr(
+            mod, "Florence2Run", lambda *a, **k: (None, None, DummyNode({"text": ["auto"]}), None), raising=False
+        )
+        monkeypatch.setattr(mod, "StringReplaceMtb", lambda *a, **k: DummyNode({"text": ["auto"]}), raising=False)
+        monkeypatch.setattr(mod, "StringFunctionPysssss", lambda *a, **k: DummyNode({"text": ["auto"]}), raising=False)
+    monkeypatch.setattr(mod, "CLIPTextEncode", lambda t, c: f"enc:{t}", raising=False)
+    monkeypatch.setattr(mod, "LTXVImgToVideo", lambda *a, **k: ("p", "n", "latent"), raising=False)
+    monkeypatch.setattr(mod, "LTXVConditioning", lambda p, n, fr: (p, n), raising=False)
+    monkeypatch.setattr(mod, "KSamplerSelect", lambda s: "sampler", raising=False)
+    monkeypatch.setattr(mod, "LTXVScheduler", lambda *a: "sigmas", raising=False)
+    monkeypatch.setattr(mod, "SamplerCustom", lambda *a: ("out", None), raising=False)
+    monkeypatch.setattr(mod, "VAEDecode", lambda *a: "frames", raising=False)
+    monkeypatch.setattr(mod, "VHSVideoCombine", lambda **k: DummyNode({"gifs": [{"filename": "f"}]}), raising=False)
+    monkeypatch.setattr(mod.secrets, "randbelow", lambda a: 7)
+    monkeypatch.setattr(cc, "view", lambda f: f"view:{f}")
+
+
+def test_workflow_ltxv_i2v(monkeypatch):
+    cc = get_ComfyCaller()()
+    _setup_ltxv_i2v(monkeypatch, cc, prompt_provided=True)
+    videos = asyncio.run(
+        cc._workflow_ltxv_i2v(
+            "img",
+            model_name="m",
+            clip_name="c",
+            image_resize_height=1,
+            image_resize_width=1,
+            num_frames=1,
+            frame_rate_conditioning=1,
+            frame_rate_save=1,
+            batch_size=1,
+            florence_model_name="fm",
+            max_shift=0,
+            base_shift=0,
+            stretch=0,
+            terminal=False,
+            negative_prompt="n",
+            auto_prompt_suffix="s",
+            auto_prompt_extra="e",
+            prompt="given",
+            cfg=1,
+            sampler="sam",
+            scheduler="sch",
+            steps=1,
+            pingpong=False,
+            output_format="webp",
+            denoise=0.5,
+            seed=None,
+            florence_seed=1,
+        )
+    )
+    assert videos == ["view:f"]
+
+
+def test_workflow_ltxv_i2v_prompt_auto(monkeypatch):
+    cc = get_ComfyCaller()()
+    _setup_ltxv_i2v(monkeypatch, cc, prompt_provided=False)
+    videos = asyncio.run(
+        cc._workflow_ltxv_i2v(
+            "img",
+            model_name="m",
+            clip_name="c",
+            image_resize_height=1,
+            image_resize_width=1,
+            num_frames=1,
+            frame_rate_conditioning=1,
+            frame_rate_save=1,
+            batch_size=1,
+            florence_model_name="fm",
+            max_shift=0,
+            base_shift=0,
+            stretch=0,
+            terminal=False,
+            negative_prompt="n",
+            auto_prompt_suffix="s",
+            auto_prompt_extra="e",
+            prompt=None,
+            cfg=1,
+            sampler="sam",
+            scheduler="sch",
+            steps=1,
+            pingpong=False,
+            output_format="webp",
+            denoise=0.5,
+            seed=None,
+            florence_seed=None,
+        )
+    )
+    assert videos == ["view:f"]
+
+
+def _setup_hunyuan(monkeypatch, cc, tiled):
+    mod = importlib.import_module("lair.comfy_caller")
+    monkeypatch.setattr(mod, "RandomNoise", lambda s: f"noise:{s}")
+    monkeypatch.setattr(mod, "UNETLoader", lambda n, d: "model", raising=False)
+    monkeypatch.setattr(mod, "DualCLIPLoader", lambda a, b, c, d: "clip", raising=False)
+    monkeypatch.setattr(mod, "CLIPTextEncode", lambda t, c: f"enc:{t}", raising=False)
+    monkeypatch.setattr(mod, "FluxGuidance", lambda c, g: f"flux:{g}", raising=False)
+    monkeypatch.setattr(mod, "ModelSamplingSD3", lambda m, s: "shifted", raising=False)
+    monkeypatch.setattr(mod, "BasicGuider", lambda m, c: "guider", raising=False)
+    monkeypatch.setattr(mod, "KSamplerSelect", lambda s: "ksel", raising=False)
+    monkeypatch.setattr(mod, "BasicScheduler", lambda m, m2, steps, denoise: "sig", raising=False)
+    monkeypatch.setattr(mod, "EmptyHunyuanLatentVideo", lambda *a: "latent", raising=False)
+    monkeypatch.setattr(mod, "SamplerCustomAdvanced", lambda *a: ("latent2", None), raising=False)
+    monkeypatch.setattr(mod, "VAELoader", lambda n: "vae", raising=False)
+    monkeypatch.setattr(mod, "VAEDecodeTiled", lambda *a: "img_t", raising=False)
+    monkeypatch.setattr(mod, "VAEDecode", lambda *a: "img", raising=False)
+    monkeypatch.setattr(
+        mod, "SaveAnimatedWEBP", lambda *a, **k: DummyNode({"images": [{"filename": "f"}]}), raising=False
+    )
+    monkeypatch.setattr(mod.secrets, "randbelow", lambda a: 5)
+    monkeypatch.setattr(cc, "view", lambda f, type="output": f"view:{f}:{type}")
+
+
+@pytest.mark.parametrize("tiled", [False, True])
+def test_workflow_hunyuan_video_t2v(monkeypatch, tiled):
+    cc = get_ComfyCaller()()
+    _setup_hunyuan(monkeypatch, cc, tiled)
+    videos = asyncio.run(
+        cc._workflow_hunyuan_video_t2v(
+            batch_size=1,
+            clip_name_1="c1",
+            clip_name_2="c2",
+            denoise=0.1,
+            frame_rate=1,
+            guidance_scale=0.2,
+            height=1,
+            loras=None,
+            model_name="m",
+            num_frames=1,
+            model_weight_dtype="fp16",
+            prompt="p",
+            sampler="sam",
+            sampling_shift=0,
+            scheduler="sch",
+            seed=None,
+            steps=1,
+            tile_overlap=0,
+            tile_size=1,
+            tile_temporal_size=1,
+            tile_temporal_overlap=0,
+            tiled_decode_enabled=tiled,
+            width=1,
+            vae_model_name="vae",
+        )
+    )
+    assert videos == ["view:f:output"]

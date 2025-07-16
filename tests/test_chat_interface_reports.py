@@ -125,3 +125,15 @@ def test_print_help_and_current_model():
     ci.print_current_model_report()
     # expect two tables from help and one from current model
     assert len(ci.reporting.tables) == 3
+
+
+def test_iter_config_rows_and_baseline(monkeypatch):
+    ci = make_ci()
+    # rows should include differences from the default configuration
+    rows = list(ci._iter_config_rows(True, None, None))
+    assert rows
+
+    # baseline message when baseline exists
+    ci.reporting.messages.clear()
+    ci.print_config_report(baseline="openai")
+    assert any("Baseline mode" in msg for _, msg in ci.reporting.messages)
