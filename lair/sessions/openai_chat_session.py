@@ -2,12 +2,11 @@ import datetime
 import json
 import os
 import zoneinfo
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import openai
 
 import lair
-import lair.components.tools
 import lair.reporting
 from lair.logging import logger
 
@@ -19,7 +18,7 @@ from .base_chat_session import BaseChatSession
 class OpenAIChatSession(BaseChatSession):
     def __init__(self, *, history: Optional[ChatHistory] = None, tool_set: Optional[ToolSet] = None):
         super().__init__(history=history, tool_set=tool_set)
-        self.openai = None
+        self.openai: Optional[openai.OpenAI] = None
         self.recreate_openai_client()
 
         lair.events.subscribe("config.update", lambda d: self.recreate_openai_client(), instance=self)
@@ -57,14 +56,15 @@ class OpenAIChatSession(BaseChatSession):
 
         model_name = lair.config.get("model.name")
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
+        assert self.openai is not None
         answer = self.openai.chat.completions.create(
-            messages=messages,
+            messages=cast(Any, messages),
             model=model_name,
             temperature=temperature if temperature is not None else lair.config.get("model.temperature"),
             max_completion_tokens=lair.config.get("model.max_tokens"),
         )
-
-        return answer.choices[0].message.content.strip()
+        content = answer.choices[0].message.content
+        return content.strip() if content is not None else ""
 
     def _process_tool_calls(self, message, messages, tool_messages):
         """Handle tool calls returned by the model."""
@@ -109,7 +109,7 @@ class OpenAIChatSession(BaseChatSession):
 
             messages.extend(self.history.get_messages())
 
-        tool_messages = []
+        tool_messages: List[Dict[str, Any]] = []
 
         cycle = 0
         while True:
@@ -117,8 +117,9 @@ class OpenAIChatSession(BaseChatSession):
                 "OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d"
                 % (lair.config.get("model.name"), len(messages), cycle)
             )
+            assert self.openai is not None
             answer = self.openai.chat.completions.create(
-                messages=messages,
+                messages=cast(Any, messages),
                 model=lair.config.get("model.name"),
                 temperature=lair.config.get("model.temperature"),
                 max_completion_tokens=lair.config.get("model.max_tokens"),
@@ -131,10 +132,10 @@ class OpenAIChatSession(BaseChatSession):
                 cycle += 1
             else:
                 self.last_prompt = self.reporting.messages_to_str(messages)
+                content = message.content
+                return (content.strip() if content is not None else ""), tool_messages
 
-                return message.content.strip(), tool_messages
-
-    def list_models(self, *, ignore_errors=False):
+    def list_models(self, *, ignore_errors: bool = False) -> Optional[List[Dict[str, Any]]]:
         """
         Retrieve a list of available models and their metadata.
 
@@ -163,7 +164,8 @@ class OpenAIChatSession(BaseChatSession):
                 If an error occurs during model retrieval and `ignore_errors` is False.
         """
         try:
-            models = []
+            models: List[Dict[str, Any]] = []
+            assert self.openai is not None
             for model in self.openai.models.list():
                 models.append(
                     {
@@ -178,6 +180,8 @@ class OpenAIChatSession(BaseChatSession):
         except Exception as error:
             if ignore_errors:
                 logger.debug(f"Failed to retrieve models: {error}")
-                return
+                return None
             else:
                 raise
+
+        return None
