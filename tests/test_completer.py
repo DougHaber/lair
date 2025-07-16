@@ -57,3 +57,39 @@ def test_get_attachments_content(monkeypatch, tmp_path):
     assert any(p["type"] == "image_url" for p in parts)
     joined = " ".join(m["content"] for m in messages)
     assert "pdfdata" in joined and "hello" in joined
+
+
+def test_completer_edge_cases(monkeypatch):
+    ci = make_interface(monkeypatch)
+    # No models available
+    ci._models = None
+    comp = ChatInterfaceCompleter(ci)
+
+    from prompt_toolkit.document import Document
+
+    # /model with no cached models
+    doc = Document("/model a", cursor_position=len("/model a"))
+    assert list(comp.get_completions(doc, None)) == []
+
+    # /mode with too many components
+    doc = Document("/mode openai extra", cursor_position=len("/mode openai extra"))
+    assert list(comp.get_completions(doc, None)) == []
+
+    # /prompt without argument uses handler directly
+    assert list(comp.get_completions__prompt("/prompt")) == []
+
+    # /set value suggestions when key has value
+    value_prefix = lair.config.get("model.name")[0]
+    doc = Document(f"/set model.name {value_prefix}", cursor_position=len(f"/set model.name {value_prefix}"))
+    results = [c.text for c in comp.get_completions(doc, None)]
+    assert f"/set model.name {lair.config.get('model.name')}" in results
+
+    # /set value suggestions when key is unset
+    doc = Document("/set no.key ", cursor_position=len("/set no.key "))
+    results = [c.text for c in comp.get_completions(doc, None)]
+    assert "/set no.key" in results
+
+    # /set key suggestions
+    doc = Document("/set model.", cursor_position=len("/set model."))
+    results = [c.text for c in comp.get_completions(doc, None)]
+    assert any(r.startswith("/set model.") for r in results)
