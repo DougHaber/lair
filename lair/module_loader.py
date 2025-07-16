@@ -39,10 +39,14 @@ class ModuleLoader:
 
         Example: `modules/util/tools/example.py` becomes just `util/tools/example`
         """
-        absolute_module_file = os.path.abspath(module.__file__).replace("_", "-")
+        absolute_module_file = os.path.abspath(module.__file__)
         absolute_module_path = os.path.abspath(module_path)
 
-        return re.sub("^" + re.escape(absolute_module_path) + "/", "", re.sub(r"\.pyc?$", "", absolute_module_file))
+        # Determine the relative path before replacing underscores so that
+        # underscores in parent directories do not break the prefix stripping.
+        relative = os.path.relpath(absolute_module_file, absolute_module_path)
+        relative = re.sub(r"\.pyc?$", "", relative)
+        return relative.replace("_", "-")
 
     def _register_module(self, module, module_path):
         module_info = module._module_info()
