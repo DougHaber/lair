@@ -1,5 +1,7 @@
+import contextlib
+import io
 import sys
-import subprocess
+from types import SimpleNamespace
 
 STUB_SCRIPT = """
 import sys, types
@@ -29,9 +31,13 @@ run.start()
 
 
 def run_command(*args):
-    cmd = [sys.executable, "-c", STUB_SCRIPT]
-    cmd.extend(args)
-    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    argv_backup = sys.argv
+    sys.argv = ["cli", *args]
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+        exec(STUB_SCRIPT, {})
+    sys.argv = argv_backup
+    return SimpleNamespace(stdout=buffer.getvalue(), returncode=0)
 
 
 def test_help_command():
