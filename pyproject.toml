@@ -64,7 +64,7 @@ select = [
 "tests/**/*.py" = ["S101"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=65"
+addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=90"
 
 [build-system]
 requires = ["poetry-core"]
