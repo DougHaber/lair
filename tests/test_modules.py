@@ -86,3 +86,125 @@ def test_call_llm_and_clean(monkeypatch):
     assert result == "ok" and chat.called
     cleaned = util.clean_response("```txt\nhello\n```")
     assert cleaned == "hello\n"
+
+
+def test_chat_module_info():
+    info = chat_mod._module_info()
+    assert info["class"] is chat_mod.Chat
+    assert info["description"].startswith("Run the interactive")
+    assert "cli" in info["tags"]
+
+
+class DummySession:
+    def __init__(self):
+        self.session_title = None
+        self.session_alias = None
+
+
+class DummySessionManager:
+    def __init__(self, raise_unknown=False, alias_available=True):
+        self.raise_unknown = raise_unknown
+        self.alias_available = alias_available
+        self.add_called = False
+        self.switched = False
+
+    def switch_to_session(self, alias, chat_session):
+        if self.raise_unknown:
+            raise lair.sessions.UnknownSessionException("no session")
+        self.switched = True
+
+    def is_alias_available(self, alias):
+        return self.alias_available
+
+    def add_from_chat_session(self, chat_session):
+        self.add_called = True
+
+
+def test_init_session_manager_create(monkeypatch):
+    util = make_util()
+    manager = DummySessionManager(raise_unknown=True, alias_available=True)
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: manager)
+    monkeypatch.setattr(lair.util, "safe_int", lambda v: None)
+    args = argparse.Namespace(
+        session="new",
+        allow_create_session=True,
+        read_only_session=False,
+    )
+    chat_session = DummySession()
+    result = util._init_session_manager(chat_session, args)
+    assert result is manager
+    assert chat_session.session_alias == "new"
+    assert manager.add_called
+
+
+def test_init_session_manager_numeric_alias(monkeypatch):
+    util = make_util()
+    manager = DummySessionManager(raise_unknown=True, alias_available=False)
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: manager)
+    monkeypatch.setattr(lair.util, "safe_int", lambda v: 5)
+    args = argparse.Namespace(
+        session="5",
+        allow_create_session=True,
+        read_only_session=False,
+    )
+    with pytest.raises(SystemExit):
+        util._init_session_manager(DummySession(), args)
+
+
+def test_util_run(monkeypatch):
+    util = make_util()
+
+    class DummyChat:
+        def __init__(self):
+            self.messages = None
+            self.session_title = None
+            self.session_alias = None
+
+        def chat(self, messages):
+            self.messages = messages
+            return "```result```"
+
+    chat_obj = DummyChat()
+
+    monkeypatch.setattr(lair.sessions, "get_chat_session", lambda session_type: chat_obj)
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+
+    def fake_init(chat_session, args):
+        chat_session.session_title = "N/A"
+        return None
+
+    monkeypatch.setattr(util, "_init_session_manager", fake_init)
+    monkeypatch.setattr(util, "_get_instructions", lambda a: "INST")
+    monkeypatch.setattr(util, "_get_user_messages", lambda a: [{"role": "user", "content": "MSG"}])
+    monkeypatch.setattr(util, "clean_response", lambda r: r.strip("`") )
+    outputs = []
+
+    class DummyReporting:
+        def llm_output(self, text):
+            outputs.append(text)
+
+    monkeypatch.setattr(lair.reporting, "Reporting", lambda: DummyReporting())
+
+    backup = lair.config.active.copy()
+    args = argparse.Namespace(
+        session=None,
+        allow_create_session=False,
+        model=None,
+        markdown=True,
+        include_filenames=None,
+        enable_tools=True,
+        pipe=False,
+        content=None,
+        content_file=None,
+        attachments=None,
+        instructions=None,
+        instructions_file=None,
+        read_only_session=False,
+    )
+
+    util.run(args)
+    lair.config.update(backup)
+
+    assert outputs == ["result"]
+    assert chat_obj.session_title == "N/A"
+    assert chat_obj.messages[1]["content"] == "MSG"
