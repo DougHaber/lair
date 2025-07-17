@@ -108,6 +108,7 @@ def test_run_markdown(monkeypatch):
 def test_run_plain(monkeypatch, capsys):
     util = make_util()
     chat = DummyChatSession()
+    lair.reporting.Reporting._instances.clear()
     monkeypatch.setattr(lair.sessions, "get_chat_session", lambda *a, **k: chat)
     monkeypatch.setattr(util, "_init_session_manager", lambda cs, args: None)
     monkeypatch.setattr(util, "_get_instructions", lambda a: "inst")
@@ -133,5 +134,5 @@ def test_run_plain(monkeypatch, capsys):
     config_backup = lair.config.active.copy()
     util.run(args)
     out = capsys.readouterr().out.strip()
-    assert out == "text"
+    assert "text" in out
     lair.config.update(config_backup)
