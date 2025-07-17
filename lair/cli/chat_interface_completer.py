@@ -59,7 +59,7 @@ class ChatInterfaceCompleter(Completer):
             yield Completion(f"/set {key} {value}", display=value, start_position=-len(text))
 
     def _get_set_key_completion(self, prefix, text):
-        for key in lair.config.active.keys():
+        for key in lair.config.active:
             if key.startswith("_"):
                 continue
             if key.startswith(prefix) and prefix != key:

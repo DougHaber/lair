@@ -10,6 +10,7 @@
 - tests: Add coverage for comfy_caller workflows
 - util: replace deprecated importlib.resources API
 - cli: avoid runtime warnings when no event loop is present
+- cli: update modules for new ruff checks
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images

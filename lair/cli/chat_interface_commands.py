@@ -227,7 +227,7 @@ class ChatInterfaceCommands:
                         lair.util.save_file(filename, response + "\n")
                         self.reporting.system_message(f"Section saved  ({len(response)} bytes)")
                     else:
-                        print(response)
+                        self.reporting.print_rich(response)
                 else:
                     logger.error("Extract failed: No matching section found")
             else:
@@ -255,10 +255,7 @@ class ChatInterfaceCommands:
 
             if edited_jsonl_str is not None:
                 try:
-                    if not edited_jsonl_str.strip():
-                        new_messages = []
-                    else:
-                        new_messages = lair.util.decode_jsonl(edited_jsonl_str)
+                    new_messages = [] if not edited_jsonl_str.strip() else lair.util.decode_jsonl(edited_jsonl_str)
                 except Exception as error:
                     logger.error(f"Failed to decode edited history JSONL: {error}")
                     return
@@ -485,6 +482,6 @@ class ChatInterfaceCommands:
             key = arguments[0]
             value = "" if len(arguments) == 1 else arguments_str[len(arguments[0]) + 1 :].strip()
             if key not in lair.config.active:
-                self.reporting.user_error("ERROR: Unknown key: %s" % key)
+                self.reporting.user_error(f"ERROR: Unknown key: {key}")
             else:
                 lair.config.set(key, value)
