@@ -14,7 +14,7 @@ def setup_interface(monkeypatch):
 def test_init_starting_session_create(monkeypatch):
     ci = setup_interface(monkeypatch)
     monkeypatch.setattr(
-        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("u"))
+        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionError("u"))
     )
     monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: True)
     ci.chat_session.session_alias = None
@@ -26,7 +26,7 @@ def test_init_starting_session_create(monkeypatch):
 def test_init_starting_session_integer_error(monkeypatch, caplog):
     ci = setup_interface(monkeypatch)
     monkeypatch.setattr(
-        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("u"))
+        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionError("u"))
     )
     monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: False)
     monkeypatch.setattr(lair.util, "safe_int", int)

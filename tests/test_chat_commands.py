@@ -28,7 +28,7 @@ def setup_ci(monkeypatch):
             return orig_get(id_or_alias, raise_exception)
         except Exception:
             if raise_exception:
-                raise lair.sessions.session_manager.UnknownSessionException("Unknown")
+                raise lair.sessions.session_manager.UnknownSessionError("Unknown")
             return None
 
     monkeypatch.setattr(ci.session_manager, "get_session_id", patched_get)

@@ -456,7 +456,7 @@ class ChatInterfaceCommands:
             # If the current session was deleted, recreate it
             try:
                 self.session_manager.get_session_id(self.chat_session.session_id)
-            except lair.sessions.session_manager.UnknownSessionException:
+            except lair.sessions.session_manager.UnknownSessionError:
                 self._new_chat_session()
 
     def command_session_new(self, command, arguments, arguments_str):
