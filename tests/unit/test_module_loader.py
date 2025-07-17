@@ -1,5 +1,6 @@
 import os
 import types
+
 import pytest
 
 from lair.module_loader import ModuleLoader

@@ -568,7 +568,7 @@ class Comfy:
             output_files.append(filename)
         else:
             if filename == "-":
-                raise Exception("Writing to STDOUT is only supported for single-file output")
+                raise ValueError("Writing to STDOUT is only supported for single-file output")
             elif not os.path.splitext(filename)[1]:
                 raise ValueError("Filename must have an extension (e.g., 'output.png').")
 

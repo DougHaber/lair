@@ -1,8 +1,9 @@
+import importlib
 import os
+
 import pytest
 
 import lair
-import importlib
 
 config_module = importlib.import_module("lair.config")
 
@@ -40,7 +41,7 @@ def test_add_config_errors_and_change_mode(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         cfg._add_config({"default_mode": "missing"})
     # unknown mode change
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         cfg.change_mode("missing")
 
 

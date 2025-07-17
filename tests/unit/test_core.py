@@ -1,3 +1,11 @@
+import base64
+import datetime
+import os
+import subprocess
+
+import pytest
+
+import lair
 import lair.util.core as core
 
 
@@ -26,15 +34,6 @@ def test_expand_filename_list(tmp_path):
     pattern = str(tmp_path / "*.txt")
     result = core.expand_filename_list([pattern])
     assert str(f1) in result and str(f2) in result
-
-
-import os
-import base64
-import datetime
-import subprocess
-import pytest
-import lair
-import lair.util.core as core
 
 
 def test_safe_dump_and_file_ops(tmp_path, monkeypatch):
@@ -67,7 +66,7 @@ def test_misc_utils(monkeypatch):
 
 
 def test_expand_filename_list_errors(tmp_path):
-    with pytest.raises(Exception):
+    with pytest.raises(FileNotFoundError):
         core.expand_filename_list([str(tmp_path / "nofile")])
 
     f = tmp_path / "a.txt"
@@ -118,7 +117,7 @@ def test_read_pdf_limits(tmp_path, monkeypatch):
     out = core.read_pdf(dummy_file, enforce_limits=True)
     assert len(out) == 5
     monkeypatch.setattr(lair.config, "active", {**lair.config.active, "misc.text_attachment_truncate": False})
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         core.read_pdf(dummy_file, enforce_limits=True)
 
 
@@ -138,7 +137,7 @@ def test_pdf_and_text_files(tmp_path, monkeypatch):
     assert msg2["content"].endswith("abc")
 
     textfile.write_bytes(b"\xff\xfe")
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         core._get_attachments_content__text_file(str(textfile))
 
 

@@ -1,8 +1,10 @@
 import argparse
+
 import pytest
 
 import lair
-from lair.modules import chat as chat_mod, util as util_mod
+from lair.modules import chat as chat_mod
+from lair.modules import util as util_mod
 
 
 class DummyChatSession:

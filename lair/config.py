@@ -92,7 +92,7 @@ class Configuration:
 
     def change_mode(self, mode):
         if mode not in self.modes:
-            raise Exception(f"Unknown mode: {mode}")
+            raise ValueError(f"Unknown mode: {mode}")
 
         # Reset `_active` to a fresh copy of the selected mode
         self.modes["_active"] = self.modes[mode].copy()

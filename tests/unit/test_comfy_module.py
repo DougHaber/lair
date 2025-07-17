@@ -1,11 +1,12 @@
 import argparse
-import sys
 import io
+import sys
 import types
+
+import pytest
 
 import lair
 from lair.modules import comfy as comfy_mod
-import pytest
 
 
 class DummyComfyCaller:
@@ -57,7 +58,7 @@ def test_save_output_multiple_files(tmp_path, comfy):
 @pytest.mark.parametrize("filename", ["-", "outfile"])
 def test_save_output_invalid(filename, comfy):
     if filename == "-":
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             comfy._save_output([b"a"], filename)
     else:
         with pytest.raises(ValueError):

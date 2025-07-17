@@ -54,9 +54,9 @@ class ModuleLoader:
         module_info.update({"name": name})  # Add the name into our stored module_info
 
         if name in self.modules:
-            raise Exception("Unable to register repeat name: %s" % name)
+            raise ValueError(f"Unable to register repeat name: {name}")
         elif name in self.commands:
-            raise Exception("Unable to register repeat command name: %s" % name)
+            raise ValueError(f"Unable to register repeat command name: {name}")
         else:
             logger.debug("Registered module: %s" % name)
             self.modules[name] = module_info
@@ -64,19 +64,19 @@ class ModuleLoader:
 
             for alias in module_info.get("aliases", []):
                 if alias in self.commands:
-                    raise Exception("Unable to register repeat command / alias: %s" % name)
+                    raise ValueError(f"Unable to register repeat command / alias: {name}")
                 self.commands[alias] = module_info["class"]
 
     def _validate_module(self, module):
         if not hasattr(module, "_module_info"):
-            raise Exception("_module_info not defined")
+            raise ValueError("_module_info not defined")
         elif not isinstance(module._module_info, types.FunctionType):
-            raise Exception("_module_info not a function")
+            raise ValueError("_module_info not a function")
         else:
             try:
                 jsonschema.validate(instance=module._module_info(), schema=ModuleLoader.MODULE_INFO_SCHEMA)
             except jsonschema.ValidationError as error:
-                raise Exception("Invalid _module_info: %s" % error)
+                raise ValueError(f"Invalid _module_info: {error}")
 
     def import_file(self, filename, module_path):
         logger.debug("Importing file: %s" % filename)

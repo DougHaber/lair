@@ -1,7 +1,9 @@
 import os
-import lair
-import pytest
+
 import libtmux
+import pytest
+
+import lair
 from lair.components.tools.tmux_tool import TmuxTool
 
 
@@ -108,7 +110,7 @@ def test_get_window_by_id_and_errors(tool):
     assert tool._get_window_by_id(w1.get("window_id")) is w1
     assert tool._get_window_by_id(w1.get("window_id").lstrip("@")) is w1
     assert tool._get_window_by_id(None) is None
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool._get_window_by_id("@99")
 
 
@@ -129,7 +131,7 @@ def test_get_output_modes(tool, monkeypatch):
     assert called["mode"] == "stream"
     assert tool._get_output("screen") == {"out": "screen"}
     assert called["mode"] == "screen"
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool._get_output("bad")
 
 
@@ -177,7 +179,7 @@ def test_send_keys_valid_and_errors(tool, monkeypatch):
 
 
 def test_capture_output_and_errors(tool):
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.capture_output()
     tool.session.new_window("one")
     tool.active_window = tool.session.windows[0]
@@ -213,7 +215,7 @@ def test_read_new_output_flow(tool, tmp_path):
 
     # connection lost
     del tool.log_files[pane.get("pane_id")]
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.read_new_output()
 
 
@@ -290,7 +292,7 @@ def test_ensure_connection_error(monkeypatch):
             raise RuntimeError("again")
 
     monkeypatch.setattr(tool, "_connect_to_tmux", connect)
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool._ensure_connection()
     assert len(calls) == 2
 
@@ -367,7 +369,7 @@ def test_get_log_file_name_creates_dirs(tmp_path, basic_tool):
 
 
 def test_read_new_output_no_windows(basic_tool):
-    with pytest.raises(Exception, match="No active tmux windows"):
+    with pytest.raises(RuntimeError, match="No active tmux windows"):
         basic_tool.read_new_output()
 
 
