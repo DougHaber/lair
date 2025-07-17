@@ -42,8 +42,5 @@ def _log_color(level_name):
 
 def _emit_with_color(handler, record):
     message = handler.format(record)
-    if record.color:
-        text = Text(record.prefix + message, style=record.color)
-    else:
-        text = Text(record.prefix + message)
+    text = Text(record.prefix + message, style=record.color) if record.color else Text(record.prefix + message)
     console.print(text)

@@ -71,7 +71,7 @@ class ChatHistory:
         if role == "tool":
             raise ValueError("add_message(): Role of tool is invalid. Use add_tool_message()")
         elif role not in self.ALLOWED_ROLES:
-            raise ValueError("add_message(): Unknown role: %s" % role)
+            raise ValueError(f"add_message(): Unknown role: {role}")
 
         self._history.append(
             {

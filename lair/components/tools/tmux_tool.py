@@ -113,7 +113,7 @@ class TmuxTool:
             try:
                 self._connect_to_tmux()
             except Exception as connect_error:
-                raise Exception(f"Tmux server unavailable: {connect_error}")
+                raise Exception(f"Tmux server unavailable: {connect_error}") from connect_error
 
     def _get_output(self, return_mode, *, prune_line=None, window_id=None):
         """
