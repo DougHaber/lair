@@ -1,8 +1,9 @@
+import importlib
 import os
+
 import pytest
 
 import lair
-import importlib
 
 config_module = importlib.import_module("lair.config")
 
@@ -40,7 +41,7 @@ def test_add_config_errors_and_change_mode(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         cfg._add_config({"default_mode": "missing"})
     # unknown mode change
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="Unknown mode"):
         cfg.change_mode("missing")
 
 
@@ -54,10 +55,10 @@ def test_update_get_set_and_cast(monkeypatch, tmp_path):
     with pytest.raises(ValueError):
         cfg.get("nope")
     # set unknown key
-    with pytest.raises(config_module.ConfigUnknownKeyException):
+    with pytest.raises(config_module.ConfigUnknownKeyError):
         cfg.set("nope", 1)
     # invalid bool value triggers ConfigInvalidType
-    with pytest.raises(config_module.ConfigInvalidType):
+    with pytest.raises(config_module.ConfigInvalidTypeError):
         cfg.set("chat.attachments_enabled", "maybe")
     # cast empty string for int returns None
     assert cfg._cast_value("session.max_history_length", "") is None
@@ -81,5 +82,5 @@ def test_set_inherit_and_invalid_cast(tmp_path, monkeypatch):
     cfg = config_module.Configuration()
     cfg.set("_inherit", ["base"])
     assert cfg.get("_inherit") == ["base"]
-    with pytest.raises(config_module.ConfigInvalidType):
+    with pytest.raises(config_module.ConfigInvalidTypeError):
         cfg.set("session.max_history_length", "oops")

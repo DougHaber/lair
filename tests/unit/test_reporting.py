@@ -37,7 +37,7 @@ def test_print_highlighted_json(monkeypatch):
 
     values["style.messages_command.syntax_highlight"] = False
     captured = []
-    monkeypatch.setattr(builtins, "print", lambda text: captured.append(text))
+    monkeypatch.setattr(r.console, "print", lambda text, **_: captured.append(text))
     r.print_highlighted_json('{"a":2}')
     assert captured == ['{"a":2}']
 
