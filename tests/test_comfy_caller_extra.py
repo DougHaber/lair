@@ -1,13 +1,13 @@
+import asyncio
 import importlib
-import types
 import ssl
 import sys
-import asyncio
+import types
 
 import pytest
 
-from tests.test_comfy_caller import get_ComfyCaller
 import lair
+from tests.test_comfy_caller import get_comfy_caller
 
 
 class DummyNode:
@@ -20,7 +20,7 @@ class DummyNode:
 
 def test_monkey_patch_comfy_script(monkeypatch):
     importlib.import_module("lair.comfy_caller")
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
 
     class DummyConnector:
         last_ssl = None
@@ -42,7 +42,7 @@ def test_monkey_patch_comfy_script(monkeypatch):
 
 def test_import_comfy_script(monkeypatch):
     caller_mod = importlib.import_module("lair.comfy_caller")
-    cc = get_ComfyCaller()(url="http://unit.test")
+    cc = get_comfy_caller()(url="http://unit.test")
 
     runtime_mod = types.ModuleType("comfy_script.runtime")
 
@@ -81,25 +81,25 @@ def test_import_comfy_script(monkeypatch):
 
 
 def test_set_url(monkeypatch):
-    cc = get_ComfyCaller()(url="http://same")
+    cc = get_comfy_caller()(url="http://same")
     called = []
     monkeypatch.setattr(cc, "_import_comfy_script", lambda: called.append(True))
     cc.set_url("http://same")
     assert called == []
 
-    cc2 = get_ComfyCaller()()
+    cc2 = get_comfy_caller()()
     called2 = []
     monkeypatch.setattr(cc2, "_import_comfy_script", lambda: called2.append(True))
     cc2.set_url("http://new")
     assert cc2.url == "http://new"
     assert called2 == [True]
 
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         cc.set_url("http://other")
 
 
 def test_view(monkeypatch):
-    cc = get_ComfyCaller()(url="http://server")
+    cc = get_comfy_caller()(url="http://server")
     responses = []
 
     class Resp:
@@ -120,12 +120,12 @@ def test_view(monkeypatch):
     monkeypatch.setattr(
         importlib.import_module("lair.comfy_caller").requests, "get", lambda *a, **k: Resp(404), raising=False
     )
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         cc.view("bad")
 
 
 def test_kill_thread(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     dummy = types.SimpleNamespace(ident=5)
     called = []
     monkeypatch.setattr(
@@ -150,7 +150,7 @@ def test_kill_thread(monkeypatch):
 
 
 def test_workflow_ltxv_prompt(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     with pytest.raises(ValueError):
         asyncio.run(
             cc._workflow_ltxv_prompt(
@@ -198,12 +198,12 @@ def test_workflow_ltxv_prompt(monkeypatch):
 
 
 def test_kill_thread_none():
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     assert cc._kill_thread(None) is None
 
 
 def test_get_defaults_image(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     vals = {
         "comfy.image.loras": "a\nb",
         "comfy.image.batch_size": 1,
@@ -242,7 +242,7 @@ class DummyAsyncNode:
 
 
 def test_workflow_image(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     mod = importlib.import_module("lair.comfy_caller")
     monkeypatch.setattr(mod, "Workflow", DummyAsyncWF, raising=False)
     monkeypatch.setattr(mod, "CheckpointLoaderSimple", lambda n: ("m", "c", "v"), raising=False)
@@ -274,7 +274,7 @@ def test_workflow_image(monkeypatch):
 
 
 def test_workflow_upscale(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     mod = importlib.import_module("lair.comfy_caller")
     monkeypatch.setattr(mod, "UpscaleModelLoader", lambda n: f"m:{n}", raising=False)
     monkeypatch.setattr(cc.__class__, "_image_to_base64", lambda self, img: "b64", raising=False)
@@ -286,7 +286,7 @@ def test_workflow_upscale(monkeypatch):
 
 
 def test_workflow_outpaint(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     mod = importlib.import_module("lair.comfy_caller")
     monkeypatch.setattr(mod, "Workflow", DummyAsyncWF, raising=False)
     monkeypatch.setattr(mod, "CheckpointLoaderSimple", lambda n: ("m", "c", "v"), raising=False)

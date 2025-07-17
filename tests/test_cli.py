@@ -1,5 +1,12 @@
+import io
+import os
+import runpy
 import sys
-import subprocess
+import tempfile
+from contextlib import redirect_stderr, redirect_stdout
+from types import SimpleNamespace
+
+import pytest
 
 STUB_SCRIPT = """
 import sys, types
@@ -29,9 +36,20 @@ run.start()
 
 
 def run_command(*args):
-    cmd = [sys.executable, "-c", STUB_SCRIPT]
-    cmd.extend(args)
-    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    buffer = io.StringIO()
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tmp:
+        tmp.write(STUB_SCRIPT)
+        path = tmp.name
+    try:
+        with redirect_stdout(buffer), redirect_stderr(buffer):
+            original_argv = sys.argv
+            sys.argv = [path] + list(args)
+            with pytest.raises(SystemExit) as exc_info:
+                runpy.run_path(path, run_name="__main__")
+            sys.argv = original_argv
+    finally:
+        os.remove(path)
+    return SimpleNamespace(returncode=exc_info.value.code, stdout=buffer.getvalue())
 
 
 def test_help_command():

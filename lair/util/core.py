@@ -37,7 +37,7 @@ def safe_int(number):
 
 
 def slurp_file(filename):
-    with open(os.path.expanduser(filename), "r") as fd:
+    with open(os.path.expanduser(filename)) as fd:
         document = fd.read()
 
     return document
@@ -53,7 +53,7 @@ def parse_yaml_text(text):
 
 
 def parse_yaml_file(filename):
-    with open(filename, "r") as fd:
+    with open(filename) as fd:
         return yaml.safe_load(fd)
 
 
@@ -108,7 +108,7 @@ def expand_filename_list(filenames, *, fail_on_not_found=True, sort_results=True
         matches = glob.glob(os.path.expanduser(filename))
 
         if not matches and fail_on_not_found:
-            raise Exception("File not found: %s" % filename)
+            raise FileNotFoundError(f"File not found: {filename}")
 
         new_filenames.extend(matches)
 
@@ -147,7 +147,7 @@ def read_pdf(filename, *, enforce_limits=False):
             contents += page.extract_text(x_tolerance=2, y_tolerance=2)
             if enforce_limits and len(contents) > limit:
                 if not lair.config.get("misc.text_attachment_truncate"):
-                    raise Exception(
+                    raise RuntimeError(
                         "Attachment size exceeds limit: "
                         f"file={filename}, size={os.path.getsize(filename)}, limit={limit}"
                     )
@@ -178,7 +178,7 @@ def _get_attachments_content__text_file(filename):
     do_truncate = False
     if os.path.getsize(filename) > limit:
         if not lair.config.get("misc.text_attachment_truncate"):
-            raise Exception(
+            raise RuntimeError(
                 f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
             )
         else:
@@ -188,10 +188,10 @@ def _get_attachments_content__text_file(filename):
             do_truncate = True
 
     try:
-        with open(filename, "r") as fd:
+        with open(filename) as fd:
             contents = fd.read(limit if do_truncate else None)
     except UnicodeDecodeError as error:
-        raise Exception(f"File attachment is not text: file={filename}, error={error}")
+        raise RuntimeError(f"File attachment is not text: file={filename}, error={error}") from error
 
     if lair.config.get("misc.provide_attachment_filenames"):
         header = f"User provided file: filename={filename}\n---\n"
@@ -235,17 +235,14 @@ def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | 
     editor_cmd = lair.config.get("misc.editor_command") or os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
     editor_args = shlex.split(editor_cmd)
 
-    temp_file = tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix)
-    temp_path = pathlib.Path(temp_file.name)
+    with tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix) as temp_file:
+        temp_path = pathlib.Path(temp_file.name)
+        temp_file.write(content)
 
     try:
-        temp_file.write(content)
-        temp_file.close()
-
         run = subprocess.run
         run(editor_args + [str(temp_path)], check=True)
         modified_content = temp_path.read_text()
-
         return modified_content if modified_content != content else None
     finally:
         temp_path.unlink()
