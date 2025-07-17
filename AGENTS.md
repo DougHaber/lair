@@ -60,8 +60,8 @@ The `CHANGELOG.md` file should be appended with new entries for any new features
 Before submitting any pull requests that modify Python code or documentation, you must run the following checks and ensure they succeed:
 
 1. `python -m compileall -q lair`
-2. `ruff check lair`
-3. `ruff format lair`
+2. `ruff check lair tests`
+3. `ruff format lair tests`
 4. `mypy lair`
 5. `pytest`
 

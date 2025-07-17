@@ -176,7 +176,7 @@ def test_util_run(monkeypatch):
     monkeypatch.setattr(util, "_init_session_manager", fake_init)
     monkeypatch.setattr(util, "_get_instructions", lambda a: "INST")
     monkeypatch.setattr(util, "_get_user_messages", lambda a: [{"role": "user", "content": "MSG"}])
-    monkeypatch.setattr(util, "clean_response", lambda r: r.strip("`") )
+    monkeypatch.setattr(util, "clean_response", lambda r: r.strip("`"))
     outputs = []
 
     class DummyReporting:

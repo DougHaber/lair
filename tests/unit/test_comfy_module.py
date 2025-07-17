@@ -198,7 +198,9 @@ def test_run_workflow_queue(monkeypatch, tmp_path, comfy):
     monkeypatch.setattr(comfy_mod.logger, "warning", lambda msg: warnings.append(msg))
 
     args = argparse.Namespace(recursive=False, skip_existing=False, comfy_command="image")
-    comfy._run_workflow_queue(args, {}, {}, queue=[str(dir_path), str(file_path)], output_filename_template="{basename}.png")
+    comfy._run_workflow_queue(
+        args, {}, {}, queue=[str(dir_path), str(file_path)], output_filename_template="{basename}.png"
+    )
     assert processed == [str(file_path)]
     assert extended == []
     assert warnings and str(dir_path) in warnings[0]
@@ -215,6 +217,8 @@ def test_run_workflow_queue_recursive(monkeypatch, tmp_path, comfy):
     monkeypatch.setattr(comfy, "_extend_queue_from_dir", lambda d, q: extended.append(d))
 
     args = argparse.Namespace(recursive=True, skip_existing=False, comfy_command="image")
-    comfy._run_workflow_queue(args, {}, {}, queue=[str(dir_path), str(file_path)], output_filename_template="{basename}.png")
+    comfy._run_workflow_queue(
+        args, {}, {}, queue=[str(dir_path), str(file_path)], output_filename_template="{basename}.png"
+    )
     assert processed == [str(file_path)]
     assert extended == [str(dir_path)]

@@ -149,6 +149,8 @@ def test_run_workflow_no_debug(monkeypatch, capsys):
     result = cc.run_workflow("dummy")
     assert result == "ok"
     assert called == ["start", "stop"]
+
+
 import importlib
 import types
 import ssl
