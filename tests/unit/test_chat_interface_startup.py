@@ -2,7 +2,7 @@ import pytest
 import types
 import lair
 import prompt_toolkit
-from tests.test_chat_interface_extended import make_interface
+from tests.helpers.chat_interface import make_interface
 
 
 def setup_interface(monkeypatch):

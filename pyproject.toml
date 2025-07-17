@@ -64,6 +64,10 @@ select = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=65"
+markers = [
+    "unit: unit tests",
+    "integration: integration tests using sqlite",
+]
 
 [build-system]
 requires = ["poetry-core"]
