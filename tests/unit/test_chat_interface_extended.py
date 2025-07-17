@@ -1,28 +1,29 @@
+import importlib
 import sys
 import types
-import importlib
 
-import pytest  # noqa: F401
+OPTIONAL_MODULES = [
+    "diffusers",
+    "transformers",
+    "torch",
+    "comfy_script",
+    "lair.comfy_caller",
+    "trafilatura",
+    "PIL",
+    "duckduckgo_search",
+    "pdfplumber",
+    "requests",
+    "libtmux",
+    "lmdb",
+]
 
 
-def make_interface(monkeypatch):
-    # stub heavy optional dependencies before importing lair
-    for name in [
-        "diffusers",
-        "transformers",
-        "torch",
-        "comfy_script",
-        "lair.comfy_caller",
-        "trafilatura",
-        "PIL",
-        "duckduckgo_search",
-        "pdfplumber",
-        "requests",
-        "libtmux",
-        "lmdb",
-    ]:
+def _stub_modules() -> None:
+    for name in OPTIONAL_MODULES:
         sys.modules.setdefault(name, types.ModuleType(name))
 
+
+def _create_classes():
     import lair
     from lair.components.history.chat_history import ChatHistory
     from lair.components.tools.tool_set import ToolSet
@@ -150,6 +151,16 @@ def make_interface(monkeypatch):
         def set_title(self, id_or_alias, title):
             sid = self.get_session_id(id_or_alias)
             self.sessions[sid]["title"] = title
+
+    return DummyChatSession, DummyReporting, SimpleSessionManager
+
+
+def make_interface(monkeypatch):
+    _stub_modules()
+
+    DummyChatSession, DummyReporting, SimpleSessionManager = _create_classes()
+
+    import lair
 
     monkeypatch.setattr(lair.sessions, "get_chat_session", lambda t: DummyChatSession())
     monkeypatch.setattr(lair.sessions, "SessionManager", SimpleSessionManager)

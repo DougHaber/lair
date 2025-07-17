@@ -1,15 +1,19 @@
-import sys
-import types
 import importlib
-import shutil
-import time
 import os
-import pytest
+import shutil
+import sys
+import time
+import types
+
 import prompt_toolkit
+import pytest
+
 import lair
 from lair.components.history.chat_history import ChatHistory
 from lair.logging import logger
-from tests.unit.test_chat_interface_extended import make_interface as extended_make_interface
+from tests.unit.test_chat_interface_extended import (
+    make_interface as extended_make_interface,
+)
 
 
 def import_commands():

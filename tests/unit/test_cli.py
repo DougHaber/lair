@@ -1,5 +1,5 @@
-import sys
 import subprocess
+import sys
 
 STUB_SCRIPT = """
 import sys, types
@@ -29,9 +29,14 @@ run.start()
 
 
 def run_command(*args):
-    cmd = [sys.executable, "-c", STUB_SCRIPT]
-    cmd.extend(args)
-    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    cmd = [sys.executable, "-c", STUB_SCRIPT, *args]
+    return subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=True,
+    )
 
 
 def test_help_command():

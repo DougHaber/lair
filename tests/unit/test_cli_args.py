@@ -1,6 +1,6 @@
+import importlib
 import sys
 import types
-import importlib
 from unittest import mock
 
 import lair
@@ -63,9 +63,8 @@ def test_parse_arguments_version(monkeypatch, capsys):
     monkeypatch.setattr(run, "init_subcommands", lambda parser: {})
     monkeypatch.setattr(lair, "version", lambda: "1.2.3")
     argv = ["prog", "--version"]
-    with pytest.raises(SystemExit) as exc:
-        with mock.patch.object(sys, "argv", argv):
-            run.parse_arguments()
+    with pytest.raises(SystemExit) as exc, mock.patch.object(sys, "argv", argv):
+        run.parse_arguments()
     assert exc.value.code == 0
     captured = capsys.readouterr()
     assert "1.2.3" in captured.out
@@ -87,7 +86,6 @@ def test_set_config_from_arguments_bad(monkeypatch):
 def test_parse_arguments_no_subcommand(monkeypatch):
     monkeypatch.setattr(run, "init_subcommands", fake_init)
     argv = ["prog"]
-    with pytest.raises(SystemExit) as exc:
-        with mock.patch.object(sys, "argv", argv):
-            run.parse_arguments()
+    with pytest.raises(SystemExit) as exc, mock.patch.object(sys, "argv", argv):
+        run.parse_arguments()
     assert exc.value.code == 1

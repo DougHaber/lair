@@ -1,9 +1,10 @@
 # ruff: noqa: E402
 import sys
+import types
 
 sys.modules.pop("pdfplumber", None)
 import pdfplumber  # noqa: F401,E402
-import types
+
 import lair
 from lair.cli.chat_interface_reports import ChatInterfaceReports
 from lair.logging import logger
