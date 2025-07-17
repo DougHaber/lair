@@ -68,11 +68,7 @@ class ToolSet:
         return enabled_tools
 
     def all_flags_enabled(self, flags):
-        for flag in flags:
-            if not lair.config.get(flag):
-                return False
-
-        return True
+        return all(lair.config.get(flag) for flag in flags)
 
     def get_all_tools(self):
         """
