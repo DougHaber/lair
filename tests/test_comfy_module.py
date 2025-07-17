@@ -179,3 +179,42 @@ def test_run(monkeypatch, tmp_path, comfy):
     comfy.run(args)
     assert comfy.comfy.url == "http://example"
     assert calls == ["upscale"]
+
+
+def test_get_output_file_name(comfy):
+    assert comfy.get_output_file_name("img.png") == "img-upscaled.png"
+
+
+def test_run_workflow_queue(monkeypatch, tmp_path, comfy):
+    dir_path = tmp_path / "d"
+    dir_path.mkdir()
+    file_path = tmp_path / "f.jpg"
+    file_path.touch()
+    processed = []
+    extended = []
+    warnings = []
+    monkeypatch.setattr(comfy, "_process_file", lambda f, a, b, c: processed.append(f))
+    monkeypatch.setattr(comfy, "_extend_queue_from_dir", lambda d, q: extended.append(d))
+    monkeypatch.setattr(comfy_mod.logger, "warning", lambda msg: warnings.append(msg))
+
+    args = argparse.Namespace(recursive=False, skip_existing=False, comfy_command="image")
+    comfy._run_workflow_queue(args, {}, {}, queue=[str(dir_path), str(file_path)], output_filename_template="{basename}.png")
+    assert processed == [str(file_path)]
+    assert extended == []
+    assert warnings and str(dir_path) in warnings[0]
+
+
+def test_run_workflow_queue_recursive(monkeypatch, tmp_path, comfy):
+    dir_path = tmp_path / "d"
+    dir_path.mkdir()
+    file_path = tmp_path / "f.jpg"
+    file_path.touch()
+    processed = []
+    extended = []
+    monkeypatch.setattr(comfy, "_process_file", lambda f, a, b, c: processed.append(f))
+    monkeypatch.setattr(comfy, "_extend_queue_from_dir", lambda d, q: extended.append(d))
+
+    args = argparse.Namespace(recursive=True, skip_existing=False, comfy_command="image")
+    comfy._run_workflow_queue(args, {}, {}, queue=[str(dir_path), str(file_path)], output_filename_template="{basename}.png")
+    assert processed == [str(file_path)]
+    assert extended == [str(dir_path)]
