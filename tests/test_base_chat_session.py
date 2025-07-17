@@ -110,7 +110,9 @@ def test_serialization_helpers(monkeypatch):
     monkeypatch.setattr(lair.sessions.serializer, "save", lambda s, f: actions.append(("save", f)))
     monkeypatch.setattr(lair.sessions.serializer, "load", lambda s, f: actions.append(("load", f)))
     monkeypatch.setattr(lair.sessions.serializer, "session_to_dict", lambda s: {"id": 1})
-    monkeypatch.setattr(lair.sessions.serializer, "update_session_from_dict", lambda s, d: actions.append(("update", d)))
+    monkeypatch.setattr(
+        lair.sessions.serializer, "update_session_from_dict", lambda s, d: actions.append(("update", d))
+    )
     session.save_to_file("f")
     session.load_from_file("f")
     assert session.to_dict() == {"id": 1}
