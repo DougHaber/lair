@@ -33,7 +33,7 @@ def get_tool_classes_from_str(tool_names_str):
         name = name.strip()
 
         if name not in TOOLS:
-            raise ValueError("Unknown tool name: %s" % tool_names_str)
+            raise ValueError(f"Unknown tool name: {tool_names_str}")
 
         classes.append(TOOLS[name])
 

@@ -1,17 +1,17 @@
 import datetime
 import json
 import os
-import zoneinfo
 from typing import Any, Dict, List, Optional, cast
 
 import openai
+import zoneinfo
 
 import lair
 import lair.reporting
-from lair.logging import logger
-
 from lair.components.history import ChatHistory
 from lair.components.tools import ToolSet
+from lair.logging import logger
+
 from .base_chat_session import BaseChatSession
 
 
@@ -24,7 +24,7 @@ class OpenAIChatSession(BaseChatSession):
         lair.events.subscribe("config.update", lambda d: self.recreate_openai_client(), instance=self)
 
     def _get_openai_client(self):
-        logger.debug("Create OpenAI() client: base_url=%s" % lair.config.get("openai.api_base"))
+        logger.debug(f"Create OpenAI() client: base_url={lair.config.get('openai.api_base')}")
         self.openai = openai.OpenAI(
             api_key=os.environ.get(lair.config.get("openai.api_key_environment_variable")) or "none",
             base_url=lair.config.get("openai.api_base"),
@@ -56,7 +56,8 @@ class OpenAIChatSession(BaseChatSession):
 
         model_name = lair.config.get("model.name")
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
-        assert self.openai is not None
+        if self.openai is None:
+            raise RuntimeError("OpenAI client is not initialized")
         answer = self.openai.chat.completions.create(
             messages=cast(Any, messages),
             model=model_name,
@@ -117,7 +118,8 @@ class OpenAIChatSession(BaseChatSession):
                 "OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d"
                 % (lair.config.get("model.name"), len(messages), cycle)
             )
-            assert self.openai is not None
+            if self.openai is None:
+                raise RuntimeError("OpenAI client is not initialized")
             answer = self.openai.chat.completions.create(
                 messages=cast(Any, messages),
                 model=lair.config.get("model.name"),
@@ -165,7 +167,8 @@ class OpenAIChatSession(BaseChatSession):
         """
         try:
             models: List[Dict[str, Any]] = []
-            assert self.openai is not None
+            if self.openai is None:
+                raise RuntimeError("OpenAI client is not initialized")
             for model in self.openai.models.list():
                 models.append(
                     {

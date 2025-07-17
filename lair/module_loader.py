@@ -72,7 +72,7 @@ class ModuleLoader:
             try:
                 jsonschema.validate(instance=module._module_info(), schema=ModuleLoader.MODULE_INFO_SCHEMA)
             except jsonschema.ValidationError as error:
-                raise Exception(f"Invalid _module_info: {error}")
+                raise Exception(f"Invalid _module_info: {error}") from error
 
     def import_file(self, filename, module_path):
         logger.debug(f"Importing file: {filename}")
