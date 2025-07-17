@@ -115,11 +115,11 @@ class ComfyCaller:
         # this, STDOUT is ignored on import.
         with contextlib.redirect_stdout(io.StringIO()):
             runtime_module = importlib.import_module("comfy_script.runtime")
-            load = getattr(runtime_module, "load")
-            Workflow_local = getattr(runtime_module, "Workflow")
+            load = runtime_module.load
+            workflow_local = runtime_module.Workflow
 
             globals()["load"] = load
-            globals()["Workflow"] = Workflow_local
+            globals()["Workflow"] = workflow_local
 
             if lair.config.get("comfy.verify_ssl") is False:
                 self._monkey_patch_comfy_script()
@@ -185,7 +185,7 @@ class ComfyCaller:
             with open(image, "rb") as image_file:
                 return base64.b64encode(image_file.read()).decode("utf-8")
         else:
-            raise ValueError("Conversion of image to base64 not supported for type: %s" % type(image))
+            raise ValueError(f"Conversion of image to base64 not supported for type: {type(image)}")
 
     def _ensure_watch_thread(self):
         runtime = importlib.import_module("comfy_script.runtime")
@@ -482,9 +482,9 @@ class ComfyCaller:
             prompt = StringFunctionPysssss("append", "no", prompt, auto_prompt_extra, auto_prompt_suffix)
 
         prompts = []
-        for prompt in prompt.wait()._output["text"]:
+        for prompt_text in prompt.wait()._output["text"]:
             # Encoding is used so that the save file bytes() support can write the output
-            prompts.append(prompt.encode())
+            prompts.append(prompt_text.encode())
 
         return prompts
 

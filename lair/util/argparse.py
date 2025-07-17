@@ -1,13 +1,13 @@
 import argparse
 
 
-class ArgumentParserExitException(Exception):
+class ArgumentParserExitError(Exception):
     """Custom Exception for argparse to throw on exit, instead of actually exiting"""
 
     pass
 
 
-class ArgumentParserHelpException(Exception):
+class ArgumentParserHelpError(Exception):
     pass
 
 
@@ -22,8 +22,8 @@ class ErrorRaisingArgumentParser(argparse.ArgumentParser):
         """Instead of exiting, throw an exception with the error"""
         if message:
             self._print_message(message)
-        raise ArgumentParserExitException(None, None)
+        raise ArgumentParserExitError(None, None)
 
     def print_help(self, file=None):
         """Override print_help to raise an exception with the help message."""
-        raise ArgumentParserHelpException(self.format_help())
+        raise ArgumentParserHelpError(self.format_help())

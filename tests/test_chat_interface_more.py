@@ -108,7 +108,7 @@ def test_handle_session_switch(monkeypatch):
 
     def fake_switch(id_or_alias, chat_session):
         if id_or_alias == "unknown":
-            raise lair.sessions.UnknownSessionException("Unknown")
+            raise lair.sessions.UnknownSessionError("Unknown")
         return original(id_or_alias, chat_session)
 
     monkeypatch.setattr(ci.session_manager, "switch_to_session", fake_switch)

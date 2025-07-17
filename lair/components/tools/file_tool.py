@@ -148,10 +148,7 @@ class FileTool:
         try:
             workspace = os.path.abspath(lair.config.get("tools.file.path"))
 
-            if not os.path.isabs(path):
-                pattern = os.path.join(workspace, path)
-            else:
-                pattern = path
+            pattern = os.path.join(workspace, path) if not os.path.isabs(path) else path
 
             file_paths = glob.glob(pattern, recursive=True)
             if not file_paths:
@@ -165,7 +162,7 @@ class FileTool:
                 elif not os.path.isfile(file_path):
                     continue  # Skip non-files (e.g., directories)
 
-                with open(file_path, "r") as f:
+                with open(file_path) as f:
                     content = f.read()
                     relative_path = os.path.relpath(file_path, workspace)
                     file_contents[relative_path] = content

@@ -38,7 +38,7 @@ class PythonTool:
                     "Run a python script and return the output. "
                     "This is not a REPL. Repeat calls are independent. Output must be printed to be retrieved. "
                     "STDOUT, STDERR are returned.) "
-                    "(extra_modules=%(extra_modules)s, timeout=%(timeout)s)" % settings
+                    f"(extra_modules={settings['extra_modules']}, timeout={settings['timeout']})"
                 ),
                 "parameters": {
                     "type": "object",

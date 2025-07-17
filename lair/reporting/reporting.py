@@ -3,6 +3,7 @@ import math
 import re
 import sys
 import traceback
+from typing import Any
 
 import rich
 import rich.columns
@@ -10,8 +11,6 @@ import rich.highlighter
 import rich.markdown
 import rich.text
 import rich.traceback
-
-from typing import Any
 
 import lair
 
@@ -50,7 +49,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         if lair.config.get("style.messages_command.syntax_highlight"):
             rich.print_json(json_str, indent=None)
         else:
-            print(json_str)
+            self.console.print(json_str)
 
     def style(self, *args, **kwargs):
         """Style a string using rich.
@@ -78,10 +77,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             return
 
         if column_names is None:
-            if automatic_column_names:
-                column_names = list(rows_of_dicts[0].keys())
-            else:
-                column_names = None
+            column_names = list(rows_of_dicts[0].keys()) if automatic_column_names else None
         else:
             column_names = list(column_names)
 
@@ -346,27 +342,29 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         display_value=None,
         log=False,
         inverse=False,
-        styles=[  # shades in red, yellow, and green
-            "rgb(51,0,0)",
-            "rgb(102,0,0)",
-            "rgb(153,0,0)",
-            "rgb(204,0,0)",
-            "rgb(255,0,0)",
-            "rgb(51,51,0)",
-            "rgb(102,102,0)",
-            "rgb(153,153,0)",
-            "rgb(204,204,0)",
-            "rgb(255,255,0)",
-            "rgb(0,51,0)",
-            "rgb(0,102,0)",
-            "rgb(0,153,0)",
-            "rgb(0,204,0)",
-            "rgb(0,255,0)",
-        ],
+        styles=None,
     ):
         """
         Color a value based on where it falls within a range
         """
+        if styles is None:
+            styles = [  # shades in red, yellow, and green
+                "rgb(51,0,0)",
+                "rgb(102,0,0)",
+                "rgb(153,0,0)",
+                "rgb(204,0,0)",
+                "rgb(255,0,0)",
+                "rgb(51,51,0)",
+                "rgb(102,102,0)",
+                "rgb(153,153,0)",
+                "rgb(204,204,0)",
+                "rgb(255,255,0)",
+                "rgb(0,51,0)",
+                "rgb(0,102,0)",
+                "rgb(0,153,0)",
+                "rgb(0,204,0)",
+                "rgb(0,255,0)",
+            ]
         index_percent = (value - minimum) / (maximum - minimum)
         if log:
             index_percent = math.log(1 + index_percent, 2)
