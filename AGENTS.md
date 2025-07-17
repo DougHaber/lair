@@ -18,6 +18,12 @@ Lair is a command line tool for working with generative AI.
 - NEVER mark tests as skipped or failx. Instead, fix them. Problems can not be ignored.
 - NEVER hide code from coverage with `# pragma: no cover` or disable tests. Instead, write tests.
 - Tests should cover all invalid inputs. Tests should test out real-world complicated flows. Please focus heavily on test coverage.
+- Organize tests by type. Unit tests live under `tests/unit` and integration tests under `tests/integration`.
+- Test files must have clear and descriptive names. Avoid vague suffixes such as `_additional`, `_more`, or `_new`.
+- Use meaningful file splits only when necessary and ensure names reflect the content.
+- Pytest markers are used for categorization:
+  - `unit`: unit tests
+  - `integration`: integration tests using sqlite
 
 ### Style
 
