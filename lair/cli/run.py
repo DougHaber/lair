@@ -4,6 +4,8 @@ import traceback
 
 import lair.logging
 import lair.util
+import lair.module_loader
+import lair.reporting
 from lair.logging import logger
 
 
