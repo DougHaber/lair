@@ -112,7 +112,7 @@ def expand_filename_list(filenames, *, fail_on_not_found=True, sort_results=True
         matches = glob.glob(os.path.expanduser(filename))
 
         if not matches and fail_on_not_found:
-            raise Exception("File not found: %s" % filename)
+            raise FileNotFoundError(f"File not found: {filename}")
 
         new_filenames.extend(matches)
 
@@ -151,7 +151,7 @@ def read_pdf(filename, *, enforce_limits=False):
             contents += page.extract_text(x_tolerance=2, y_tolerance=2)
             if enforce_limits and len(contents) > limit:
                 if not lair.config.get("misc.text_attachment_truncate"):
-                    raise Exception(
+                    raise ValueError(
                         "Attachment size exceeds limit: "
                         f"file={filename}, size={os.path.getsize(filename)}, limit={limit}"
                     )
@@ -182,7 +182,7 @@ def _get_attachments_content__text_file(filename):
     do_truncate = False
     if os.path.getsize(filename) > limit:
         if not lair.config.get("misc.text_attachment_truncate"):
-            raise Exception(
+            raise ValueError(
                 f"Attachment size exceeds limit: file={filename}, size={os.path.getsize(filename)}, limit={limit}"
             )
         else:
@@ -195,7 +195,7 @@ def _get_attachments_content__text_file(filename):
         with open(filename, "r") as fd:
             contents = fd.read(limit if do_truncate else None)
     except UnicodeDecodeError as error:
-        raise Exception(f"File attachment is not text: file={filename}, error={error}")
+        raise ValueError(f"File attachment is not text: file={filename}, error={error}")
 
     if lair.config.get("misc.provide_attachment_filenames"):
         header = f"User provided file: filename={filename}\n---\n"

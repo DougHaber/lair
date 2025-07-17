@@ -41,7 +41,7 @@ def test_add_config_errors_and_change_mode(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         cfg._add_config({"default_mode": "missing"})
     # unknown mode change
-    with pytest.raises(Exception, match="Unknown mode"):
+    with pytest.raises(ValueError, match="Unknown mode"):
         cfg.change_mode("missing")
 
 

@@ -237,7 +237,7 @@ class ComfyCaller:
         elif self.url is not None:
             # This should be supported, but we'll need to look into the ComfyScript repo
             # to figure out how
-            raise Exception("ComfyCaller(): Modifying a Comfy URL is not supported.")
+            raise ValueError("ComfyCaller(): Modifying a Comfy URL is not supported.")
         else:
             self.url = url
             self._import_comfy_script()
@@ -271,7 +271,7 @@ class ComfyCaller:
             timeout=lair.config.get("comfy.timeout"),
         )
         if response.status_code != 200:
-            raise Exception(f"/api/view returned unexpected status code: {response.status_code}")
+            raise ValueError(f"/api/view returned unexpected status code: {response.status_code}")
         else:
             return response.content
 
