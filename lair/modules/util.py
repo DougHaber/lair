@@ -123,7 +123,7 @@ class Util:
         session_manager = lair.sessions.SessionManager()
         try:
             session_manager.switch_to_session(arguments.session, chat_session)
-        except lair.sessions.UnknownSessionException:
+        except lair.sessions.UnknownSessionError:
             if not arguments.allow_create_session:
                 logger.error(f"Unknown session: {arguments.session}")
                 sys.exit(1)

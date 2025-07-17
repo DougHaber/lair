@@ -16,7 +16,7 @@ from lair.logging import logger
 #   A `session` is a serialized session dict from lair.sessions.serializer
 
 
-class UnknownSessionException(Exception):
+class UnknownSessionError(Exception):
     pass
 
 
@@ -79,14 +79,14 @@ class SessionManager:
                     return int(id_or_alias)
 
         if raise_exception:
-            raise UnknownSessionException(f"Unknown session: {id_or_alias}")
+            raise UnknownSessionError(f"Unknown session: {id_or_alias}")
         else:
             return None
 
     def all_sessions(self):
         with self.env.begin() as txn:
             cursor = txn.cursor()
-            prefix = "session:".encode()
+            prefix = b"session:"
             if cursor.set_range(prefix):
                 for key, value in cursor:
                     if not key.startswith(prefix):
@@ -206,7 +206,7 @@ class SessionManager:
         try:
             if self.get_session_id(alias):
                 return False
-        except UnknownSessionException:
+        except UnknownSessionError:
             return True
 
     def set_alias(self, id_or_alias, new_alias):
