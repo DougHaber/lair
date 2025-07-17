@@ -6,7 +6,7 @@ import asyncio
 
 import pytest
 
-from tests.test_comfy_caller import get_ComfyCaller
+from tests.helpers.comfy_caller import get_ComfyCaller
 import lair
 
 

@@ -6,10 +6,12 @@ from lair.logging import logger  # noqa
 
 
 class ConfigUnknownKeyError(Exception):
+    """Raised when attempting to access an undefined configuration key."""
     pass
 
 
 class ConfigInvalidTypeError(Exception):
+    """Raised when a value cannot be cast to the expected configuration type."""
     pass
 
 
@@ -141,8 +143,9 @@ class Configuration:
             self.active[key] = value
             if not no_event:
                 lair.events.fire("config.update")
-        except ValueError as exc:
-            raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}'") from exc
+
+        except ValueError as error:
+            raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}'") from error
 
     def _cast_value(self, key, value):
         current_type = self.types[key]

@@ -2,7 +2,7 @@ import base64
 from prompt_toolkit.document import Document
 import lair
 from lair.cli.chat_interface_completer import ChatInterfaceCompleter
-from tests.test_chat_interface_extended import make_interface
+from tests.helpers.chat_interface import make_interface
 import lair.util.core as core
 
 

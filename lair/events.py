@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import itertools
 import weakref
 from contextlib import contextmanager
@@ -69,6 +70,9 @@ def fire(event_name, data=None):
             return  # Skip duplicate events
         _deferred_events.append((event_name, data))
         return
+
+    if data is None:
+        data = {}
 
     logger.debug(f"events: fire(): {event_name}, data: {data}")
     if event_name in _event_handlers:
