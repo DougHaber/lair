@@ -1,7 +1,6 @@
+from contextlib import contextmanager
 import itertools
 import weakref
-from contextlib import contextmanager
-
 from typing import Any, Callable
 
 from lair.logging import logger
@@ -60,7 +59,7 @@ def unsubscribe(subscription_id):
     return False
 
 
-def fire(event_name, data={}):
+def fire(event_name, data=None):
     """Triggers an event, calling all subscribed handlers."""
     global _deferring
     if _deferring:
@@ -68,6 +67,9 @@ def fire(event_name, data={}):
             return  # Skip duplicate events
         _deferred_events.append((event_name, data))
         return
+
+    if data is None:
+        data = {}
 
     logger.debug(f"events: fire(): {event_name}, data: {data}")
     if event_name in _event_handlers:
