@@ -127,4 +127,4 @@ def validate_messages(messages):
         else:
             error_location = "root"
 
-        raise jsonschema.ValidationError(f"Validation failed at '{error_location}': {error.message}")
+        raise jsonschema.ValidationError(f"Validation failed at '{error_location}': {error.message}") from error

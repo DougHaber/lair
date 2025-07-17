@@ -5,11 +5,11 @@ import lair.util
 from lair.logging import logger  # noqa
 
 
-class ConfigUnknownKeyException(Exception):
+class ConfigUnknownKeyError(Exception):
     pass
 
 
-class ConfigInvalidType(Exception):
+class ConfigInvalidTypeError(Exception):
     pass
 
 
@@ -86,7 +86,7 @@ class Configuration:
         if default_mode is None:
             return
         elif default_mode not in self.modes:
-            sys.exit("ERROR: Configuration file's default_mode is not found: %s" % default_mode)
+            sys.exit(f"ERROR: Configuration file's default_mode is not found: {default_mode}")
         else:
             self.change_mode(default_mode)
 
@@ -132,7 +132,7 @@ class Configuration:
             return
 
         if key not in self.modes["_default"]:
-            raise ConfigUnknownKeyException("Unknown Key: %s" % key)
+            raise ConfigUnknownKeyError(f"Unknown Key: {key}")
 
         try:
             value = self._cast_value(key, value)
@@ -141,8 +141,8 @@ class Configuration:
             self.active[key] = value
             if not no_event:
                 lair.events.fire("config.update")
-        except ValueError:
-            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{self.types[key]}'")
+        except ValueError as err:
+            raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}'") from err
 
     def _cast_value(self, key, value):
         current_type = self.types[key]
@@ -151,7 +151,7 @@ class Configuration:
                 return True
             if value in {False, "false", "False"}:
                 return False
-            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
+            raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
 
         if value is None and current_type is str:
             return ""

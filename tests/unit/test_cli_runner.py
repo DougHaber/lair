@@ -1,6 +1,7 @@
+import importlib
 import sys
 import types
-import importlib
+
 import click
 from click.testing import CliRunner
 
@@ -26,6 +27,8 @@ def test_cli_runner_chat_command(monkeypatch):
         monkeypatch.setitem(sys.modules, name, mod)
 
     import lair.reporting  # ensure submodule is registered
+
+    assert lair.reporting  # make linter happy
 
     run = importlib.import_module("lair.cli.run")
 

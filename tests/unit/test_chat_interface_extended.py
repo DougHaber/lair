@@ -1,155 +1,169 @@
+# ruff: noqa: E402
+import importlib
 import sys
 import types
-import importlib
 
 import pytest  # noqa: F401
 
+_OPTIONAL_MODULES = [
+    "diffusers",
+    "transformers",
+    "torch",
+    "comfy_script",
+    "lair.comfy_caller",
+    "trafilatura",
+    "PIL",
+    "duckduckgo_search",
+    "pdfplumber",
+    "requests",
+    "libtmux",
+    "lmdb",
+]
 
-def make_interface(monkeypatch):
-    # stub heavy optional dependencies before importing lair
-    for name in [
-        "diffusers",
-        "transformers",
-        "torch",
-        "comfy_script",
-        "lair.comfy_caller",
-        "trafilatura",
-        "PIL",
-        "duckduckgo_search",
-        "pdfplumber",
-        "requests",
-        "libtmux",
-        "lmdb",
-    ]:
+
+def _stub_optional_dependencies():
+    for name in _OPTIONAL_MODULES:
         sys.modules.setdefault(name, types.ModuleType(name))
 
-    import lair
-    from lair.components.history.chat_history import ChatHistory
-    from lair.components.tools.tool_set import ToolSet
-    from lair.sessions.base_chat_session import BaseChatSession
 
-    class DummyChatSession(BaseChatSession):
-        def __init__(self):
-            super().__init__(history=ChatHistory(), tool_set=ToolSet(tools=[]))
+_stub_optional_dependencies()
 
-        def invoke(self, messages=None, disable_system_prompt=False, model=None, temperature=None):
-            return "ok"
+import lair
+from lair.components.history.chat_history import ChatHistory
+from lair.components.tools.tool_set import ToolSet
+from lair.sessions.base_chat_session import BaseChatSession
 
-        def invoke_with_tools(self, messages=None, disable_system_prompt=False):
-            return "ok", []
 
-        def list_models(self, ignore_errors=False):
-            return [{"id": "model-a"}, {"id": "model-b"}]
+class DummyChatSession(BaseChatSession):
+    def __init__(self):
+        super().__init__(history=ChatHistory(), tool_set=ToolSet(tools=[]))
 
-    class DummyReporting:
-        def __init__(self):
-            self.messages = []
+    def invoke(self, messages=None, disable_system_prompt=False, model=None, temperature=None):
+        return "ok"
 
-        def system_message(self, message, **kwargs):
-            self.messages.append(("system", message))
+    def invoke_with_tools(self, messages=None, disable_system_prompt=False):
+        return "ok", []
 
-        def user_error(self, message):
-            self.messages.append(("error", message))
+    def list_models(self, ignore_errors=False):
+        return [{"id": "model-a"}, {"id": "model-b"}]
 
-        def print_rich(self, *args, **kwargs):
-            pass
 
-        def table_system(self, *args, **kwargs):
-            pass
+class DummyReporting:
+    def __init__(self):
+        self.messages = []
 
-        def table_from_dicts_system(self, *args, **kwargs):
-            pass
+    def system_message(self, message, **kwargs):
+        self.messages.append(("system", message))
 
-        def message(self, message):
-            self.messages.append(("message", message))
+    def user_error(self, message):
+        self.messages.append(("error", message))
 
-        def llm_output(self, message):
-            self.messages.append(("llm", message))
+    def print_rich(self, *args, **kwargs):
+        pass
 
-        def style(self, text, style=None):
-            return text
+    def table_system(self, *args, **kwargs):
+        pass
 
-    class SimpleSessionManager:
-        def __init__(self):
-            self.sessions = {}
-            self.aliases = {}
-            self.next_id = 1
+    def table_from_dicts_system(self, *args, **kwargs):
+        pass
 
-        def add_from_chat_session(self, chat_session):
-            if chat_session.session_id is None:
-                chat_session.session_id = self.next_id
-                self.next_id += 1
-            self.sessions[chat_session.session_id] = lair.sessions.serializer.session_to_dict(chat_session)
-            if chat_session.session_alias:
-                self.aliases[chat_session.session_alias] = chat_session.session_id
+    def message(self, message):
+        self.messages.append(("message", message))
 
-        def refresh_from_chat_session(self, chat_session):
-            self.sessions[chat_session.session_id] = lair.sessions.serializer.session_to_dict(chat_session)
-            for alias, sid in list(self.aliases.items()):
-                if sid == chat_session.session_id:
-                    del self.aliases[alias]
-            if chat_session.session_alias:
-                self.aliases[chat_session.session_alias] = chat_session.session_id
+    def llm_output(self, message):
+        self.messages.append(("llm", message))
 
-        def get_session_id(self, id_or_alias, raise_exception=True):
-            try:
-                sid = int(id_or_alias)
-                if sid in self.sessions:
-                    return sid
-            except ValueError:
-                if id_or_alias in self.aliases:
-                    return self.aliases[id_or_alias]
-            if raise_exception:
-                raise Exception("Unknown")
-            return None
+    def style(self, text, style=None):
+        return text
 
-        def switch_to_session(self, id_or_alias, chat_session):
-            sid = self.get_session_id(id_or_alias)
-            lair.sessions.serializer.update_session_from_dict(chat_session, self.sessions[sid])
 
-        def all_sessions(self):
-            return self.sessions.values()
+class SimpleSessionManager:
+    def __init__(self):
+        self.sessions = {}
+        self.aliases = {}
+        self.next_id = 1
 
-        def get_next_session_id(self, current):
-            ids = sorted(self.sessions)
-            return ids[(ids.index(current) + 1) % len(ids)] if ids else None
+    def add_from_chat_session(self, chat_session):
+        if chat_session.session_id is None:
+            chat_session.session_id = self.next_id
+            self.next_id += 1
+        self.sessions[chat_session.session_id] = lair.sessions.serializer.session_to_dict(chat_session)
+        if chat_session.session_alias:
+            self.aliases[chat_session.session_alias] = chat_session.session_id
 
-        def get_previous_session_id(self, current):
-            ids = sorted(self.sessions)
-            return ids[(ids.index(current) - 1) % len(ids)] if ids else None
+    def refresh_from_chat_session(self, chat_session):
+        self.sessions[chat_session.session_id] = lair.sessions.serializer.session_to_dict(chat_session)
+        for alias, sid in list(self.aliases.items()):
+            if sid == chat_session.session_id:
+                del self.aliases[alias]
+        if chat_session.session_alias:
+            self.aliases[chat_session.session_alias] = chat_session.session_id
 
-        def delete_sessions(self, ids):
-            for item in ids:
-                sid = self.get_session_id(item)
-                self.sessions.pop(sid, None)
-                for a in list(self.aliases):
-                    if self.aliases[a] == sid:
-                        del self.aliases[a]
+    def get_session_id(self, id_or_alias, raise_exception=True):
+        try:
+            sid = int(id_or_alias)
+            if sid in self.sessions:
+                return sid
+        except ValueError:
+            if id_or_alias in self.aliases:
+                return self.aliases[id_or_alias]
+        if raise_exception:
+            raise Exception("Unknown")
+        return None
 
-        def is_alias_available(self, alias):
-            if alias is None:
-                return True
-            try:
-                int(alias)
-                return False
-            except ValueError:
-                pass
-            return alias not in self.aliases
+    def switch_to_session(self, id_or_alias, chat_session):
+        sid = self.get_session_id(id_or_alias)
+        lair.sessions.serializer.update_session_from_dict(chat_session, self.sessions[sid])
 
-        def set_alias(self, id_or_alias, new_alias):
-            if not self.is_alias_available(new_alias):
-                raise ValueError
-            sid = self.get_session_id(id_or_alias)
+    def all_sessions(self):
+        return self.sessions.values()
+
+    def get_next_session_id(self, current):
+        ids = sorted(self.sessions)
+        return ids[(ids.index(current) + 1) % len(ids)] if ids else None
+
+    def get_previous_session_id(self, current):
+        ids = sorted(self.sessions)
+        return ids[(ids.index(current) - 1) % len(ids)] if ids else None
+
+    def delete_sessions(self, ids):
+        for item in ids:
+            sid = self.get_session_id(item)
+            self.sessions.pop(sid, None)
             for a in list(self.aliases):
                 if self.aliases[a] == sid:
                     del self.aliases[a]
-            if new_alias:
-                self.aliases[new_alias] = sid
-            self.sessions[sid]["alias"] = new_alias
 
-        def set_title(self, id_or_alias, title):
-            sid = self.get_session_id(id_or_alias)
-            self.sessions[sid]["title"] = title
+    def is_alias_available(self, alias):
+        if alias is None:
+            return True
+        try:
+            int(alias)
+            return False
+        except ValueError:
+            pass
+        return alias not in self.aliases
+
+    def set_alias(self, id_or_alias, new_alias):
+        if not self.is_alias_available(new_alias):
+            raise ValueError
+        sid = self.get_session_id(id_or_alias)
+        for a in list(self.aliases):
+            if self.aliases[a] == sid:
+                del self.aliases[a]
+        if new_alias:
+            self.aliases[new_alias] = sid
+        self.sessions[sid]["alias"] = new_alias
+
+    def set_title(self, id_or_alias, title):
+        sid = self.get_session_id(id_or_alias)
+        self.sessions[sid]["title"] = title
+
+
+def make_interface(monkeypatch):
+    for name in _OPTIONAL_MODULES:
+        sys.modules.setdefault(name, types.ModuleType(name))
+    importlib.reload(lair)
 
     monkeypatch.setattr(lair.sessions, "get_chat_session", lambda t: DummyChatSession())
     monkeypatch.setattr(lair.sessions, "SessionManager", SimpleSessionManager)

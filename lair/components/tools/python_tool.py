@@ -36,9 +36,10 @@ class PythonTool:
                 "name": "run_python",
                 "description": (
                     "Run a python script and return the output. "
-                    "This is not a REPL. Repeat calls are independent. Output must be printed to be retrieved. "
-                    "STDOUT, STDERR are returned.) "
-                    "(extra_modules=%(extra_modules)s, timeout=%(timeout)s)" % settings
+                    "This is not a REPL. Repeat calls are independent. "
+                    "Output must be printed to be retrieved. "
+                    f"STDOUT, STDERR are returned.) (extra_modules={settings['extra_modules']}, "
+                    f"timeout={settings['timeout']})"
                 ),
                 "parameters": {
                     "type": "object",

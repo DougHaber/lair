@@ -407,7 +407,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 self.commands[command]["callback"](command, arguments, arguments_str)
                 return True
             except Exception as error:
-                self.reporting.error("Command failed: %s" % error)
+                self.reporting.error(f"Command failed: {error}")
                 return False
         else:
             self.reporting.user_error("Unknown command")
@@ -454,7 +454,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             else:
                 return self._handle_request_chat(request)
         except Exception as error:
-            self.reporting.error("Chat failed: %s" % error)
+            self.reporting.error(f"Chat failed: {error}")
             return False
 
     def startup_message(self):
@@ -512,9 +512,9 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
     def _generate_toolbar_template_flags(self):
         def flag(character, parameter):
             if lair.config.active[parameter]:
-                return "<flag.on>%s</flag.on>" % character.upper()
+                return f"<flag.on>{character.upper()}</flag.on>"
             else:
-                return "<flag.off>%s</flag.off>" % character.lower()
+                return f"<flag.off>{character.lower()}</flag.off>"
 
         return (
             flag("l", "chat.multiline_input")
@@ -531,7 +531,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         if time.time() < self.flash_message_expiration:
             return prompt_toolkit.formatted_text.HTML(
-                "<bottom-toolbar.flash>%s</bottom-toolbar.flash>" % self.flash_message
+                f"<bottom-toolbar.flash>{self.flash_message}</bottom-toolbar.flash>"
             )
 
         try:
@@ -541,7 +541,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
             return prompt_toolkit.formatted_text.HTML(template)
         except Exception as error:
-            logger.error("Unable to render toolbar: %s" % error)
+            logger.error(f"Unable to render toolbar: {error}")
             logger.error("Disabling toolbar")
             lair.config.active["chat.enable_toolbar"] = False
             return ""

@@ -1,11 +1,11 @@
-import types
-import sys
+import importlib
 import re
+import sys
+import types
 from contextlib import contextmanager
 
 import pytest
 
-import importlib
 import lair
 
 
@@ -88,7 +88,7 @@ class DummyChatSession:
         pass
 
 
-class UnknownSessionException(Exception):
+class UnknownSessionError(Exception):
     pass
 
 
@@ -106,7 +106,7 @@ class DummySessionManager:
             if id_or_alias in self.aliases:
                 return self.aliases[id_or_alias]
         if raise_exception:
-            raise UnknownSessionException("Unknown")
+            raise UnknownSessionError("Unknown")
         return None
 
     def is_alias_available(self, alias):
@@ -182,7 +182,7 @@ class DummyCI(commands.ChatInterfaceCommands):
 @pytest.fixture(autouse=True)
 def patch_unknown(monkeypatch):
     dummy_mod = types.ModuleType("lair.sessions.session_manager")
-    dummy_mod.UnknownSessionException = UnknownSessionException
+    dummy_mod.UnknownSessionException = UnknownSessionError
     sys.modules["lair.sessions.session_manager"] = dummy_mod
     yield
     sys.modules.pop("lair.sessions.session_manager", None)
@@ -196,7 +196,7 @@ def test_register_command_duplicate():
     ci = make_ci()
     ci.register_command("/t", lambda *a: None, "d")
     assert "/t" in ci.commands
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         ci.register_command("/t", lambda *a: None, "d")
 
 

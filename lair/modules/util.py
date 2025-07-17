@@ -33,8 +33,10 @@ class Util:
             "--include-filenames",
             action="store_true",
             default=None,
-            help="Provide filenames of attached files (via misc.provide_attachment_filenames, default=%s)"
-            % lair.config.get("misc.provide_attachment_filenames"),
+            help=(
+                "Provide filenames of attached files (via misc.provide_attachment_filenames, "
+                f"default={lair.config.get('misc.provide_attachment_filenames')})"
+            ),
         )
         parser.add_argument("-i", "--instructions", type=str, help="Instructions for the request")
         parser.add_argument(
@@ -69,7 +71,7 @@ class Util:
         return response
 
     def _read_file(self, filename):
-        with open(filename, "r") as fd:
+        with open(filename) as fd:
             return fd.read()
 
     def _get_instructions(self, arguments):
@@ -173,8 +175,8 @@ class Util:
             lair.config.update(config_backup)
             session_manager.refresh_from_chat_session(chat_session)
 
+        reporting = lair.reporting.Reporting()
         if arguments.markdown:
-            reporting = lair.reporting.Reporting()
             reporting.llm_output(response)
         else:
-            print(response)
+            reporting.print_rich(response)

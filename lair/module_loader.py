@@ -27,10 +27,10 @@ class ModuleLoader:
     def _get_module_files(self, path):
         module_files = []
 
-        for root, dirs, files in os.walk(os.path.abspath(path)):
+        for root, _dirs, files in os.walk(os.path.abspath(path)):
             for name in files:
                 if name.endswith(".py") and name != "__init__.py" and not name.startswith("."):
-                    module_files.append("%s/%s" % (root, name))
+                    module_files.append(f"{root}/{name}")
 
         return module_files
 
@@ -58,7 +58,7 @@ class ModuleLoader:
         elif name in self.commands:
             raise ValueError(f"Unable to register repeat command name: {name}")
         else:
-            logger.debug("Registered module: %s" % name)
+            logger.debug(f"Registered module: {name}")
             self.modules[name] = module_info
             self.commands[name] = module_info["class"]
 
@@ -76,10 +76,10 @@ class ModuleLoader:
             try:
                 jsonschema.validate(instance=module._module_info(), schema=ModuleLoader.MODULE_INFO_SCHEMA)
             except jsonschema.ValidationError as error:
-                raise ValueError(f"Invalid _module_info: {error}")
+                raise ValueError(f"Invalid _module_info: {error}") from error
 
     def import_file(self, filename, module_path):
-        logger.debug("Importing file: %s" % filename)
+        logger.debug(f"Importing file: {filename}")
 
         try:
             spec = importlib.util.spec_from_file_location(filename, filename)
@@ -89,11 +89,11 @@ class ModuleLoader:
             self._validate_module(module)
             self._register_module(module, module_path)
         except Exception as error:
-            logger.warning("Error loading module from file '%s': %s" % (filename, error))
+            logger.warning(f"Error loading module from file '{filename}': {error}")
             return
 
     def load_modules_from_path(self, module_path):
-        logger.debug("Loading modules from path: %s" % module_path)
+        logger.debug(f"Loading modules from path: {module_path}")
         files = self._get_module_files(module_path)
 
         for filename in sorted(files):
