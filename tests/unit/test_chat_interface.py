@@ -1,15 +1,19 @@
-import sys
-import types
 import importlib
-import shutil
-import time
 import os
-import pytest
+import shutil
+import sys
+import time
+import types
+
 import prompt_toolkit
+import pytest
+
 import lair
 from lair.components.history.chat_history import ChatHistory
 from lair.logging import logger
-from tests.unit.test_chat_interface_extended import make_interface as extended_make_interface
+from tests.unit.test_chat_interface_extended import (
+    make_interface as extended_make_interface,
+)
 
 
 def import_commands():
@@ -276,11 +280,7 @@ def test_generate_toolbar_flags_and_prompt(monkeypatch):
     ci.chat_session.session_alias = "al"
     flags = ci._generate_toolbar_template_flags()
     assert flags == (
-        "<flag.on>L</flag.on>"
-        "<flag.off>m</flag.off>"
-        "<flag.on>T</flag.on>"
-        "<flag.off>v</flag.off>"
-        "<flag.on>W</flag.on>"
+        "<flag.on>L</flag.on><flag.off>m</flag.off><flag.on>T</flag.on><flag.off>v</flag.off><flag.on>W</flag.on>"
     )
     prompt = ci._generate_prompt()
     assert f"{ci.chat_session.session_id}:al" in prompt.value

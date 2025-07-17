@@ -181,7 +181,7 @@ class ChatInterfaceCommands:
         # Other modules can subscribe to chat.init() and then call
         # this function to register their own sub-commands.
         if command in self.commands:
-            raise Exception(f"Failed to register chat command '{command}': Already registered")
+            raise RuntimeError(f"Failed to register chat command '{command}': Already registered")
 
         self.commands[command] = {
             "callback": callback,
