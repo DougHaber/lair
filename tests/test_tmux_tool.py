@@ -1,6 +1,8 @@
 import os
-import lair
+
 import pytest
+
+import lair
 from lair.components.tools.tmux_tool import TmuxTool
 
 
@@ -107,8 +109,11 @@ def test_get_window_by_id_and_errors(tool):
     assert tool._get_window_by_id(w1.get("window_id")) is w1
     assert tool._get_window_by_id(w1.get("window_id").lstrip("@")) is w1
     assert tool._get_window_by_id(None) is None
-    with pytest.raises(Exception):
+    try:
         tool._get_window_by_id("@99")
+        raise AssertionError("Expected missing window failure")
+    except Exception as exc:
+        assert "Requested window id not found" in str(exc)
 
 
 def test_get_output_modes(tool, monkeypatch):
@@ -128,8 +133,11 @@ def test_get_output_modes(tool, monkeypatch):
     assert called["mode"] == "stream"
     assert tool._get_output("screen") == {"out": "screen"}
     assert called["mode"] == "screen"
-    with pytest.raises(Exception):
+    try:
         tool._get_output("bad")
+        raise AssertionError("Expected invalid return_mode failure")
+    except Exception as exc:
+        assert "Invalid return_mode" in str(exc)
 
 
 def test_run_creates_window_and_logs(tool, tmp_path, monkeypatch):
@@ -176,8 +184,11 @@ def test_send_keys_valid_and_errors(tool, monkeypatch):
 
 
 def test_capture_output_and_errors(tool):
-    with pytest.raises(Exception):
+    try:
         tool.capture_output()
+        raise AssertionError("Expected no-window failure")
+    except Exception as exc:
+        assert "No active tmux windows" in str(exc)
     tool.session.new_window("one")
     tool.active_window = tool.session.windows[0]
     pane = tool.active_window.attached_pane
@@ -212,8 +223,11 @@ def test_read_new_output_flow(tool, tmp_path):
 
     # connection lost
     del tool.log_files[pane.get("pane_id")]
-    with pytest.raises(Exception):
+    try:
         tool.read_new_output()
+        raise AssertionError("Expected connection lost failure")
+    except Exception as exc:
+        assert "Connection to pane lost" in str(exc)
 
 
 def test_kill_attach_and_list(tool):

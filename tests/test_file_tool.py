@@ -1,6 +1,8 @@
 import os
-import lair
+
 import pytest
+
+import lair
 from lair.components.tools.file_tool import FileTool
 
 

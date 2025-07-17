@@ -13,6 +13,7 @@ modules_to_stub = [
     "requests",
     "libtmux",
     "lmdb",
+    "pdfplumber",
     "openai",
 ]
 
