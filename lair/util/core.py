@@ -1,7 +1,7 @@
 import base64
 import datetime
 import glob
-import importlib.resources
+from importlib import resources
 import json
 import logging
 import mimetypes
@@ -74,10 +74,14 @@ def get_lib_path(end=""):
 
 
 def read_package_file(path, name):
-    """Read a file within the packages libdir.
-    path - Package path (dot delimited, such as lair.files)
-    name - Filename within the path"""
-    with importlib.resources.open_text(path, name) as fd:
+    """Read a file shipped with the package.
+
+    Arguments:
+      path: Package name (for example ``lair.files``).
+      name: File name inside that package.
+    """
+    file_path = resources.files(path).joinpath(name)
+    with file_path.open("r") as fd:
         return fd.read()
 
 

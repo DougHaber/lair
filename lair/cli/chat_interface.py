@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import shutil
@@ -48,6 +49,15 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         lair.events.subscribe("config.update", lambda d: self._on_config_update(), instance=self)
         lair.events.fire("chat.init", self)
+
+    def _run_in_terminal(self, func):
+        """Run ``func`` synchronously when no event loop is running."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            func()
+        else:
+            prompt_toolkit.application.run_in_terminal(func)
 
     def _on_config_update(self):
         self._init_history()
@@ -245,35 +255,35 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             self._switch_to_session(session_id)
 
     def session_set_alias(self, event):
-        prompt_toolkit.application.run_in_terminal(self._handle_session_set_alias)
+        self._run_in_terminal(self._handle_session_set_alias)
 
     def session_set_title(self, event):
-        prompt_toolkit.application.run_in_terminal(self._handle_session_set_title)
+        self._run_in_terminal(self._handle_session_set_title)
 
     def session_status(self, event):
-        prompt_toolkit.application.run_in_terminal(self.print_sessions_report)
+        self._run_in_terminal(self.print_sessions_report)
 
     def session_switch(self, event):
-        prompt_toolkit.application.run_in_terminal(self._handle_session_switch)
+        self._run_in_terminal(self._handle_session_switch)
 
     def show_help(self, event):
-        prompt_toolkit.application.run_in_terminal(self.print_help)
+        self._run_in_terminal(self.print_help)
 
     def show_history(self, event):
-        prompt_toolkit.application.run_in_terminal(self.print_history)
+        self._run_in_terminal(self.print_history)
 
     def show_recent_history(self, event):
-        prompt_toolkit.application.run_in_terminal(lambda: self.print_history(num_messages=2))
+        self._run_in_terminal(lambda: self.print_history(num_messages=2))
 
     def list_models(self, event):
-        prompt_toolkit.application.run_in_terminal(lambda: self.print_models_report(update_cache=True))
+        self._run_in_terminal(lambda: self.print_models_report(update_cache=True))
 
     def list_tools(self, event):
-        prompt_toolkit.application.run_in_terminal(self.print_tools_report)
+        self._run_in_terminal(self.print_tools_report)
 
     def _f_key(self, event):
         session_id = int(event.key_sequence[0].key[1:])
-        prompt_toolkit.application.run_in_terminal(lambda: self._switch_to_session(session_id, raise_exceptions=False))
+        self._run_in_terminal(lambda: self._switch_to_session(session_id, raise_exceptions=False))
 
     def _new_chat_session(self):
         self.chat_session.new_session()
@@ -335,7 +345,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         @key_bindings.add("tab")
         def show_sessions(event):
-            prompt_toolkit.application.run_in_terminal(lambda: self.print_sessions_report())
+            self._run_in_terminal(lambda: self.print_sessions_report())
 
         try:
             id_or_alias = prompt_toolkit.prompt(
@@ -465,7 +475,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.flash_message_expiration = time.time() + duration
 
     def _prompt_handler_system_message(self, message):
-        prompt_toolkit.application.run_in_terminal(lambda: self.reporting.system_message(message))
+        self._run_in_terminal(lambda: self.reporting.system_message(message))
 
     def _get_embedded_response(self, message, position):
         regex = lair.config.get("chat.embedded_syntax_regex")
