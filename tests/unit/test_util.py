@@ -3,7 +3,7 @@ import argparse
 import pytest
 
 import lair
-from tests.test_modules import DummyChatSession, make_util
+from tests.unit.test_modules import DummyChatSession, make_util
 
 
 class DummySessionManager:

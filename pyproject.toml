@@ -19,6 +19,7 @@ trafilatura = "^2.0.0"
 jinja2 = "^3.1.5"
 lmdb = "^1.6.2"
 libtmux = "^0.46.0"
+PyYAML = "^6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
