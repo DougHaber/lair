@@ -116,7 +116,7 @@ def test_add_refresh_and_switch(monkeypatch, tmp_path):
     chat.history.messages.append({"role": "assistant", "content": "ok"})
     chat.session_alias = "beta"
     manager.refresh_from_chat_session(chat)
-    with pytest.raises(mod.UnknownSessionException):
+    with pytest.raises(mod.UnknownSessionError):
         manager.get_session_id("alpha")
     assert manager.get_session_id("beta") == 1
 
@@ -149,7 +149,7 @@ def test_next_prev_delete(monkeypatch, tmp_path):
     assert manager.get_previous_session_id(c2.session_id) == 3
 
     manager.delete_sessions([c1.session_id])
-    with pytest.raises(mod.UnknownSessionException):
+    with pytest.raises(mod.UnknownSessionError):
         manager.get_session_id(c1.session_id)
 
     manager.delete_sessions(["all"])
@@ -165,7 +165,7 @@ def test_ensure_map_size_and_get_session_id(monkeypatch, tmp_path):
 
     assert not manager.is_alias_available("123")
     assert manager.get_session_id("missing", raise_exception=False) is None
-    with pytest.raises(mod.UnknownSessionException):
+    with pytest.raises(mod.UnknownSessionError):
         manager.get_session_id("missing")
 
 

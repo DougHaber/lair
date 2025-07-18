@@ -1,7 +1,6 @@
 import base64
 import datetime
 import glob
-from importlib import resources
 import json
 import logging
 import mimetypes
@@ -11,6 +10,7 @@ import re
 import shlex
 import subprocess
 import tempfile
+from importlib import resources
 from typing import Optional
 
 import pdfplumber
@@ -37,7 +37,7 @@ def safe_int(number):
 
 
 def slurp_file(filename):
-    with open(os.path.expanduser(filename), "r") as fd:
+    with open(os.path.expanduser(filename)) as fd:
         document = fd.read()
 
     return document
@@ -53,7 +53,7 @@ def parse_yaml_text(text):
 
 
 def parse_yaml_file(filename):
-    with open(filename, "r") as fd:
+    with open(filename) as fd:
         return yaml.safe_load(fd)
 
 
@@ -192,10 +192,10 @@ def _get_attachments_content__text_file(filename):
             do_truncate = True
 
     try:
-        with open(filename, "r") as fd:
+        with open(filename) as fd:
             contents = fd.read(limit if do_truncate else None)
     except UnicodeDecodeError as error:
-        raise ValueError(f"File attachment is not text: file={filename}, error={error}")
+        raise ValueError(f"File attachment is not text: file={filename}, error={error}") from error
 
     if lair.config.get("misc.provide_attachment_filenames"):
         header = f"User provided file: filename={filename}\n---\n"

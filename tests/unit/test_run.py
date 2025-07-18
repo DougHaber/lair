@@ -1,5 +1,6 @@
 import argparse
 import types
+
 import pytest
 
 import lair

@@ -1,10 +1,11 @@
-import types
 import importlib
-import sys
-import lair
-
 import json
+import sys
+import types
+
 import pytest
+
+import lair
 
 
 def setup_session(monkeypatch, responses=None, tool_set=None):

@@ -1,9 +1,9 @@
 import argparse
 
-import lair
 import pytest
-from tests.unit.test_chat_interface_extended import make_interface
 
+import lair
+from tests.unit.test_chat_interface_extended import make_interface
 
 # Helpers
 
@@ -29,7 +29,7 @@ def setup_ci(monkeypatch):
             return orig_get(id_or_alias, raise_exception)
         except Exception as exc:
             if raise_exception:
-                raise lair.sessions.session_manager.UnknownSessionException("Unknown") from exc
+                raise lair.sessions.session_manager.UnknownSessionError("Unknown") from exc
             return None
 
     monkeypatch.setattr(ci.session_manager, "get_session_id", patched_get)

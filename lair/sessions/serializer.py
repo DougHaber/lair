@@ -49,7 +49,7 @@ def update_session_from_dict(chat_session, state):
 
 
 def load(chat_session, filename):
-    with open(filename, "r") as state_file:
+    with open(filename) as state_file:
         contents = state_file.read()
         state = json.loads(contents)
 
