@@ -5,8 +5,8 @@ import shlex
 import lair
 from lair.logging import logger
 from lair.util.argparse import (
-    ArgumentParserExitException,
-    ArgumentParserHelpException,
+    ArgumentParserExitError,
+    ArgumentParserHelpError,
     ErrorRaisingArgumentParser,
 )
 
@@ -330,10 +330,10 @@ class ChatInterfaceCommands:
 
         try:
             new_arguments = parser.parse_args(shlex.split(arguments_str))
-        except ArgumentParserHelpException as error:  # Display help with styles
+        except ArgumentParserHelpError as error:  # Display help with styles
             self.reporting.system_message(str(error), disable_markdown=True)
             return
-        except ArgumentParserExitException:  # Ignore exits
+        except ArgumentParserExitError:  # Ignore exits
             return
 
         self.print_config_report(
@@ -453,7 +453,7 @@ class ChatInterfaceCommands:
             # If the current session was deleted, recreate it
             try:
                 self.session_manager.get_session_id(self.chat_session.session_id)
-            except lair.sessions.session_manager.UnknownSessionException:
+            except lair.sessions.session_manager.UnknownSessionError:
                 self._new_chat_session()
 
     def command_session_new(self, command, arguments, arguments_str):

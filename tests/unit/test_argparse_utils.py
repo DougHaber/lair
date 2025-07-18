@@ -3,8 +3,8 @@ import argparse
 import pytest
 
 from lair.util.argparse import (
-    ArgumentParserExitException,
-    ArgumentParserHelpException,
+    ArgumentParserExitError,
+    ArgumentParserHelpError,
     ErrorRaisingArgumentParser,
 )
 
@@ -18,17 +18,17 @@ def test_required_argument_error():
 
 def test_print_help_exception():
     parser = ErrorRaisingArgumentParser()
-    with pytest.raises(ArgumentParserHelpException):
+    with pytest.raises(ArgumentParserHelpError):
         parser.print_help()
 
 
 def test_exit_exception():
     parser = ErrorRaisingArgumentParser()
-    with pytest.raises(ArgumentParserExitException):
+    with pytest.raises(ArgumentParserExitError):
         parser.exit()
 
 
 def test_help_flag(monkeypatch):
     parser = ErrorRaisingArgumentParser()
-    with pytest.raises(ArgumentParserHelpException):
+    with pytest.raises(ArgumentParserHelpError):
         parser.parse_args(["-h"])

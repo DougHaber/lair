@@ -1,8 +1,10 @@
 import json
+
+import pytest
+
 import lair
 from lair.components.history import ChatHistory
 from lair.sessions import serializer
-import pytest
 
 
 class DummySession:

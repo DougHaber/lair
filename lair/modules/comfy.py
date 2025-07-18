@@ -11,8 +11,8 @@ import lair.cli
 import lair.comfy_caller
 from lair.logging import logger  # noqa
 from lair.util.argparse import (
-    ArgumentParserExitException,
-    ArgumentParserHelpException,
+    ArgumentParserExitError,
+    ArgumentParserHelpError,
     ErrorRaisingArgumentParser,
 )
 
@@ -511,10 +511,10 @@ class Comfy:
                 try:
                     params = chat_command_parser.parse_args(new_arguments)
                     params.comfy_url = lair.config.get("comfy.url")
-                except ArgumentParserHelpException as error:  # Display help with styles
+                except ArgumentParserHelpError as error:  # Display help with styles
                     chat_interface.reporting.error(str(error), show_exception=False)
                     return
-                except ArgumentParserExitException:  # Ignore exits
+                except ArgumentParserExitError:  # Ignore exits
                     return
             except argparse.ArgumentError as error:
                 message = str(error)

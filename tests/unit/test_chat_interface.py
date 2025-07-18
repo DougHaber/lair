@@ -102,7 +102,7 @@ def test_init_starting_session_alias_used(monkeypatch, caplog):
     monkeypatch.setattr(
         ci,
         "_switch_to_session",
-        lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("x")),
+        lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionError("x")),
     )
     with caplog.at_level("ERROR"), pytest.raises(SystemExit):
         ci._init_starting_session("alias", create_session_if_missing=True)
@@ -326,7 +326,7 @@ def test_handle_session_switch(monkeypatch):
 
     def fake_switch(id_or_alias, chat_session):
         if id_or_alias == "unknown":
-            raise lair.sessions.UnknownSessionException("Unknown")
+            raise lair.sessions.UnknownSessionError("Unknown")
         return original(id_or_alias, chat_session)
 
     monkeypatch.setattr(ci.session_manager, "switch_to_session", fake_switch)
@@ -337,7 +337,7 @@ def test_handle_session_switch(monkeypatch):
 def test_init_starting_session_create(monkeypatch):
     ci = setup_interface(monkeypatch)
     monkeypatch.setattr(
-        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("u"))
+        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionError("u"))
     )
     monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: True)
     ci.chat_session.session_alias = None
@@ -349,7 +349,7 @@ def test_init_starting_session_create(monkeypatch):
 def test_init_starting_session_integer_error(monkeypatch, caplog):
     ci = setup_interface(monkeypatch)
     monkeypatch.setattr(
-        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("u"))
+        ci, "_switch_to_session", lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionError("u"))
     )
     monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: False)
     monkeypatch.setattr(lair.util, "safe_int", int)
@@ -422,13 +422,13 @@ def test_switch_to_session_unknown(monkeypatch):
     monkeypatch.setattr(
         ci.session_manager,
         "switch_to_session",
-        lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("bad")),
+        lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionError("bad")),
     )
     captured = []
     monkeypatch.setattr(lair.logging.logger, "error", lambda m: captured.append(m))
     ci._switch_to_session("unknown", raise_exceptions=False)
     assert captured and "Unknown session: unknown" in captured[0]
-    with pytest.raises(lair.sessions.UnknownSessionException):
+    with pytest.raises(lair.sessions.UnknownSessionError):
         ci._switch_to_session("unknown", raise_exceptions=True)
 
 

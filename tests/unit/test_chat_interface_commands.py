@@ -283,8 +283,8 @@ def test_last_prompt_and_response(monkeypatch, caplog):
 def test_list_settings_help(monkeypatch):
     ci = make_ci()
     monkeypatch.setattr(commands, "ErrorRaisingArgumentParser", commands.ErrorRaisingArgumentParser)
-    monkeypatch.setattr(commands, "ArgumentParserHelpException", commands.ArgumentParserHelpException)
-    monkeypatch.setattr(commands, "ArgumentParserExitException", commands.ArgumentParserExitException)
+    monkeypatch.setattr(commands, "ArgumentParserHelpError", commands.ArgumentParserHelpError)
+    monkeypatch.setattr(commands, "ArgumentParserExitError", commands.ArgumentParserExitError)
     result = []
     monkeypatch.setattr(ci.reporting, "system_message", lambda m, **k: result.append(m))
     ci.command_list_settings("/list-settings", [], "--help")

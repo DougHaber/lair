@@ -3,8 +3,9 @@ import sys
 import types
 from unittest import mock
 
-import lair
 import pytest
+
+import lair
 
 
 def import_run():

@@ -17,7 +17,7 @@ class DummySessionManager:
     def switch_to_session(self, session, chat_session):
         self.switched = True
         if self.raise_unknown:
-            raise lair.sessions.UnknownSessionException()
+            raise lair.sessions.UnknownSessionError()
 
     def is_alias_available(self, alias):
         return self.alias_available

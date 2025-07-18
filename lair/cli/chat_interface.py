@@ -87,7 +87,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         if id_or_alias:
             try:
                 self._switch_to_session(id_or_alias)
-            except lair.sessions.UnknownSessionException:
+            except lair.sessions.UnknownSessionError:
                 if create_session_if_missing:
                     if not self.session_manager.is_alias_available(id_or_alias):
                         if isinstance(lair.util.safe_int(id_or_alias), int):
@@ -309,8 +309,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                             When False, it logs an error instead.
 
         Raises:
-          lair.sessions.UnknownSessionException: If the session ID is unknown
-                                                 and `raise_exceptions` is True.
+          lair.sessions.UnknownSessionError: If the session ID is unknown
+                                             and `raise_exceptions` is True.
         """
         try:
             with lair.events.defer_events():
@@ -319,7 +319,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 self._rebuild_chat_session()
                 if old_session_id != self.chat_session.session_id:
                     self.last_used_session_id = old_session_id
-        except lair.sessions.UnknownSessionException:
+        except lair.sessions.UnknownSessionError:
             if raise_exceptions:
                 raise
             else:
@@ -361,7 +361,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         try:
             self._switch_to_session(id_or_alias)
-        except lair.sessions.UnknownSessionException:
+        except lair.sessions.UnknownSessionError:
             self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
 
     def _handle_session_set_alias(self):

@@ -1,5 +1,5 @@
 from .openai_chat_session import OpenAIChatSession
-from .session_manager import SessionManager, UnknownSessionException
+from .session_manager import SessionManager, UnknownSessionError
 
 
 def get_chat_session(session_type, *args, **kwargs):
@@ -12,6 +12,6 @@ def get_chat_session(session_type, *args, **kwargs):
 __all__ = [
     "OpenAIChatSession",
     "SessionManager",
-    "UnknownSessionException",
+    "UnknownSessionError",
     "get_chat_session",
 ]

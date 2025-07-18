@@ -1,12 +1,13 @@
-import builtins
 import datetime
 import traceback
 
+import pytest
 import rich
 import rich.text
+import rich.traceback
 
 import lair
-from lair.reporting.reporting import Reporting
+from lair.reporting.reporting import Reporting, ReportingSingletoneMeta
 
 
 def patch_config(monkeypatch, values):
@@ -228,13 +229,6 @@ def test_messages_to_str_and_colors():
     assert r.color_gt_lt(0, center=0) == "gray"
     assert isinstance(r.color_bool(True), rich.text.Text)
     assert isinstance(r.color_bool(False), rich.text.Text)
-
-
-import pytest
-import rich
-import rich.traceback
-
-from lair.reporting.reporting import Reporting, ReportingSingletoneMeta
 
 
 def reset_reporting():

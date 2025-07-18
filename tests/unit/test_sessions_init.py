@@ -1,7 +1,7 @@
 import pytest
+
 import lair
-from lair.sessions import get_chat_session, OpenAIChatSession
-import lair.sessions.openai_chat_session as ocs
+from lair.sessions import OpenAIChatSession, get_chat_session
 
 
 def test_get_chat_session_openai(monkeypatch):
