@@ -64,6 +64,15 @@ def parse_arguments():
     return arguments, subcommands[arguments.subcommand]
 
 
+def _parse_arguments_no_exit():
+    try:
+        return parse_arguments()
+    except SystemExit as exc:
+        if exc.code == 0:
+            return None, None
+        raise
+
+
 def set_config_from_arguments(overrides):
     if not overrides:
         return
@@ -79,25 +88,29 @@ def set_config_from_arguments(overrides):
     lair.events.fire("config.update")
 
 
+def _apply_arguments(arguments):
+    if arguments.debug:
+        logger.setLevel("DEBUG")
+
+    if arguments.mode:
+        lair.config.change_mode(arguments.mode)
+    set_config_from_arguments(arguments.set)
+    if arguments.model:
+        lair.config.set("model.name", arguments.model)
+
+    lair.reporting.Reporting(
+        disable_color=arguments.disable_color,
+        force_color=arguments.force_color,
+    )
+
+
 def start():
     try:
         lair.logging.init_logging()
-        arguments, subcommand = parse_arguments()
-
-        if arguments.debug:
-            logger.setLevel("DEBUG")
-
-        if arguments.mode:
-            lair.config.change_mode(arguments.mode)
-        set_config_from_arguments(arguments.set)
-        if arguments.model:
-            lair.config.set("model.name", arguments.model)
-
-        lair.reporting.Reporting(
-            disable_color=arguments.disable_color,
-            force_color=arguments.force_color,
-        )
-
+        arguments, subcommand = _parse_arguments_no_exit()
+        if arguments is None:
+            return
+        _apply_arguments(arguments)
         subcommand.run(arguments)
     except KeyboardInterrupt:
         sys.exit("Received interrupt.  Exiting")
