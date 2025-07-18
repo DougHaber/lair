@@ -26,3 +26,17 @@ for name in modules_to_stub:
         # pdfplumber is only used in tests and may not be installed. Provide a
         # minimal stub so monkeypatching works without raising AttributeError.
         module.open = lambda *args, **kwargs: None
+    elif name == "openai":
+        # Provide a minimal stub for the OpenAI client used by the code. Tests
+        # will patch this with more complete behaviour when required.
+        class DummyOpenAI:
+            def __init__(self, *args, **kwargs):
+                pass
+
+        module.OpenAI = DummyOpenAI
+    elif name == "PIL":
+        # Basic Image stub so isinstance checks succeed when PIL is missing.
+        class DummyImage:
+            pass
+
+        module.Image = types.SimpleNamespace(Image=DummyImage)
