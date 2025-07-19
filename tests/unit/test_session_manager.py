@@ -231,3 +231,47 @@ def test_delete_session_error_and_alias_conflict(monkeypatch, tmp_path):
     manager.set_alias(session_id, "alias")
     with pytest.raises(ValueError):
         manager.set_alias(s2.session_id, "alias")
+
+
+def test_edge_cases_next_prev(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    assert manager.get_next_session_id(1) is None
+    assert manager.get_previous_session_id(1) is None
+
+    manager.env.db[b"session:00000001"] = json.dumps({"id": 1, "history": []}).encode()
+    manager.env.db[b"session:00000002"] = json.dumps({"id": 2, "history": []}).encode()
+    manager.env.db[b"zzz"] = b"stop"
+
+    assert manager._get_next_session_id() == 3
+    assert manager.get_next_session_id(99) == 1
+    assert manager.get_previous_session_id(99) == 1
+
+
+def test_refresh_missing_session(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    sess = DummySession()
+    sess.session_id = 5
+    sess.history.add_message("user", "hi")
+    manager.refresh_from_chat_session(sess)
+    assert b"session:00000005" in manager.env.db
+
+
+def test_add_with_alias_and_alias_update(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    sess = DummySession()
+    sess.session_alias = "old"
+    manager.add_from_chat_session(sess)
+    session_id = sess.session_id
+    assert manager.env.db[b"alias:old"] == str(session_id).encode()
+
+    manager.set_alias(session_id, "new")
+    assert b"alias:old" not in manager.env.db
+    assert manager.env.db[b"alias:new"] == str(session_id).encode()
+
+
+def test_all_sessions_stop_on_prefix(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    manager.env.db[b"session:00000001"] = json.dumps({"id": 1, "history": []}).encode()
+    manager.env.db[b"zzz"] = b"stop"
+    sessions = list(manager.all_sessions())
+    assert sessions[0]["id"] == 1 and len(sessions) == 1

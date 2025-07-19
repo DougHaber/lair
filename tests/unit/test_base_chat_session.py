@@ -136,3 +136,24 @@ def test_serialization_helpers(monkeypatch, tmp_path):
     assert session.to_dict() == {"k": 1}
     session.update_from_dict({"a": 2})
     assert calls["update"] == {"a": 2}
+
+
+def test_auto_generate_title_two_user_messages(monkeypatch):
+    session = DummySession()
+    lair.config.set("session.auto_generate_titles.enabled", True, no_event=True)
+    session.history.add_message("user", "first")
+    session.history.add_message("user", "second")
+    assert session.auto_generate_title() is None
+
+
+def test_get_system_prompt(monkeypatch):
+    session = DummySession()
+    lair.config.set("session.system_prompt_template", "PROMPT", no_event=True)
+    assert session.get_system_prompt() == "PROMPT"
+
+
+def test_base_methods_exposed():
+    session = DummySession()
+    assert BaseChatSession.invoke(session) is None
+    assert BaseChatSession.invoke_with_tools(session) is None
+    assert BaseChatSession.list_models(session) is None
