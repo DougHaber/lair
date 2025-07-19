@@ -212,3 +212,93 @@ def test_util_run_markdown_with_session(monkeypatch):
     monkeypatch.setattr(lair.reporting, "Reporting", lambda: reporter)
     util.run(make_args(markdown=True))
     assert "resp" in calls and updated
+
+def test_util_module_info_func():
+    info = util_mod._module_info()
+    assert info["class"] is util_mod.Util
+    assert info["description"].startswith("Make simple calls") and isinstance(info["tags"], list)
+
+
+def test_get_instructions_from_argument():
+    util = make_util()
+    args = argparse.Namespace(instructions="xyz", instructions_file=None)
+    assert util._get_instructions(args) == "xyz"
+
+
+def test_get_user_messages_pipe(monkeypatch):
+    util = make_util()
+    monkeypatch.setattr(sys, "stdin", SimpleNamespace(read=lambda: "pipe"))
+    args = argparse.Namespace(pipe=True, content_file=None, content=None, attachments=None)
+    msgs = util._get_user_messages(args)
+    assert any("pipe" in m.get("content", "") for m in msgs)
+
+
+def test_get_user_messages_content():
+    util = make_util()
+    args = argparse.Namespace(pipe=False, content_file=None, content="text", attachments=None)
+    msgs = util._get_user_messages(args)
+    assert any("text" in m.get("content", "") for m in msgs)
+
+
+class _SM:
+    def __init__(self):
+        pass
+    def switch_to_session(self, alias, chat_session):
+        raise lair.sessions.UnknownSessionException("missing")
+    def is_alias_available(self, alias):
+        return False
+    def add_from_chat_session(self, chat_session):
+        pass
+
+def test_init_session_manager_unknown_no_create(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: _SM())
+    errors = []
+    monkeypatch.setattr(logger, "error", lambda msg: errors.append(msg))
+    with pytest.raises(SystemExit):
+        util._init_session_manager(chat, make_args(session="a"))
+    assert any("Unknown session" in e for e in errors)
+
+
+def test_init_session_manager_read_only(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: _SM())
+    errors = []
+    monkeypatch.setattr(logger, "error", lambda msg: errors.append(msg))
+    with pytest.raises(SystemExit):
+        util._init_session_manager(chat, make_args(session="a", allow_create_session=True, read_only_session=True))
+    assert any("read-only-session" in e for e in errors)
+
+
+def test_init_session_manager_alias_used(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: _SM())
+    monkeypatch.setattr(lair.util, "safe_int", lambda v: v)
+    errors = []
+    monkeypatch.setattr(logger, "error", lambda msg: errors.append(msg))
+    with pytest.raises(SystemExit):
+        util._init_session_manager(chat, make_args(session="alias", allow_create_session=True))
+    assert any("Alias is already used" in e for e in errors)
+
+
+def test_util_run_sets_model_and_include(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    monkeypatch.setattr(lair.sessions, "get_chat_session", lambda session_type: chat)
+    monkeypatch.setattr(util, "_init_session_manager", lambda cs, args: None)
+    orig_get = lair.config.get
+    monkeypatch.setattr(lair.config, "get", lambda k: "tmpl" if k == "util.system_prompt_template" else orig_get(k))
+    monkeypatch.setattr(util, "_get_instructions", lambda a: "i")
+    monkeypatch.setattr(util, "_get_user_messages", lambda a: [])
+    monkeypatch.setattr(util, "call_llm", lambda *a, **k: "resp")
+    monkeypatch.setattr(util, "clean_response", lambda r: r)
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    sets = []
+    monkeypatch.setattr(lair.config, "set", lambda k, v: sets.append((k, v)))
+    monkeypatch.setattr(sys, "stdout", SimpleNamespace(write=lambda s: None, flush=lambda: None))
+    util.run(make_args(model="model-x", include_filenames=True))
+    assert ("model.name", "model-x") in sets
+    assert ("misc.provide_attachment_filenames", True) in sets
