@@ -125,3 +125,17 @@ def test_print_help_and_current_model():
     ci.print_current_model_report()
     # expect two tables from help and one from current model
     assert len(ci.reporting.tables) == 3
+
+
+def test_iter_config_rows_unmodified():
+    ci = make_ci()
+    rows = list(ci._iter_config_rows(False, r"^model\.name$", None))
+    expected = ["model.name", f"{lair.config.get('chat.set_command.modified_style')}:" + lair.config.get('model.name')]
+    assert rows[0] == expected
+
+
+def test_print_config_report_baseline_no_keys():
+    ci = make_ci()
+    ci.print_config_report(filter_regex=r"^nomatch$", baseline="openai")
+    assert ("system", f"Current mode: {lair.config.active_mode}, Baseline mode: openai") in ci.reporting.messages
+    assert ci.reporting.messages[-1] == ("system", "No matching keys")
