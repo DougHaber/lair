@@ -239,17 +239,14 @@ def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | 
     editor_cmd = lair.config.get("misc.editor_command") or os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
     editor_args = shlex.split(editor_cmd)
 
-    temp_file = tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix)
-    temp_path = pathlib.Path(temp_file.name)
-
-    try:
+    with tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix) as temp_file:
         temp_file.write(content)
-        temp_file.close()
+        temp_path = pathlib.Path(temp_file.name)
 
-        run = subprocess.run
+    run = subprocess.run
+    try:
         run(editor_args + [str(temp_path)], check=True)
         modified_content = temp_path.read_text()
-
         return modified_content if modified_content != content else None
     finally:
         temp_path.unlink()

@@ -28,6 +28,8 @@
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
 - tests: Fix ruff lint issues in test suite
+- tests: Classify integration tests using CliRunner
+- tests: Move CLI tests to integration directory
 - tests: Add coverage for all chat sub-commands
 - tests: Add search tool coverage
 - tests: Add extra coverage for chat interface commands

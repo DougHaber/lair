@@ -1,6 +1,6 @@
 import abc
 import copy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import lair
 import lair.reporting
@@ -31,7 +31,7 @@ class BaseChatSession(abc.ABC):
         self.tool_set = tool_set or ToolSet()
 
     @abc.abstractmethod
-    def invoke(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
+    def invoke(self, messages: Optional[list[dict[str, Any]]] = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
@@ -41,7 +41,7 @@ class BaseChatSession(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def invoke_with_tools(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
+    def invoke_with_tools(self, messages: Optional[list[dict[str, Any]]] = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
@@ -52,7 +52,7 @@ class BaseChatSession(abc.ABC):
         """
         pass
 
-    def chat(self, message: Optional[Union[str, List[Dict[str, Any]]]] = None) -> str:
+    def chat(self, message: Optional[Union[str, list[dict[str, Any]]]] = None) -> str:
         """
         Adds a message to the chat history, sends a chat completion request, and returns the response.
 
