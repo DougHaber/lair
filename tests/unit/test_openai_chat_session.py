@@ -1,4 +1,5 @@
 import importlib
+import pytest
 import json
 import sys
 import types
@@ -89,3 +90,45 @@ def test_invoke_with_tools(monkeypatch):
     result, tool_msgs = session.invoke_with_tools()
     assert result == "done" and tool_msgs[0]["role"] == "assistant"
     assert session.last_prompt
+
+
+def test_invoke_uses_defaults(monkeypatch):
+    def create_fn(*, messages, model, temperature, max_completion_tokens):
+        create_fn.record = messages
+        return DummyAnswer(DummyMessage(content="out"))
+
+    ocs = setup_openai(monkeypatch, create_fn)
+    session = ocs.OpenAIChatSession(history=None, tool_set=None)
+    session.reporting = types.SimpleNamespace(messages_to_str=lambda m: "S")
+    monkeypatch.setattr(session, "get_system_prompt", lambda: "SYS")
+    session.history.add_message("user", "hi")
+
+    result = session.invoke()
+    assert result == "out" and create_fn.record[0]["role"] == "system"
+    assert session.last_prompt == "S"
+
+    session.openai = None
+    with pytest.raises(RuntimeError):
+        session.invoke(messages=[{"role": "user", "content": "x"}])
+
+
+def test_list_models_error_handling(monkeypatch):
+    def create_fn(*a, **k):
+        return DummyAnswer(DummyMessage(content="x"))
+
+    ocs = setup_openai(monkeypatch, create_fn)
+    session = ocs.OpenAIChatSession(history=None, tool_set=None)
+    session.openai = None
+    with pytest.raises(RuntimeError):
+        session.list_models()
+
+    session.recreate_openai_client()
+
+    def bad_list():
+        raise ValueError("boom")
+
+    session.openai.models = types.SimpleNamespace(list=bad_list)
+    with pytest.raises(ValueError):
+        session.list_models()
+    session.openai.models = types.SimpleNamespace(list=bad_list)
+    assert session.list_models(ignore_errors=True) is None

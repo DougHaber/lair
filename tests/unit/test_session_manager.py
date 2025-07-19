@@ -1,6 +1,7 @@
 import importlib
 import sys
 import pytest
+import json
 import lair
 from lair.components.history.chat_history import ChatHistory
 
@@ -151,3 +152,82 @@ def test_prune_and_alias_checks(monkeypatch, tmp_path):
 
     assert not manager.is_alias_available("1")
     assert manager.is_alias_available("new")
+
+
+def test_map_size_and_next_id(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    manager.env.map_size = 50
+    lair.config.set("database.sessions.size", 70, no_event=True)
+    called = []
+
+    def set_mapsize(size):
+        called.append(size)
+        manager.env.map_size = size
+
+    manager.env.set_mapsize = set_mapsize
+    manager.ensure_correct_map_size()
+    assert called == [70] and manager.env.map_size == 70
+
+    manager.env.db[b"session:00000001"] = b"{}"
+    manager.env.db[b"session:00000003"] = b"{}"
+    assert manager._get_next_session_id() == 2
+
+
+def test_refresh_and_delete_all(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    sess = DummySession()
+    sess.session_id = 1
+    sess.session_alias = "new"
+    sess.history.add_message("user", "hi")
+    manager.env.db[b"session:00000001"] = json.dumps({"id": 1, "alias": "old", "history": []}).encode()
+    manager.env.db[b"alias:old"] = b"1"
+    manager.refresh_from_chat_session(sess)
+    assert manager.env.db[b"alias:new"] == b"1" and b"alias:old" not in manager.env.db
+
+    new_sess = DummySession()
+    manager.refresh_from_chat_session(new_sess)
+    assert new_sess.session_id == 2
+
+    s1 = DummySession()
+    manager.add_from_chat_session(s1)
+    s2 = DummySession()
+    manager.add_from_chat_session(s2)
+    assert len(list(manager.all_sessions())) >= 2
+    manager.delete_sessions(["all"])
+    assert list(manager.all_sessions()) == []
+
+
+def test_delete_session_error_and_alias_conflict(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    sess = DummySession()
+    sess.history.add_message("user", "hi")
+    manager.add_from_chat_session(sess)
+    session_id = sess.session_id
+
+    class FailTxn(DummyTxn):
+        def delete(self, key):
+            raise RuntimeError("boom")
+
+        def abort(self):
+            self.aborted = True
+            super().abort()
+
+    used = {}
+
+    def begin(write=False):
+        txn = FailTxn(manager.env, write) if write else DummyTxn(manager.env, False)
+        if write:
+            used["txn"] = txn
+        return txn
+
+    manager.env.begin = begin
+    with pytest.raises(RuntimeError):
+        manager.delete_session(session_id)
+    assert used["txn"].aborted
+
+    s2 = DummySession()
+    manager.env.begin = lambda write=False: DummyTxn(manager.env, write)
+    manager.add_from_chat_session(s2)
+    manager.set_alias(session_id, "alias")
+    with pytest.raises(ValueError):
+        manager.set_alias(s2.session_id, "alias")
