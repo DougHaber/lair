@@ -40,6 +40,7 @@
 - cleanup: refactor workflow and tool call helpers for readability
 - tests: Add FileTool unit tests
 - tests: Add ComfyCaller SSL and URL handling coverage
+- tests: Improve ComfyCaller defaults and workflow coverage
 - tests: Add PythonTool unit tests
 - tests: Increase tmux tool coverage
 - internal: Fix import order to satisfy new ruff checks

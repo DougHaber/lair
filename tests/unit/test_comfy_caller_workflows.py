@@ -322,3 +322,188 @@ def test_workflow_outpaint(monkeypatch):
         )
     )
     assert images == ["img"]
+
+
+def test_import_comfy_script_noop(monkeypatch):
+    cc = get_ComfyCaller()(url="http://unit")
+    cc.is_comfy_script_imported = True
+    called = []
+    monkeypatch.setattr(importlib, "import_module", lambda *a, **k: called.append(a))
+    monkeypatch.setattr(cc, "_monkey_patch_comfy_script", lambda: called.append("patch"))
+    cc._import_comfy_script()
+    assert called == []
+
+
+def test_get_defaults_hunyuan_and_outpaint(monkeypatch):
+    cc = get_ComfyCaller()()
+    hv = {
+        "comfy.hunyuan_video.loras": "x\ny",
+        "comfy.hunyuan_video.batch_size": 2,
+    }
+    op = {
+        "comfy.outpaint.loras": "a\nb",
+        "comfy.outpaint.cfg": 1,
+    }
+
+    def fake_get(key, *a, **k):
+        return hv.get(key) if key in hv else op.get(key)
+
+    monkeypatch.setattr(importlib.import_module("lair").config, "get", fake_get)
+    hv_defaults = cc._get_defaults_hunyuan_video_t2v()
+    op_defaults = cc._get_defaults_outpaint()
+    assert hv_defaults["loras"] == ["x", "y"]
+    assert hv_defaults["batch_size"] == 2
+    assert op_defaults["loras"] == ["a", "b"]
+    assert op_defaults["cfg"] == 1
+
+
+class DummyWF:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        pass
+
+
+def test_workflow_ltxv_i2v(monkeypatch):
+    cc = get_ComfyCaller()()
+    with pytest.raises(ValueError):
+        asyncio.run(
+            cc._workflow_ltxv_i2v(
+                None,
+                model_name="m",
+                clip_name="c",
+                image_resize_height=1,
+                image_resize_width=1,
+                num_frames=1,
+                frame_rate_conditioning=1,
+                frame_rate_save=1,
+                batch_size=1,
+                florence_model_name="f",
+                max_shift=1,
+                base_shift=1,
+                stretch=1,
+                terminal=1,
+                negative_prompt="n",
+                auto_prompt_suffix="s",
+                auto_prompt_extra="e",
+                prompt="p",
+                cfg=1,
+                sampler="sam",
+                scheduler="sch",
+                steps=1,
+                pingpong=False,
+                output_format="gif",
+                denoise=0.1,
+                seed=1,
+                florence_seed=1,
+            )
+        )
+
+    caller_mod = importlib.import_module("lair.comfy_caller")
+    monkeypatch.setattr(caller_mod, "CheckpointLoaderSimple", lambda n: ("m", "c", "v"), raising=False)
+    monkeypatch.setattr(caller_mod, "Workflow", DummyWF, raising=False)
+    monkeypatch.setattr(cc.__class__, "_image_to_base64", lambda self, img: "b64")
+    monkeypatch.setattr(caller_mod, "ETNLoadImageBase64", lambda b: ("img", None))
+    monkeypatch.setattr(caller_mod, "LTXVPreprocess", lambda img, s: "prep")
+    monkeypatch.setattr(caller_mod, "ImageResizeKJ", lambda *a, **k: ("img2", 2, 3))
+    monkeypatch.setattr(caller_mod, "CLIPLoader", lambda *a, **k: "clip")
+    monkeypatch.setattr(caller_mod, "DownloadAndLoadFlorence2Model", lambda *a, **k: "model")
+    monkeypatch.setattr(caller_mod, "Florence2Run", lambda *a, **k: (None, None, DummyNode({"text": ["p"]}), None))
+    monkeypatch.setattr(caller_mod, "StringReplaceMtb", lambda *a, **k: DummyNode({"text": ["p"]}))
+    monkeypatch.setattr(caller_mod, "StringFunctionPysssss", lambda *a, **k: DummyNode({"text": ["final"]}))
+    monkeypatch.setattr(caller_mod, "CLIPTextEncode", lambda t, c: f"{t}/{c}")
+    monkeypatch.setattr(caller_mod, "LTXVImgToVideo", lambda *a, **k: ("pos", "neg", "latent"))
+    monkeypatch.setattr(caller_mod, "LTXVConditioning", lambda p, n, f: (p, n))
+    monkeypatch.setattr(caller_mod, "KSamplerSelect", lambda s: "sampler")
+    monkeypatch.setattr(caller_mod, "LTXVScheduler", lambda *a, **k: "sigmas")
+    monkeypatch.setattr(caller_mod, "SamplerCustom", lambda *a, **k: ("out", None))
+    monkeypatch.setattr(caller_mod, "VAEDecode", lambda output, v: "frames")
+    monkeypatch.setattr(caller_mod, "VHSVideoCombine", lambda **k: DummyNode({"gifs": [{"filename": "vid"}]}))
+    monkeypatch.setattr(cc, "view", lambda f: f"view:{f}")
+    monkeypatch.setattr(cc, "_ensure_seed", lambda s: 5)
+
+    result = asyncio.run(
+        cc._workflow_ltxv_i2v(
+            "file",
+            model_name="m",
+            clip_name="c",
+            image_resize_height=1,
+            image_resize_width=1,
+            num_frames=1,
+            frame_rate_conditioning=1,
+            frame_rate_save=1,
+            batch_size=1,
+            florence_model_name="f",
+            max_shift=1,
+            base_shift=1,
+            stretch=1,
+            terminal=1,
+            negative_prompt="n",
+            auto_prompt_suffix="s",
+            auto_prompt_extra="e",
+            prompt=None,
+            cfg=1,
+            sampler="sam",
+            scheduler="sch",
+            steps=1,
+            pingpong=False,
+            output_format="gif",
+            denoise=0.1,
+            seed=None,
+            florence_seed=None,
+        )
+    )
+    assert result == ["view:vid"]
+
+
+def test_workflow_hunyuan_video_t2v(monkeypatch):
+    cc = get_ComfyCaller()()
+    caller_mod = importlib.import_module("lair.comfy_caller")
+    monkeypatch.setattr(caller_mod, "RandomNoise", lambda s: f"noise{s}")
+    monkeypatch.setattr(caller_mod, "UNETLoader", lambda n, d: f"unet:{n}:{d}")
+    monkeypatch.setattr(caller_mod, "DualCLIPLoader", lambda *a: "clip")
+    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, l: (m, c))
+    monkeypatch.setattr(caller_mod, "CLIPTextEncode", lambda p, c: f"{p}/{c}")
+    monkeypatch.setattr(caller_mod, "FluxGuidance", lambda c, g: f"flux:{c}:{g}")
+    monkeypatch.setattr(caller_mod, "ModelSamplingSD3", lambda m, s: f"shift:{m}:{s}")
+    monkeypatch.setattr(caller_mod, "BasicGuider", lambda m, c: f"guide:{m}:{c}")
+    monkeypatch.setattr(caller_mod, "KSamplerSelect", lambda *a: "sampler")
+    monkeypatch.setattr(caller_mod, "BasicScheduler", lambda *a, **k: "sigmas")
+    monkeypatch.setattr(caller_mod, "EmptyHunyuanLatentVideo", lambda *a: "latent")
+    monkeypatch.setattr(caller_mod, "SamplerCustomAdvanced", lambda *a, **k: ("latent", None))
+    monkeypatch.setattr(caller_mod, "VAELoader", lambda n: "vae")
+    monkeypatch.setattr(caller_mod, "VAEDecodeTiled", lambda *a, **k: "img")
+    monkeypatch.setattr(caller_mod, "SaveAnimatedWEBP", lambda *a, **k: DummyNode({"images": [{"filename": "vid"}]}))
+    monkeypatch.setattr(cc, "view", lambda f, type="output": f"view:{f}")
+    monkeypatch.setattr(cc, "_ensure_seed", lambda s: 1)
+
+    result = asyncio.run(
+        cc._workflow_hunyuan_video_t2v(
+            batch_size=1,
+            clip_name_1="c1",
+            clip_name_2="c2",
+            denoise=0.1,
+            frame_rate=24,
+            guidance_scale=1.0,
+            height=64,
+            loras=None,
+            model_name="m",
+            num_frames=2,
+            model_weight_dtype="fp16",
+            prompt="p",
+            sampler="sampler",
+            sampling_shift=1.0,
+            scheduler="sch",
+            seed=None,
+            steps=2,
+            tile_overlap=1,
+            tile_size=64,
+            tile_temporal_size=2,
+            tile_temporal_overlap=1,
+            tiled_decode_enabled=True,
+            width=64,
+            vae_model_name="vae",
+        )
+    )
+    assert result == ["view:vid"]
