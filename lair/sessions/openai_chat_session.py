@@ -1,7 +1,7 @@
 import datetime
 import json
 import os
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Optional, cast
 
 import openai
 import zoneinfo
@@ -35,7 +35,7 @@ class OpenAIChatSession(BaseChatSession):
 
     def invoke(
         self,
-        messages: Optional[List[Dict[str, Any]]] = None,
+        messages: Optional[list[dict[str, Any]]] = None,
         disable_system_prompt: bool = False,
         model: Optional[str] = None,
         temperature: Optional[float] = None,
@@ -93,7 +93,7 @@ class OpenAIChatSession(BaseChatSession):
             tool_messages.append(tool_response_messsage)
             logger.debug(f"Tool result: {tool_response_messsage}")
 
-    def invoke_with_tools(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
+    def invoke_with_tools(self, messages: Optional[list[dict[str, Any]]] = None, disable_system_prompt: bool = False):
         """
         Call the underlying model without altering state (no history)
 
@@ -110,13 +110,14 @@ class OpenAIChatSession(BaseChatSession):
 
             messages.extend(self.history.get_messages())
 
-        tool_messages: List[Dict[str, Any]] = []
+        tool_messages: list[dict[str, Any]] = []
 
         cycle = 0
         while True:
             logger.debug(
-                "OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d"
-                % (lair.config.get("model.name"), len(messages), cycle)
+                "OpenAIChatSession(): completions.create("
+                f"model={lair.config.get('model.name')}, len(messages)={len(messages)}), "
+                f"cycle={cycle}"
             )
             if self.openai is None:
                 raise RuntimeError("OpenAI client is not initialized")
@@ -137,7 +138,7 @@ class OpenAIChatSession(BaseChatSession):
                 content = message.content
                 return (content.strip() if content is not None else ""), tool_messages
 
-    def list_models(self, *, ignore_errors: bool = False) -> Optional[List[Dict[str, Any]]]:
+    def list_models(self, *, ignore_errors: bool = False) -> Optional[list[dict[str, Any]]]:
         """
         Retrieve a list of available models and their metadata.
 
@@ -166,7 +167,7 @@ class OpenAIChatSession(BaseChatSession):
                 If an error occurs during model retrieval and `ignore_errors` is False.
         """
         try:
-            models: List[Dict[str, Any]] = []
+            models: list[dict[str, Any]] = []
             if self.openai is None:
                 raise RuntimeError("OpenAI client is not initialized")
             for model in self.openai.models.list():

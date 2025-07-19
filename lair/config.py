@@ -7,11 +7,13 @@ from lair.logging import logger  # noqa
 
 class ConfigUnknownKeyError(Exception):
     """Raised when attempting to access an undefined configuration key."""
+
     pass
 
 
 class ConfigInvalidTypeError(Exception):
     """Raised when a value cannot be cast to the expected configuration type."""
+
     pass
 
 

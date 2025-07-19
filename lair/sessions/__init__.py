@@ -1,6 +1,9 @@
 from .openai_chat_session import OpenAIChatSession
 from .session_manager import SessionManager, UnknownSessionError
 
+# Backwards compatibility
+UnknownSessionException = UnknownSessionError
+
 
 def get_chat_session(session_type, *args, **kwargs):
     if session_type == "openai_chat":
@@ -13,5 +16,6 @@ __all__ = [
     "OpenAIChatSession",
     "SessionManager",
     "UnknownSessionError",
+    "UnknownSessionException",
     "get_chat_session",
 ]

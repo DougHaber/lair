@@ -19,6 +19,9 @@ class UnknownSessionError(Exception):
     pass
 
 
+UnknownSessionException = UnknownSessionError
+
+
 class SessionManager:
     def __init__(self):
         self.database_path = os.path.expanduser(lair.config.get("database.sessions.path"))

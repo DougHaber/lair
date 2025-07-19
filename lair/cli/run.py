@@ -32,7 +32,7 @@ def parse_arguments():
     class HelpFormatter(argparse.HelpFormatter):
         def _format_action(self, action):
             if type(action) is argparse._SubParsersAction._ChoicesPseudoAction:
-                return "  %-40.40s - %s\n" % (self._format_action_invocation(action), self._expand_help(action))
+                return f"  {self._format_action_invocation(action):40.40} - {self._expand_help(action)}\n"
             else:
                 return super()._format_action(action)
 
