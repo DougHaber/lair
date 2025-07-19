@@ -4,10 +4,13 @@ import pytest
 import lair
 from lair.modules import chat as chat_mod, util as util_mod
 
+from lair.modules.util import logger
 
 class DummyChatSession:
     def __init__(self):
         self.called = False
+        self.session_alias = None
+        self.session_title = None
 
     def chat(self, messages):
         self.called = True
@@ -86,3 +89,66 @@ def test_call_llm_and_clean(monkeypatch):
     assert result == "ok" and chat.called
     cleaned = util.clean_response("```txt\nhello\n```")
     assert cleaned == "hello\n"
+
+class DummySessionManager:
+    def __init__(self, *, alias_available=True):
+        self.alias_available = alias_available
+        self.add_called = False
+    def switch_to_session(self, alias, chat_session):
+        raise lair.sessions.UnknownSessionException("missing")
+    def is_alias_available(self, alias):
+        return self.alias_available
+    def add_from_chat_session(self, chat_session):
+        self.add_called = True
+
+
+def make_args(**overrides):
+    base = dict(
+        session=None,
+        allow_create_session=False,
+        read_only_session=False,
+        instructions=None,
+        instructions_file=None,
+        pipe=False,
+        content=None,
+        content_file=None,
+        attachments=None,
+        enable_tools=False,
+        markdown=False,
+        include_filenames=None,
+        model=None,
+    )
+    base.update(overrides)
+    return argparse.Namespace(**base)
+
+
+def test_init_session_manager_no_session(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: DummySessionManager())
+    result = util._init_session_manager(chat, make_args())
+    assert result is None and chat.session_title == "N/A"
+
+
+def test_init_session_manager_alias_unavailable(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    manager = DummySessionManager(alias_available=False)
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: manager)
+    monkeypatch.setattr(lair.util, "safe_int", lambda v: int(v) if v.isdigit() else v)
+    errors = []
+    monkeypatch.setattr(logger, "error", lambda msg: errors.append(msg))
+    with pytest.raises(SystemExit):
+        util._init_session_manager(chat, make_args(session="1", allow_create_session=True))
+    assert any("may not be integers" in e for e in errors)
+
+
+def test_init_session_manager_success(monkeypatch):
+    util = make_util()
+    chat = DummyChatSession()
+    manager = DummySessionManager()
+    monkeypatch.setattr(lair.sessions, "SessionManager", lambda: manager)
+    manager.switch_to_session = lambda alias, cs: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("missing"))
+    monkeypatch.setattr(lair.util, "safe_int", lambda v: v)
+    result = util._init_session_manager(chat, make_args(session="new", allow_create_session=True))
+    assert result is manager and chat.session_alias == "new" and manager.add_called
