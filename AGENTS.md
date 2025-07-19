@@ -59,6 +59,8 @@ eval $(poetry env activate)
 poetry install --with dev
 ```
 
+You have network permissions to install all dependencies. If installation fails try again and make sure you are doing it properly. If you are unable to install all dependencies, abort the task.
+
 ### Completing a Request
 
 The `CHANGELOG.md` file should be appended with new entries for any new features or fixes. Fixes to issues created within a PR or a branch that were never released should not be mentioned. New entries should be added under the top `# WIP -` heading.
