@@ -106,3 +106,36 @@ def test_read_file_skips_directories(file_tool):
     res = file_tool.read_file("**")
     assert list(res["file_content"].values()) == ["data"]
 
+
+def test_generate_remaining_definitions(file_tool):
+    read_def = file_tool._generate_read_file_definition()
+    path = lair.config.get("tools.file.path")
+    assert read_def["function"]["name"] == "read_file"
+    assert path in read_def["function"]["description"]
+
+    delete_def = file_tool._generate_delete_file_definition()
+    assert delete_def["function"]["name"] == "delete_file"
+    assert path in delete_def["function"]["description"]
+
+    make_def = file_tool._generate_make_directory_definition()
+    assert make_def["function"]["name"] == "make_directory"
+    assert path in make_def["function"]["description"]
+
+    remove_def = file_tool._generate_remove_directory_definition()
+    assert remove_def["function"]["name"] == "remove_directory"
+    assert path in remove_def["function"]["description"]
+
+
+def test_read_file_handles_open_errors(file_tool, monkeypatch):
+    workspace = lair.config.get("tools.file.path")
+    target = os.path.join(workspace, "fail.txt")
+    with open(target, "w"):
+        pass
+
+    def explode(*_args, **_kwargs):
+        raise OSError("cannot open")
+
+    monkeypatch.setattr("builtins.open", explode)
+    result = file_tool.read_file("fail.txt")
+    assert "cannot open" in result["error"]
+
