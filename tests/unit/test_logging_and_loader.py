@@ -113,3 +113,21 @@ def test_load_modules_from_path_sorted(monkeypatch):
     monkeypatch.setattr(loader, "import_file", lambda f, p: order.append(f))
     loader.load_modules_from_path("unused")
     assert order == sorted(files)
+
+
+def test_register_module_alias_conflict(tmp_path):
+    loader = ModuleLoader()
+
+    def make(name, alias):
+        mod = types.ModuleType(name)
+        path = tmp_path / f"{name}.py"
+        mod.__file__ = str(path)
+        path.write_text("")
+        mod._module_info = lambda: {"class": object, "aliases": [alias]}
+        return mod
+
+    first = make("one", "alias")
+    loader._register_module(first, tmp_path)
+    second = make("two", "alias")
+    with pytest.raises(Exception, match="repeat command / alias"):
+        loader._register_module(second, tmp_path)
