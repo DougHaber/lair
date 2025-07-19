@@ -3,6 +3,7 @@ import sys
 import traceback
 
 import lair.logging
+import lair.module_loader
 import lair.util
 from lair.logging import logger
 
