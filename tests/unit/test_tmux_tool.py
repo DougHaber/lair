@@ -237,3 +237,42 @@ def test_kill_attach_and_list(tool):
     assert "No active tmux windows" in err["error"]
     err2 = tool.attach_window(window_id="@1")
     assert "No tmux windows" in err2["error"]
+
+
+def test_ensure_connection_and_failure(tmp_path, monkeypatch):
+    new_tool = TmuxTool()
+    old = setup_config(tmp_path)
+    calls = []
+
+    class DummyServer:
+        def __init__(self, fail=False):
+            self.fail = fail
+            self.sessions = []
+
+        def list_sessions(self):
+            if self.fail:
+                raise RuntimeError("nope")
+
+    def connect_first():
+        calls.append("c")
+        new_tool.server = DummyServer(fail=len(calls) == 1)
+        new_tool.session = DummySession()
+
+    monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_first)
+    new_tool.server = None
+    new_tool._ensure_connection()
+    assert len(calls) == 2  # called twice due to retry
+
+    def connect_fail():
+        raise RuntimeError("boom")
+
+    new_tool.server = DummyServer(fail=True)
+    monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_fail)
+    with pytest.raises(Exception):
+        new_tool._ensure_connection()
+    restore_config(old)
+
+
+def test_read_new_output_no_windows(tool):
+    with pytest.raises(Exception):
+        tool.read_new_output()

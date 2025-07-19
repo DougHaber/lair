@@ -74,3 +74,35 @@ def test_directory_creation_and_removal(file_tool):
     assert not os.path.isdir(created) and "removed" in removed["message"]
     error = file_tool.remove_directory("dir/sub")
     assert "not a directory" in error["error"]
+
+
+def test_generate_definitions(file_tool):
+    defs = file_tool._generate_list_directory_definition()
+    assert "list_directory" == defs["function"]["name"]
+    write_def = file_tool._generate_write_file_definition()
+    assert lair.config.get("tools.file.path") in write_def["function"]["description"]
+
+
+def test_error_paths(file_tool, monkeypatch):
+    monkeypatch.setattr(file_tool, "_resolve_path", lambda p: (_ for _ in ()).throw(ValueError("bad")))
+    out = file_tool.list_directory(".")
+    assert "bad" in out["error"]
+    out2 = file_tool.write_file("a", "b")
+    assert "bad" in out2["error"]
+    out3 = file_tool.delete_file("a")
+    assert "bad" in out3["error"]
+    out4 = file_tool.make_directory("a")
+    assert "bad" in out4["error"]
+    out5 = file_tool.remove_directory("a")
+    assert "bad" in out5["error"]
+
+
+def test_read_file_skips_directories(file_tool):
+    base = lair.config.get("tools.file.path")
+    dir1 = os.path.join(base, "dir")
+    os.makedirs(dir1)
+    open(os.path.join(dir1, "f.txt"), "w").write("data")
+    os.makedirs(os.path.join(base, "dir2"))
+    res = file_tool.read_file("**")
+    assert list(res["file_content"].values()) == ["data"]
+
