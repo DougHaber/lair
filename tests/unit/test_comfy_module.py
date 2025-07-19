@@ -290,3 +290,92 @@ def test_save_output_save_to_disk(monkeypatch, tmp_path):
         module._save_output__save_to_disk(object(), str(tmp_path / "bad"))
 
     assert module.get_output_file_name("a.png").endswith("-upscaled.png")
+
+
+def test_save_output_single_file(monkeypatch, tmp_path):
+    module = make_module()
+    calls = []
+    monkeypatch.setattr(module, "_save_output__save_to_disk", lambda item, name: calls.append((item, name)))
+    out_file = tmp_path / "out.png"
+    module._save_output([b"data"], str(out_file), single_output=True)
+    assert calls == [(b"data", str(out_file))]
+
+
+def test_run_workflow_queue(monkeypatch, tmp_path):
+    module = make_module()
+    directory = tmp_path / "dir"
+    directory.mkdir()
+    file_path = tmp_path / "img.png"
+    file_path.write_text("d")
+    extra = tmp_path / "extra.png"
+    captured = {"extend": 0, "process": []}
+    monkeypatch.setattr(module, "_extend_queue_from_dir", lambda d, q: (q.append(str(extra)), captured.__setitem__("extend", captured["extend"] + 1)))
+    monkeypatch.setattr(module, "_process_file", lambda f, a, fa, t: captured["process"].append(f))
+    args = SimpleNamespace(recursive=True, skip_existing=False, comfy_command="image")
+    module._run_workflow_queue(args, {}, {}, queue=[str(directory), str(file_path)], output_filename_template="tmpl")
+    assert captured["extend"] == 1
+    assert str(extra) in captured["process"] and str(file_path) in captured["process"]
+
+    warnings = []
+    monkeypatch.setattr(module, "_extend_queue_from_dir", lambda d, q: warnings.append("extend"))
+    monkeypatch.setattr(module, "_process_file", lambda *a, **k: warnings.append("process"))
+    monkeypatch.setattr(lair.modules.comfy.logger, "warning", lambda msg: warnings.append(msg))
+    args = SimpleNamespace(recursive=False, skip_existing=False, comfy_command="image")
+    module._run_workflow_queue(args, {}, {}, queue=[str(directory)], output_filename_template="tmpl")
+    assert any("Use --recursive" in w for w in warnings)
+    assert "extend" not in warnings and "process" not in warnings
+
+
+def test_run_workflow_upscale(monkeypatch):
+    module = make_module()
+    captured = {}
+    monkeypatch.setattr(module, "_run_workflow_queue", lambda a, d, f, *, queue, output_filename_template: captured.update({"queue": queue, "template": output_filename_template}))
+    monkeypatch.setattr(lair.config, "get", lambda k: "tmpl" if k == "comfy.upscale.output_filename" else None)
+    args = SimpleNamespace(comfy_command="upscale", scale_files=["a.png", "b.png"], recursive=False)
+    module.run_workflow_upscale(args, {}, {})
+    assert captured["queue"] == ["a.png", "b.png"]
+    assert captured["template"] == "tmpl"
+
+
+def test_run_workflow_default_single(monkeypatch):
+    module = make_module()
+    args = SimpleNamespace(comfy_command="image", repeat=1, output_file="o.png")
+    called = []
+    monkeypatch.setattr(module, "_save_output", lambda res, name, start_index=0, single_output=False: called.append(single_output))
+    module.run_workflow_default(args, {"batch_size": 1}, {})
+    assert called == [True]
+
+
+def test_on_chat_init_argument_error(monkeypatch):
+    module = make_module()
+    errors = []
+    class ErrParser:
+        def parse_args(self, args):
+            raise argparse.ArgumentError(None, "the following arguments are required: comfy_command")
+        def format_help(self):
+            return "HELP"
+    monkeypatch.setattr(module, "_get_chat_command_parser", lambda: ErrParser())
+    holder = {}
+    chat_interface = SimpleNamespace(
+        reporting=SimpleNamespace(error=lambda msg, show_exception=False: errors.append(msg)),
+        register_command=lambda n, f, d: holder.setdefault("func", f),
+    )
+    module._on_chat_init(chat_interface)
+    holder["func"]("/comfy", [], "")
+    assert errors == ["HELP"]
+
+    logs = []
+    class BadParser:
+        def parse_args(self, args):
+            raise argparse.ArgumentError(None, "bad")
+        def format_help(self):
+            return "BADHELP"
+    monkeypatch.setattr(module, "_get_chat_command_parser", lambda: BadParser())
+    monkeypatch.setattr(lair.modules.comfy.logger, "error", lambda msg: logs.append(msg))
+    chat_interface = SimpleNamespace(
+        reporting=SimpleNamespace(error=lambda *a, **k: None),
+        register_command=lambda n, f, d: holder.update({"func2": f}),
+    )
+    module._on_chat_init(chat_interface)
+    holder["func2"]("/comfy", [], "")
+    assert logs == ["bad"]
