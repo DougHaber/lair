@@ -9,6 +9,15 @@ from lair.util.argparse import (
     ArgumentParserHelpError,
     ErrorRaisingArgumentParser,
 )
+from lair.util.argparse import (
+    ArgumentParserExitException as _ArgumentParserExitException,
+)
+from lair.util.argparse import (
+    ArgumentParserHelpException as _ArgumentParserHelpException,
+)
+
+ArgumentParserExitException = _ArgumentParserExitException
+ArgumentParserHelpException = _ArgumentParserHelpException
 
 
 class ChatInterfaceCommands:

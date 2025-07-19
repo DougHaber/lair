@@ -3,6 +3,7 @@
 ### Bug Fixes
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
+- config: Provide simple YAML parser when PyYAML is unavailable
 - cli: Reduce complexity of keybindings setup
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
@@ -17,6 +18,7 @@
 - documentation: Add AGENTS.md and introduction video link
 - tests: Add pytest suite and extended chat interface coverage
 - tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
+- internal: update code for new ruff version
 - tests: Enable coverage and add new utility tests
 - docker: Add lair into youtube image
 - tests: Increase ChatHistory coverage

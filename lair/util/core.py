@@ -11,13 +11,18 @@ import re
 import shlex
 import subprocess
 import tempfile
-from typing import Optional
+from typing import Any, Optional
 
 import pdfplumber
-import yaml
 
 import lair
 from lair.logging import logger
+
+yaml: Any | None
+try:
+    import yaml  # type: ignore
+except Exception:
+    yaml = None
 
 subprocess_run = subprocess.run
 
@@ -48,13 +53,86 @@ def save_file(filename, contents):
         fd.write(contents)
 
 
+_BLOCK_MARKERS = {"|", "|-", ">", ">-"}
+
+
+def _convert_scalar(value: str) -> object:
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1]
+    if value.startswith('"') and value.endswith('"'):
+        return bytes(value[1:-1], "utf-8").decode("unicode_escape")
+    if value.lower() in {"true", "false"}:
+        return value.lower() == "true"
+    if value in {"", "null", "~"}:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return value
+
+
+def _simple_yaml_parse(text: str) -> dict:
+    result: dict[str, object] = {}
+    stack = [result]
+    indents = [0]
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        raw = lines[i]
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            i += 1
+            continue
+
+        indent = len(raw) - len(raw.lstrip())
+        while indent < indents[-1]:
+            stack.pop()
+            indents.pop()
+
+        line = raw.strip()
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        i += 1
+
+        if value in _BLOCK_MARKERS:
+            block_indent = indent + 2
+            block: list[str] = []
+            while i < len(lines) and len(lines[i]) - len(lines[i].lstrip()) >= block_indent:
+                block.append(lines[i][block_indent:])
+                i += 1
+            stack[-1][key] = (" ".join(block) if value.startswith(">") else "\n".join(block)).rstrip()
+            continue
+
+        if not value:
+            new_dict: dict[str, object] = {}
+            stack[-1][key] = new_dict
+            stack.append(new_dict)
+            indents.append(indent + 2)
+            continue
+
+        stack[-1][key] = _convert_scalar(value)
+
+    return result
+
+
 def parse_yaml_text(text):
-    return yaml.safe_load(text)
+    if yaml is not None:
+        try:
+            data = yaml.safe_load(text)
+            if data:
+                return data
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("YAML parsing failed: %s", exc)
+    return _simple_yaml_parse(text)
 
 
 def parse_yaml_file(filename):
     with open(filename) as fd:
-        return yaml.safe_load(fd)
+        contents = fd.read()
+    return parse_yaml_text(contents)
 
 
 def load_json_file(filename):

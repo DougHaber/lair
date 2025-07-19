@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 import itertools
 import weakref
 from contextlib import contextmanager
@@ -64,21 +63,17 @@ def fire(event_name, data=None):
     """Triggers an event, calling all subscribed handlers."""
     if data is None:
         data = {}
-    global _deferring
-    if _deferring:
-        if _squash_duplicates and any(event[0] == event_name and event[1] == data for event in _deferred_events):
-            return  # Skip duplicate events
-        _deferred_events.append((event_name, data))
-        return
 
-    if data is None:
-        data = {}
+    if _deferring:
+        if not (_squash_duplicates and (event_name, data) in _deferred_events):
+            _deferred_events.append((event_name, data))
+        return True
 
     logger.debug(f"events: fire(): {event_name}, data: {data}")
-    if event_name in _event_handlers:
-        for handler in list(_event_handlers[event_name]):  # Iterate over a copy to avoid modification issues
-            if callable(handler):
-                handler(data)
+    handlers = _event_handlers.get(event_name, set())
+    for handler in list(handlers):  # Iterate over a copy to avoid modification issues
+        if callable(handler):
+            handler(data)
     return True
 
 
