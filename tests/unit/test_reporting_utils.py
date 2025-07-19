@@ -4,7 +4,7 @@ import rich
 import rich.text
 
 import lair
-from lair.reporting.reporting import Reporting
+from lair.reporting.reporting import Reporting, ReportingSingletoneMeta
 
 
 def make_reporting(monkeypatch):
@@ -90,6 +90,7 @@ def test_misc_helpers(monkeypatch):
 
 
 def test_reporting_init_and_highlight(monkeypatch):
+    ReportingSingletoneMeta._instances.clear()
     monkeypatch.setattr(lair.config, "get", lambda k: k == "style.messages_command.syntax_highlight")
     json_called = []
     monkeypatch.setattr(rich, "print_json", lambda *a, **k: json_called.append("json"))
