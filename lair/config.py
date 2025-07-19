@@ -17,6 +17,17 @@ class ConfigInvalidTypeError(Exception):
     pass
 
 
+def _parse_inherit(value):
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if cleaned.startswith("[") and cleaned.endswith("]"):
+            cleaned = cleaned[1:-1]
+        if not cleaned:
+            return []
+        return [part.strip().strip("'").strip('"') for part in cleaned.split(",") if part.strip()]
+    return list(value)
+
+
 class Configuration:
     def __init__(self):
         self.modes = {}
@@ -81,8 +92,10 @@ class Configuration:
                     self.explicit_mode_settings[mode] = mode_config.copy()
 
                 # If there is an `_inherit` section, copy each mode's settings in order
-                for inherit_from_mode in mode_config.get("_inherit", []):
-                    self.modes[mode].update(self.explicit_mode_settings[inherit_from_mode])
+                inherit = _parse_inherit(mode_config.get("_inherit", []))
+
+                for inherit_from_mode in inherit:
+                    self.modes[mode].update(self.explicit_mode_settings.get(inherit_from_mode, {}))
 
                 # Finally, give precedence to the mode's own settings
                 self.modes[mode].update(mode_config)
