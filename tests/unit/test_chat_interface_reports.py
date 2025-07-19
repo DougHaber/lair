@@ -139,3 +139,14 @@ def test_print_config_report_baseline_no_keys():
     ci.print_config_report(filter_regex=r"^nomatch$", baseline="openai")
     assert ("system", f"Current mode: {lair.config.active_mode}, Baseline mode: openai") in ci.reporting.messages
     assert ci.reporting.messages[-1] == ("system", "No matching keys")
+
+
+def test_iter_config_rows_unmodified_style():
+    ci = make_ci()
+    key = "chat.enable_toolbar"
+    rows = list(ci._iter_config_rows(False, fr"^{key}$", None))
+    expected = [key, f"{lair.config.get('chat.set_command.unmodified_style')}:" + str(lair.config.get(key))]
+    assert rows == [expected]
+
+    # When show_only_differences is True the row is omitted
+    assert list(ci._iter_config_rows(True, fr"^{key}$", None)) == []
