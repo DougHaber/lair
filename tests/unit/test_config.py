@@ -3,6 +3,7 @@ import os
 import types
 import lair
 import pytest
+import lair.sessions.openai_chat_session
 
 
 def create_config(tmp_path, yaml_text):
@@ -84,3 +85,51 @@ def test_parse_inherit_various():
     cfg = importlib.import_module("lair.config")
     assert cfg._parse_inherit("") == []
     assert cfg._parse_inherit("[a , 'b']") == ["a", "b"]
+
+
+def test_change_mode_unknown(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", create_config(tmp_path, ""))
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    monkeypatch.setattr(lair.sessions.openai_chat_session, "openai", types.SimpleNamespace(OpenAI=lambda **k: None))
+    cfg = Configuration()
+    with pytest.raises(Exception):
+        cfg.change_mode("missing")
+
+
+def test_add_config_invalid_default_mode(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", create_config(tmp_path, ""))
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    monkeypatch.setattr(lair.sessions.openai_chat_session, "openai", types.SimpleNamespace(OpenAI=lambda **k: None))
+    cfg = Configuration()
+    with pytest.raises(SystemExit):
+        cfg._add_config({"default_mode": "bogus"})
+
+
+def test_update_force_bypasses_type_validation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", create_config(tmp_path, ""))
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    monkeypatch.setattr(lair.sessions.openai_chat_session, "openai", types.SimpleNamespace(OpenAI=lambda **k: None))
+    cfg = Configuration()
+    events = []
+    monkeypatch.setattr(lair.events, "fire", lambda name, data=None: events.append(name))
+    cfg.update({"chat.attachments_enabled": "invalid"}, force=True)
+    assert cfg.active["chat.attachments_enabled"] == "invalid"
+    assert events == ["config.update"]
+
+
+def test_get_unknown_key_raises(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", create_config(tmp_path, ""))
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    monkeypatch.setattr(lair.sessions.openai_chat_session, "openai", types.SimpleNamespace(OpenAI=lambda **k: None))
+    cfg = Configuration()
+    with pytest.raises(ValueError):
+        cfg.get("not.there")
+
+
+def test_set_invalid_value_type_error(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", create_config(tmp_path, ""))
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    monkeypatch.setattr(lair.sessions.openai_chat_session, "openai", types.SimpleNamespace(OpenAI=lambda **k: None))
+    cfg = Configuration()
+    with pytest.raises(ConfigInvalidTypeError):
+        cfg.set("session.max_history_length", "abc")
