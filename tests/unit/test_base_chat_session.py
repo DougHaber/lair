@@ -94,3 +94,45 @@ def test_new_and_import_state():
     assert len(s2.history.get_messages()) == 1
     s2.new_session()
     assert s2.session_id is None and s2.history.num_messages() == 0
+
+
+def test_auto_generate_title_missing_parts(monkeypatch):
+    session = DummySession()
+    lair.config.set("session.auto_generate_titles.enabled", True, no_event=True)
+    session.history.add_message("assistant", "only assistant")
+    assert session.auto_generate_title() is None
+    session.history.clear()
+    session.history.add_message("user", "only user")
+    assert session.auto_generate_title() is None
+
+
+def test_serialization_helpers(monkeypatch, tmp_path):
+    session = DummySession()
+    calls = {}
+
+    def fake_save(obj, filename):
+        calls["save"] = filename
+
+    def fake_load(obj, filename):
+        calls["load"] = filename
+
+    def fake_to_dict(obj):
+        calls["to_dict"] = True
+        return {"k": 1}
+
+    def fake_update(obj, state):
+        calls["update"] = state
+
+    monkeypatch.setattr(lair.sessions.serializer, "save", fake_save)
+    monkeypatch.setattr(lair.sessions.serializer, "load", fake_load)
+    monkeypatch.setattr(lair.sessions.serializer, "session_to_dict", fake_to_dict)
+    monkeypatch.setattr(lair.sessions.serializer, "update_session_from_dict", fake_update)
+
+    file1 = tmp_path / "state1.json"
+    file2 = tmp_path / "state2.json"
+    session.save_to_file(file1)
+    session.load_from_file(file2)
+    assert calls["save"] == file1 and calls["load"] == file2
+    assert session.to_dict() == {"k": 1}
+    session.update_from_dict({"a": 2})
+    assert calls["update"] == {"a": 2}
