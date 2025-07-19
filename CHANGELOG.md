@@ -47,6 +47,7 @@
 - tests: Increase tmux tool coverage
 - internal: Fix import order to satisfy new ruff checks
 - internal: Add type annotations to fix mypy errors
+- tests: Begin integration tests for CLI modules
 
 # v0.8.1 - Bug fixes
 
