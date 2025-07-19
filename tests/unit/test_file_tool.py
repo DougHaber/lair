@@ -83,6 +83,25 @@ def test_generate_definitions(file_tool):
     assert lair.config.get("tools.file.path") in write_def["function"]["description"]
 
 
+def test_additional_generate_definitions(file_tool):
+    workspace = lair.config.get("tools.file.path")
+
+    read_def = file_tool._generate_read_file_definition()
+    assert read_def["function"]["name"] == "read_file"
+    assert workspace in read_def["function"]["description"]
+    assert read_def["function"]["parameters"]["required"] == ["path"]
+
+    delete_def = file_tool._generate_delete_file_definition()
+    assert delete_def["function"]["name"] == "delete_file"
+    assert workspace in delete_def["function"]["description"]
+
+    make_def = file_tool._generate_make_directory_definition()
+    assert make_def["function"]["name"] == "make_directory"
+
+    remove_def = file_tool._generate_remove_directory_definition()
+    assert remove_def["function"]["name"] == "remove_directory"
+
+
 def test_error_paths(file_tool, monkeypatch):
     monkeypatch.setattr(file_tool, "_resolve_path", lambda p: (_ for _ in ()).throw(ValueError("bad")))
     out = file_tool.list_directory(".")
@@ -138,4 +157,3 @@ def test_read_file_handles_open_errors(file_tool, monkeypatch):
     monkeypatch.setattr("builtins.open", explode)
     result = file_tool.read_file("fail.txt")
     assert "cannot open" in result["error"]
-
