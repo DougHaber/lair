@@ -1,3 +1,4 @@
+import mimetypes
 import os
 import base64
 import datetime
@@ -122,3 +123,43 @@ def test_edit_content_in_editor(monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake_run)
     result = core.edit_content_in_editor("old")
     assert result == "new"
+
+
+def test_image_file_wrong_mime(tmp_path, monkeypatch):
+    img = tmp_path / "img.png"
+    img.write_bytes(b"data")
+    monkeypatch.setattr(mimetypes, "guess_type", lambda f: ("text/plain", None))
+    with pytest.raises(ValueError):
+        core._get_attachments_content__image_file(str(img))
+
+
+def test_pdf_header(monkeypatch):
+    monkeypatch.setattr(core, "read_pdf", lambda f: "content")
+    monkeypatch.setattr(lair.config, "active", {**lair.config.active, "misc.provide_attachment_filenames": True})
+    msg = core._get_attachments_content__pdf_file("file.pdf")
+    assert msg["content"].startswith("User provided file: filename=file.pdf")
+
+
+def test_text_file_limits(tmp_path, monkeypatch):
+    f = tmp_path / "t.txt"
+    f.write_text("abcdef")
+    monkeypatch.setattr(
+        lair.config,
+        "active",
+        {**lair.config.active, "misc.text_attachment_max_size": 3, "misc.text_attachment_truncate": False},
+    )
+    with pytest.raises(Exception):
+        core._get_attachments_content__text_file(str(f))
+
+    monkeypatch.setattr(
+        lair.config,
+        "active",
+        {
+            **lair.config.active,
+            "misc.text_attachment_max_size": 10,
+            "misc.text_attachment_truncate": False,
+            "misc.provide_attachment_filenames": True,
+        },
+    )
+    msg = core._get_attachments_content__text_file(str(f))
+    assert msg["content"].startswith(f"User provided file: filename={f}")
