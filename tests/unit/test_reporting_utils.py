@@ -1,7 +1,9 @@
 import datetime
-import pytest
+
+import rich
 import rich.text
 
+import lair
 from lair.reporting.reporting import Reporting
 
 
@@ -85,3 +87,51 @@ def test_misc_helpers(monkeypatch):
     assert rep.color_gt_lt(0, center=0) == "gray"
     assert isinstance(rep.color_bool(True), rich.text.Text)
     assert isinstance(rep.color_bool(False), rich.text.Text)
+
+
+def test_reporting_init_and_highlight(monkeypatch):
+    monkeypatch.setattr(lair.config, "get", lambda k: k == "style.messages_command.syntax_highlight")
+    json_called = []
+    monkeypatch.setattr(rich, "print_json", lambda *a, **k: json_called.append("json"))
+    monkeypatch.setattr(rich, "print", lambda *a, **k: json_called.append("plain"))
+    rep = Reporting(force_color=True)
+    assert rep.console.no_color is False
+    rep.print_highlighted_json("{}")
+    assert json_called == ["json"]
+    monkeypatch.setattr(lair.config, "get", lambda k: False)
+    json_called.clear()
+    rep.print_highlighted_json("{}")
+    assert json_called == ["plain"]
+
+
+def test_reporting_table_system(monkeypatch):
+    rep = make_reporting(monkeypatch)
+    recorded = []
+    monkeypatch.setattr(rep, "table", lambda *a, **kw: recorded.append(kw.get("style")))
+    monkeypatch.setattr(lair.config, "get", lambda k: "sys" if k == "style.system_message" else False)
+    rep.table_from_dicts_system([{"a": 1}])
+    rep.table_system([[1]])
+    assert recorded == ["sys", "sys"]
+
+
+def test_reporting_system_error(monkeypatch):
+    rep = Reporting(disable_color=True)
+    outputs = []
+    monkeypatch.setattr(rep, "print_rich", lambda *a, **k: outputs.append(a[0]))
+    monkeypatch.setattr(rep, "exception", lambda: outputs.append("exc"))
+    monkeypatch.setattr(
+        lair.config,
+        "get",
+        lambda k: {
+            "style.render_rich_tracebacks": False,
+            "style.error": "ERR",
+            "style.user_error": "USR",
+            "style.system_message": "SM",
+            "style.system_message_heading": "HEAD",
+            "style.render_markdown": False,
+        }.get(k, False),
+    )
+    rep.error("boom", show_exception=True)
+    rep.system_message("hello", show_heading=True, disable_markdown=True)
+    assert "exc" in outputs and any("ERROR: boom" in str(o) for o in outputs)
+    assert any("hello" in str(o) for o in outputs)

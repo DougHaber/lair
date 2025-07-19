@@ -1,13 +1,15 @@
+import argparse
 import io
 import os
 import sys
-import pathlib
 from types import SimpleNamespace
 
+import PIL
 import pytest
 
 import lair
 from lair.modules.comfy import Comfy
+from lair.util.argparse import ArgumentParserHelpException, ErrorRaisingArgumentParser
 
 
 class DummyComfyCaller:
@@ -85,7 +87,7 @@ def test_save_output_multiple(monkeypatch, tmp_path):
     assert calls[0][1].endswith("000000.png")
     assert calls[1][1].endswith("000001.png")
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017 - function raises base Exception
         module._save_output([b"a"], "-", single_output=False)
     with pytest.raises(ValueError):
         module._save_output([b"a"], "noext")
@@ -207,3 +209,84 @@ def test_run(monkeypatch, tmp_path):
     monkeypatch.setattr(module, "run_workflow_outpaint", lambda a, b, c: called.append("outpaint"))
     module.run(args2)
     assert called == ["outpaint"]
+
+
+def test_get_chat_command_parser(monkeypatch):
+    module = make_module()
+    order = []
+    module._add_argparse_hunyuan_video_t2v = lambda sp: order.append("t2v")
+    module._add_argparse_image = lambda sp: order.append("img")
+    module._add_argparse_ltxv_i2v = lambda sp: order.append("i2v")
+    module._add_argparse_ltxv_prompt = lambda sp: order.append("prompt")
+    module._add_argparse_upscale = lambda sp: order.append("up")
+    parser = module._get_chat_command_parser()
+    assert order == ["t2v", "img", "i2v", "prompt", "up"]
+    assert isinstance(parser, ErrorRaisingArgumentParser)
+
+
+def test_on_chat_init(monkeypatch):
+    module = make_module()
+    cmd_holder = {}
+
+    class DummyParser:
+        def parse_args(self, args):
+            raise ArgumentParserHelpException("help")
+
+        def format_help(self):
+            return "H"
+
+    monkeypatch.setattr(module, "_get_chat_command_parser", lambda: DummyParser())
+    errors = []
+    chat_interface = SimpleNamespace(
+        reporting=SimpleNamespace(error=lambda msg, show_exception=False: errors.append(msg)),
+        register_command=lambda name, func, desc: cmd_holder.setdefault("func", func),
+    )
+    module._on_chat_init(chat_interface)
+    cmd_holder["func"]("/comfy", ["--help"], "--help")
+    assert errors == ["help"]
+
+    # success path
+    class OKParser:
+        def parse_args(self, args):
+            return argparse.Namespace(comfy_command="image", comfy_url="u")
+
+    monkeypatch.setattr(module, "_get_chat_command_parser", lambda: OKParser())
+    ran = []
+    monkeypatch.setattr(module, "run", lambda params: ran.append(True))
+    chat_interface = SimpleNamespace(
+        reporting=SimpleNamespace(error=lambda *a, **k: None),
+        register_command=lambda n, f, d: cmd_holder.update({"func2": f}),
+    )
+    module._on_chat_init(chat_interface)
+    cmd_holder["func2"]("/comfy", [], "")
+    assert ran
+
+
+def test_save_output_save_to_disk(monkeypatch, tmp_path):
+    module = make_module()
+
+    class FakeImage:
+        def __init__(self):
+            self.saved = None
+
+        def save(self, filename):
+            self.saved = filename
+
+    PIL.Image = SimpleNamespace(Image=FakeImage)
+    img = FakeImage()
+    target = tmp_path / "img.png"
+    module._save_output__save_to_disk(img, str(target))
+    assert img.saved == str(target)
+
+    data_target = tmp_path / "b.dat"
+    module._save_output__save_to_disk(b"123", str(data_target))
+    assert data_target.read_bytes() == b"123"
+
+    reader_target = tmp_path / "r.dat"
+    module._save_output__save_to_disk(io.BytesIO(b"456"), str(reader_target))
+    assert reader_target.read_bytes() == b"456"
+
+    with pytest.raises(TypeError):
+        module._save_output__save_to_disk(object(), str(tmp_path / "bad"))
+
+    assert module.get_output_file_name("a.png").endswith("-upscaled.png")
