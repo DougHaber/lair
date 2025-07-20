@@ -54,14 +54,14 @@ select = [
   "SIM", # simplify
   "Q",   # quotes
   "C",   # complexity
-  # "ANN", # annotations
-  # "D",   # docstrings
+  "ANN", # annotations
+  "D",   # docstrings
   "N",   # naming
   "T",   # debugger/print
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
+"tests/**/*.py" = ["S101", "D", "ANN"]
 
 [tool.pytest.ini_options]
 addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=90"
