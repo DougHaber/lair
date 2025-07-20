@@ -20,7 +20,6 @@
 - documentation: Expand README outpainting example
 - cleanup: refactor workflow and tool call helpers for readability
 - internal: Enforce strict ruff checks, ruff formatting, and mypy validation
-- cli: Add missing docstrings and annotations to run module
 
 # v0.8.1 - Bug fixes
 
