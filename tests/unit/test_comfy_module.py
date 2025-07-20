@@ -309,16 +309,23 @@ def test_run_workflow_queue(monkeypatch, tmp_path):
     file_path.write_text("d")
     extra = tmp_path / "extra.png"
     captured = {"extend": 0, "process": []}
-    monkeypatch.setattr(module, "_extend_queue_from_dir", lambda d, q: (q.append(str(extra)), captured.__setitem__("extend", captured["extend"] + 1)))
-    monkeypatch.setattr(module, "_process_file", lambda f, a, fa, t: captured["process"].append(f))
+    def extend_queue(_dir, queue):
+        queue.append(str(extra))
+        captured["extend"] += 1
+
+    def process_file(filename, *_a, **_k):
+        captured["process"].append(filename)
+
+    monkeypatch.setattr(module, "_extend_queue_from_dir", extend_queue)
+    monkeypatch.setattr(module, "_process_file", process_file)
     args = SimpleNamespace(recursive=True, skip_existing=False, comfy_command="image")
     module._run_workflow_queue(args, {}, {}, queue=[str(directory), str(file_path)], output_filename_template="tmpl")
     assert captured["extend"] == 1
     assert str(extra) in captured["process"] and str(file_path) in captured["process"]
 
     warnings = []
-    monkeypatch.setattr(module, "_extend_queue_from_dir", lambda d, q: warnings.append("extend"))
-    monkeypatch.setattr(module, "_process_file", lambda *a, **k: warnings.append("process"))
+    monkeypatch.setattr(module, "_extend_queue_from_dir", lambda _d, _q: warnings.append("extend"))
+    monkeypatch.setattr(module, "_process_file", lambda *_a, **_k: warnings.append("process"))
     monkeypatch.setattr(lair.modules.comfy.logger, "warning", lambda msg: warnings.append(msg))
     args = SimpleNamespace(recursive=False, skip_existing=False, comfy_command="image")
     module._run_workflow_queue(args, {}, {}, queue=[str(directory)], output_filename_template="tmpl")
@@ -329,7 +336,10 @@ def test_run_workflow_queue(monkeypatch, tmp_path):
 def test_run_workflow_upscale(monkeypatch):
     module = make_module()
     captured = {}
-    monkeypatch.setattr(module, "_run_workflow_queue", lambda a, d, f, *, queue, output_filename_template: captured.update({"queue": queue, "template": output_filename_template}))
+    def record_queue(_args, _defaults, _files, *, queue, output_filename_template):
+        captured.update({"queue": queue, "template": output_filename_template})
+
+    monkeypatch.setattr(module, "_run_workflow_queue", record_queue)
     monkeypatch.setattr(lair.config, "get", lambda k: "tmpl" if k == "comfy.upscale.output_filename" else None)
     args = SimpleNamespace(comfy_command="upscale", scale_files=["a.png", "b.png"], recursive=False)
     module.run_workflow_upscale(args, {}, {})
@@ -341,7 +351,10 @@ def test_run_workflow_default_single(monkeypatch):
     module = make_module()
     args = SimpleNamespace(comfy_command="image", repeat=1, output_file="o.png")
     called = []
-    monkeypatch.setattr(module, "_save_output", lambda res, name, start_index=0, single_output=False: called.append(single_output))
+    def save_output(_res, _name, start_index=0, single_output=False):
+        called.append(single_output)
+
+    monkeypatch.setattr(module, "_save_output", save_output)
     module.run_workflow_default(args, {"batch_size": 1}, {})
     assert called == [True]
 

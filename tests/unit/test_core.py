@@ -1,3 +1,8 @@
+import builtins
+import importlib
+import sys
+import types
+
 import lair.util.core as core
 
 
@@ -28,10 +33,6 @@ def test_expand_filename_list(tmp_path):
     assert str(f1) in result and str(f2) in result
 
 
-import builtins
-import importlib
-import sys
-import types
 
 
 def test_convert_scalar_none():

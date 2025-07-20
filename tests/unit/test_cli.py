@@ -1,5 +1,10 @@
+import contextlib
+import io
+import os
+import runpy
 import sys
-import subprocess
+import tempfile
+from dataclasses import dataclass
 
 STUB_SCRIPT = """
 import sys, types
@@ -28,10 +33,38 @@ run.start()
 """
 
 
+@dataclass
+class Completed:
+    stdout: str
+    returncode: int
+
+
 def run_command(*args):
-    cmd = [sys.executable, "-c", STUB_SCRIPT]
-    cmd.extend(args)
-    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    argv_backup = sys.argv
+    import lair.cli.run as run_module
+    orig_init = getattr(run_module, "init_subcommands", None)
+    sys.argv = [sys.executable, *args]
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            try:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp:
+                    temp.write(STUB_SCRIPT.encode())
+                    path = temp.name
+                try:
+                    runpy.run_path(path, run_name="__main__")
+                    returncode = 0
+                finally:
+                    os.unlink(path)
+            except SystemExit as exc:
+                returncode = exc.code if isinstance(exc.code, int) else 1
+            finally:
+                if orig_init is not None:
+                    run_module.init_subcommands = orig_init
+    finally:
+        sys.argv = argv_backup
+    return Completed(stdout=stdout.getvalue() + stderr.getvalue(), returncode=returncode)
 
 
 def test_help_command():

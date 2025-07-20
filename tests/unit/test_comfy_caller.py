@@ -1,14 +1,14 @@
 import base64
 import importlib
-import types
 import sys
+import types
 
 import pytest
 
 import lair
 
 
-def get_ComfyCaller():
+def get_comfy_caller():
     if "lair.comfy_caller" in sys.modules:
         mod = importlib.reload(sys.modules["lair.comfy_caller"])
     else:
@@ -41,19 +41,19 @@ def comfy_caller(monkeypatch):
     queue = DummyQueue()
     runtime_mod = types.SimpleNamespace(queue=queue)
     monkeypatch.setitem(sys.modules, "comfy_script.runtime", runtime_mod)
-    cc = get_ComfyCaller()(url="http://example")
+    cc = get_comfy_caller()(url="http://example")
     return cc, queue
 
 
 def test_parse_lora_argument():
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     assert cc._parse_lora_argument("model") == ("model", 1.0, 1.0)
     assert cc._parse_lora_argument("model:0.5") == ("model", 0.5, 1.0)
     assert cc._parse_lora_argument("model:0.2:0.3") == ("model", 0.2, 0.3)
 
 
 def test_apply_loras(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     calls = []
 
     def loader(model, clip, name, weight, clip_weight):
@@ -71,7 +71,7 @@ def test_apply_loras(monkeypatch):
 
 
 def test_ensure_seed(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     caller_mod = importlib.import_module("lair.comfy_caller")
     monkeypatch.setattr(caller_mod.secrets, "randbelow", lambda a: 42)
     assert cc._ensure_seed(None) == 42
@@ -82,7 +82,7 @@ def test_image_to_base64(tmp_path):
     file = tmp_path / "img.txt"
     content = b"data"
     file.write_bytes(content)
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
     encoded = cc._image_to_base64(str(file))
     assert encoded == base64.b64encode(content).decode()
     with pytest.raises(ValueError):
@@ -113,7 +113,7 @@ def test_watch_thread_management(comfy_caller, monkeypatch):
 
 
 def test_run_workflow(monkeypatch):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
 
     async def handler(val=0):
         return val + 1
@@ -132,10 +132,9 @@ def test_run_workflow(monkeypatch):
 
 
 def test_run_workflow_no_debug(monkeypatch, capsys):
-    cc = get_ComfyCaller()()
+    cc = get_comfy_caller()()
 
     async def handler():
-        print("noisy")
         return "ok"
 
     cc.workflows["dummy"] = handler
