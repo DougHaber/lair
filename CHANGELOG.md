@@ -23,6 +23,7 @@
 - docker: Add lair into youtube image
 - tests: Increase ChatHistory coverage
 - tests: Fix Python tool cleanup path assertions
+- tests: adjust ruff strictness and replace broad exception checks
 - tests: Increase ToolSet coverage
 - deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
