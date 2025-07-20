@@ -110,7 +110,7 @@ class ComfyCaller:
             kwargs["ssl"] = ssl_context
             return original_init(self, *args, **kwargs)
 
-        setattr(aiohttp.TCPConnector, "__init__", cast(Any, patched_init))
+        aiohttp.TCPConnector.__init__ = cast(Any, patched_init)
 
     def _import_comfy_script(self) -> None:
         """Import ``comfy_script`` and load node definitions."""
@@ -272,10 +272,7 @@ class ComfyCaller:
     def _get_defaults_image(self) -> dict[str, Any]:
         """Return default parameters for the ``image`` workflow."""
         loras_val = lair.config.get("comfy.image.loras")
-        if loras_val is not None:
-            loras = [lora for lora in str(loras_val).split("\n") if lora]
-        else:
-            loras = None
+        loras = [lora for lora in str(loras_val).split("\n") if lora] if loras_val is not None else None
 
         return {
             "batch_size": lair.config.get("comfy.image.batch_size"),
@@ -527,10 +524,7 @@ class ComfyCaller:
     def _get_defaults_hunyuan_video_t2v(self) -> dict[str, Any]:
         """Return default parameters for the hunyuan-video-t2v workflow."""
         loras_val = lair.config.get("comfy.hunyuan_video.loras")
-        if loras_val is not None:
-            loras = [lora for lora in str(loras_val).split("\n") if lora]
-        else:
-            loras = None
+        loras = [lora for lora in str(loras_val).split("\n") if lora] if loras_val is not None else None
 
         return {
             "batch_size": lair.config.get("comfy.hunyuan_video.batch_size"),
@@ -624,10 +618,7 @@ class ComfyCaller:
     def _get_defaults_outpaint(self) -> dict[str, Any]:
         """Return default parameters for the ``outpaint`` workflow."""
         loras_val = lair.config.get("comfy.outpaint.loras")
-        if loras_val is not None:
-            loras = [lora for lora in str(loras_val).split("\n") if lora]
-        else:
-            loras = None
+        loras = [lora for lora in str(loras_val).split("\n") if lora] if loras_val is not None else None
 
         return {
             "cfg": lair.config.get("comfy.outpaint.cfg"),

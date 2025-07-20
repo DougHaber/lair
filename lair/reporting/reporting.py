@@ -306,10 +306,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
     def assistant_tool_calls(self, message: Mapping[str, Any], show_heading: bool = False) -> None:
         """Display assistant tool calls contained in a message."""
         background_val = lair.config.get("style.llm_output.tool_call.background")
-        if background_val:
-            background_style = " on " + str(background_val)
-        else:
-            background_style = ""
+        background_style = " on " + str(background_val) if background_val else ""
 
         if show_heading:
             self.print_rich(
@@ -343,10 +340,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
     def tool_message(self, message: Mapping[str, Any], show_heading: bool = False) -> None:
         """Display a tool response message."""
         background_val = lair.config.get("style.tool_message.background")
-        if background_val:
-            background_style = " on " + str(background_val)
-        else:
-            background_style = ""
+        background_style = " on " + str(background_val) if background_val else ""
 
         if show_heading:
             self.console.print(
