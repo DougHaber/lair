@@ -1,3 +1,5 @@
+"""Validation schema for chat history messages."""
+
 import jsonschema
 
 MESSAGES_SCHEMA = {
@@ -108,9 +110,15 @@ MESSAGES_SCHEMA = {
 }
 
 
-def validate_messages(messages):
-    """Validate a list of messages
-    Raise an exception if it is invalid
+def validate_messages(messages: list[dict[str, object]]) -> None:
+    """Validate a list of messages.
+
+    Args:
+        messages: Messages to validate.
+
+    Raises:
+        jsonschema.exceptions.ValidationError: If validation fails.
+
     """
     try:
         jsonschema.validate(instance=messages, schema=MESSAGES_SCHEMA)
