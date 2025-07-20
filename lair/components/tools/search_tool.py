@@ -1,6 +1,6 @@
-import duckduckgo_search
 import requests
 import trafilatura
+from ddgs import DDGS  # Duck Duck Go Search
 
 import lair
 from lair.logging import logger
@@ -40,7 +40,7 @@ class SearchTool:
     }
 
     def __init__(self):
-        self.ddgs = duckduckgo_search.DDGS()
+        self.ddgs = DDGS()
 
     def add_to_tool_set(self, tool_set):
         tool_set.add_tool(
