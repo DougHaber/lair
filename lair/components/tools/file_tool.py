@@ -89,7 +89,7 @@ class FileTool:
             ValueError: If the resolved path lies outside the workspace.
 
         """
-        workspace = os.path.abspath(lair.config.get("tools.file.path"))
+        workspace = os.path.abspath(str(lair.config.get("tools.file.path")))
         if not os.path.isabs(path):
             path = os.path.join(workspace, path)
         absolute_path = os.path.abspath(path)
@@ -194,7 +194,7 @@ class FileTool:
 
         """
         try:
-            workspace = os.path.abspath(lair.config.get("tools.file.path"))
+            workspace = os.path.abspath(str(lair.config.get("tools.file.path")))
 
             pattern = os.path.join(workspace, path) if not os.path.isabs(path) else path
 

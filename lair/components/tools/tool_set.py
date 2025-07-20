@@ -1,7 +1,7 @@
 """Utilities for managing tool classes and invoking their handlers."""
 
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, cast
 
 import lair.components.tools
 from lair.logging import logger
@@ -30,9 +30,10 @@ class ToolSet:
                 tool list is used.
 
         """
-        self.requested_tools = lair.components.tools.DEFAULT_TOOLS if tools is None else tools
+        requested_tools: list[type] = cast(list[type], lair.components.tools.DEFAULT_TOOLS) if tools is None else tools
+        self.requested_tools = requested_tools
 
-        for tool in self.requested_tools:
+        for tool in requested_tools:
             tool().add_to_tool_set(self)
 
     def update_tools(self, tools: list[type] | None = None) -> None:

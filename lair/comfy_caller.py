@@ -18,7 +18,7 @@ import importlib
 import io
 import secrets
 import threading
-from typing import Any
+from typing import Any, Callable, cast
 
 import requests
 
@@ -79,7 +79,7 @@ class ComfyCaller:
         self.url = url
         self.output_prefix = output_prefix
 
-        self.workflows = {}
+        self.workflows: dict[str, Callable[..., Any]] = {}
         self.is_comfy_script_imported = False
 
         self._init_defaults()
@@ -103,14 +103,14 @@ class ComfyCaller:
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
 
-        original_init = aiohttp.TCPConnector.__init__
+        original_init = cast(Callable[..., Any], aiohttp.TCPConnector.__init__)
 
         def patched_init(self: aiohttp.TCPConnector, *args: object, **kwargs: object) -> None:
             """Override connector initialisation to disable SSL verification."""
             kwargs["ssl"] = ssl_context
             return original_init(self, *args, **kwargs)
 
-        aiohttp.TCPConnector.__init__ = patched_init
+        setattr(aiohttp.TCPConnector, "__init__", cast(Any, patched_init))
 
     def _import_comfy_script(self) -> None:
         """Import ``comfy_script`` and load node definitions."""
@@ -213,7 +213,7 @@ class ComfyCaller:
         if thread is None:
             return
         try:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident or 0), ctypes.py_object(SystemExit))
         except Exception:
             logger.debug("Failed to terminate ComfyScript thread")
 
@@ -271,9 +271,11 @@ class ComfyCaller:
 
     def _get_defaults_image(self) -> dict[str, Any]:
         """Return default parameters for the ``image`` workflow."""
-        loras = lair.config.get("comfy.image.loras")
-        if loras is not None:
-            loras = [lora for lora in loras.split("\n") if lora]
+        loras_val = lair.config.get("comfy.image.loras")
+        if loras_val is not None:
+            loras = [lora for lora in str(loras_val).split("\n") if lora]
+        else:
+            loras = None
 
         return {
             "batch_size": lair.config.get("comfy.image.batch_size"),
@@ -296,8 +298,8 @@ class ComfyCaller:
         response = requests.get(
             f"{self.url}/api/view",
             params={"filename": filename, "type": type},
-            verify=lair.config.get("comfy.verify_ssl", True),
-            timeout=lair.config.get("comfy.timeout"),
+            verify=bool(lair.config.get("comfy.verify_ssl", True)),
+            timeout=cast(float | tuple[float, float] | tuple[float, None] | None, lair.config.get("comfy.timeout")),
         )
         if response.status_code != 200:
             raise Exception(f"/api/view returned unexpected status code: {response.status_code}")
@@ -524,9 +526,11 @@ class ComfyCaller:
 
     def _get_defaults_hunyuan_video_t2v(self) -> dict[str, Any]:
         """Return default parameters for the hunyuan-video-t2v workflow."""
-        loras = lair.config.get("comfy.hunyuan_video.loras")
-        if loras is not None:
-            loras = [lora for lora in loras.split("\n") if lora]
+        loras_val = lair.config.get("comfy.hunyuan_video.loras")
+        if loras_val is not None:
+            loras = [lora for lora in str(loras_val).split("\n") if lora]
+        else:
+            loras = None
 
         return {
             "batch_size": lair.config.get("comfy.hunyuan_video.batch_size"),
@@ -619,9 +623,11 @@ class ComfyCaller:
 
     def _get_defaults_outpaint(self) -> dict[str, Any]:
         """Return default parameters for the ``outpaint`` workflow."""
-        loras = lair.config.get("comfy.outpaint.loras")
-        if loras is not None:
-            loras = [lora for lora in loras.split("\n") if lora]
+        loras_val = lair.config.get("comfy.outpaint.loras")
+        if loras_val is not None:
+            loras = [lora for lora in str(loras_val).split("\n") if lora]
+        else:
+            loras = None
 
         return {
             "cfg": lair.config.get("comfy.outpaint.cfg"),
