@@ -20,8 +20,8 @@ class BaseChatSession(abc.ABC):
 
         """
         self.reporting = lair.reporting.Reporting()
-        self.last_prompt = None
-        self.last_response = None
+        self.last_prompt: str | None = None
+        self.last_response: str | None = None
 
         self.session_id = None  # Id for session management, provided by SessionManager()
         self.session_alias = None  # Alias string for session management purposes
