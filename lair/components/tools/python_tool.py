@@ -134,27 +134,40 @@ class PythonTool:
             an ``error`` message if execution failed.
 
         """
-        container_id: Optional[str] = None
-        temp_file_path: Optional[str] = None
-
         try:
-            temp_file_path, container_path = self._create_temp_script(script)
+            return self._run_python_inner(script)
+        except Exception as error:
+            if isinstance(error, subprocess.TimeoutExpired):
+                return self._format_output(
+                    error=f"ERROR: Timeout after {lair.config.get('tools.python.timeout')} seconds"
+                )
+            return self._handle_exception(error)
+
+    def _run_python_inner(self, script: str) -> dict[str, Any]:
+        container_id: Optional[str] = None
+        temp_file_path, container_path = self._create_temp_script(script)
+        try:
             container_id, start_status = self._start_container(temp_file_path, container_path)
             if container_id is None:
                 return self._format_output(error="ERROR: Failed to start_container", exit_status=start_status)
-
-            exit_status, stdout, stderr = self._get_container_output(container_id)
-            return self._format_output(stdout=stdout, stderr=stderr, exit_status=exit_status)
-        except subprocess.TimeoutExpired:
-            return self._format_output(error=f"ERROR: Timeout after {lair.config.get('tools.python.timeout')} seconds")
-        except Exception as error:
-            if container_id:
-                self._cleanup_container(container_id)
-            logger.warning(f"run_python(): Error encountered: {error}")
-            return self._format_output(error=f"{error}\n{traceback.format_exc()}")
+            try:
+                return self._collect_output(container_id)
+            except Exception:
+                if container_id:
+                    self._cleanup_container(container_id)
+                raise
         finally:
             if temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
+
+    def _handle_exception(self, error: Exception) -> dict[str, Any]:
+        logger.warning(f"run_python(): Error encountered: {error}")
+        return self._format_output(error=f"{error}\n{traceback.format_exc()}")
+
+    def _collect_output(self, container_id: str) -> dict[str, Any]:
+        """Retrieve logs from ``container_id`` and format the result."""
+        exit_status, stdout, stderr = self._get_container_output(container_id)
+        return self._format_output(stdout=stdout, stderr=stderr, exit_status=exit_status)
 
     def _create_temp_script(self, script: str) -> tuple[str, str]:
         with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as temp_file:

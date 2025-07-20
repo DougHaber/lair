@@ -131,14 +131,19 @@ class TmuxTool:
         if not window_id_str.startswith("@"):
             window_id_str = f"@{window_id_str}"
 
+        window = self._find_window(window_id_str)
+        if window is None:
+            raise ValueError(f"Requested window id not found: {window_id_str}")
+        return window
+
+    def _find_window(self, window_id_str: str) -> Window | None:
+        """Return the window matching ``window_id_str`` or ``None``."""
         if self.session is None:
             raise RuntimeError("No tmux session available.")
-
         for window in self.session.list_windows():
             if window.get("window_id") == window_id_str:
                 return window
-
-        raise ValueError(f"Requested window id not found: {window_id_str}")
+        return None
 
     def _ensure_connection(self) -> None:
         """Ensure a tmux server connection exists."""

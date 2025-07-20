@@ -116,15 +116,20 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             logger.error(f"Unknown session: {id_or_alias}")
             sys.exit(1)
 
-        if not self.session_manager.is_alias_available(id_or_alias):
-            if isinstance(lair.util.safe_int(id_or_alias), int):
-                logger.error("Failed to create new session. Session aliases may not be integers.")
-            else:
-                logger.error("Failed to create new session. Alias is already used.")
-            sys.exit(1)
+        self._validate_new_session_alias(id_or_alias)
 
         self.chat_session.session_alias = id_or_alias
         self.session_manager.add_from_chat_session(self.chat_session)
+
+    def _validate_new_session_alias(self, alias: str | int) -> None:
+        """Ensure ``alias`` can be used for a new session."""
+        if self.session_manager.is_alias_available(alias):
+            return
+        if isinstance(lair.util.safe_int(alias), int):
+            logger.error("Failed to create new session. Session aliases may not be integers.")
+        else:
+            logger.error("Failed to create new session. Alias is already used.")
+        sys.exit(1)
 
     def _get_shortcut_details(self) -> dict[str, str]:
         """Return a mapping of shortcuts to descriptions."""

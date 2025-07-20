@@ -105,16 +105,24 @@ def fire(event_name: str, data: object | None = None) -> bool:
         data = {}
 
     if _deferring:
-        if not _should_squash(event_name, data):
-            _deferred_events.append((event_name, data))
+        _queue_event(event_name, data)
         return True
 
     logger.debug(f"events: fire(): {event_name}, data: {data}")
+    _dispatch(event_name, data)
+    return True
+
+
+def _queue_event(event_name: str, data: object) -> None:
+    if not _should_squash(event_name, data):
+        _deferred_events.append((event_name, data))
+
+
+def _dispatch(event_name: str, data: object) -> None:
     handlers = _event_handlers.get(event_name, set())
     for handler in list(handlers):  # Iterate over a copy to avoid modification issues
         if callable(handler):
             handler(data)
-    return True
 
 
 def _should_squash(event_name: str, data: object) -> bool:

@@ -587,24 +587,28 @@ class Comfy:
             single_output: Whether ``results`` contains exactly one item.
 
         """
-        output_files = []
-
         if single_output:
-            if filename == "-":
-                sys.stdout.buffer.write(cast(bytes, results[0]) + b"\n")
-                return
-
-            self._save_output__save_to_disk(results[0], filename)
-            output_files.append(filename)
-            logger.debug(f"saved: {', '.join(output_files)}")
+            self._save_single_output(results[0], filename)
             return
 
+        self._save_multiple_outputs(results, filename, start_index)
+
+    def _save_single_output(self, item: object, filename: str) -> None:
+        if filename == "-":
+            sys.stdout.buffer.write(cast(bytes, item) + b"\n")
+            return
+
+        self._save_output__save_to_disk(item, filename)
+        logger.debug(f"saved: {filename}")
+
+    def _save_multiple_outputs(self, results: Sequence[object], filename: str, start_index: int) -> None:
         if filename == "-":
             raise Exception("Writing to STDOUT is only supported for single-file output")
         if not os.path.splitext(filename)[1]:
             raise ValueError("Filename must have an extension (e.g., 'output.png').")
 
         basename, extension = os.path.splitext(filename)
+        output_files = []
         for i, output in enumerate(results, start=start_index):
             padded_index = f"{i:06d}"  # Zero-padded to 6 digits
             output_filename = f"{basename}{padded_index}{extension}"
