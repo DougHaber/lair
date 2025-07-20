@@ -309,6 +309,7 @@ def test_run_workflow_queue(monkeypatch, tmp_path):
     file_path.write_text("d")
     extra = tmp_path / "extra.png"
     captured = {"extend": 0, "process": []}
+
     def extend_queue(_dir, queue):
         queue.append(str(extra))
         captured["extend"] += 1
@@ -336,6 +337,7 @@ def test_run_workflow_queue(monkeypatch, tmp_path):
 def test_run_workflow_upscale(monkeypatch):
     module = make_module()
     captured = {}
+
     def record_queue(_args, _defaults, _files, *, queue, output_filename_template):
         captured.update({"queue": queue, "template": output_filename_template})
 
@@ -351,6 +353,7 @@ def test_run_workflow_default_single(monkeypatch):
     module = make_module()
     args = SimpleNamespace(comfy_command="image", repeat=1, output_file="o.png")
     called = []
+
     def save_output(_res, _name, start_index=0, single_output=False):
         called.append(single_output)
 
@@ -362,11 +365,14 @@ def test_run_workflow_default_single(monkeypatch):
 def test_on_chat_init_argument_error(monkeypatch):
     module = make_module()
     errors = []
+
     class ErrParser:
         def parse_args(self, args):
             raise argparse.ArgumentError(None, "the following arguments are required: comfy_command")
+
         def format_help(self):
             return "HELP"
+
     monkeypatch.setattr(module, "_get_chat_command_parser", lambda: ErrParser())
     holder = {}
     chat_interface = SimpleNamespace(
@@ -378,11 +384,14 @@ def test_on_chat_init_argument_error(monkeypatch):
     assert errors == ["HELP"]
 
     logs = []
+
     class BadParser:
         def parse_args(self, args):
             raise argparse.ArgumentError(None, "bad")
+
         def format_help(self):
             return "BADHELP"
+
     monkeypatch.setattr(module, "_get_chat_command_parser", lambda: BadParser())
     monkeypatch.setattr(lair.modules.comfy.logger, "error", lambda msg: logs.append(msg))
     chat_interface = SimpleNamespace(

@@ -45,6 +45,7 @@ def test_init_subcommands_success(monkeypatch):
 
 def test_init_subcommands_failure(monkeypatch):
     importlib.reload(run)
+
     class BadCommand:
         def __init__(self, parser):
             raise RuntimeError("boom")

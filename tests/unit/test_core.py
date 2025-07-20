@@ -33,8 +33,6 @@ def test_expand_filename_list(tmp_path):
     assert str(f1) in result and str(f2) in result
 
 
-
-
 def test_convert_scalar_none():
     assert core._convert_scalar("null") is None
     assert core._convert_scalar("~") is None

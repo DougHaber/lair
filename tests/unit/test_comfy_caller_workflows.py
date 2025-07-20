@@ -9,6 +9,7 @@ import pytest
 import lair
 from tests.helpers.comfy_caller import get_comfy_caller
 
+
 class DummyNode:
     def __init__(self, output):
         self._output = output

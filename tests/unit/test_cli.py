@@ -42,6 +42,7 @@ class Completed:
 def run_command(*args):
     argv_backup = sys.argv
     import lair.cli.run as run_module
+
     orig_init = getattr(run_module, "init_subcommands", None)
     sys.argv = [sys.executable, *args]
     stdout = io.StringIO()

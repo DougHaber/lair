@@ -146,9 +146,9 @@ def test_print_config_report_baseline_no_keys():
 def test_iter_config_rows_unmodified_style():
     ci = make_ci()
     key = "chat.enable_toolbar"
-    rows = list(ci._iter_config_rows(False, fr"^{key}$", None))
+    rows = list(ci._iter_config_rows(False, rf"^{key}$", None))
     expected = [key, f"{lair.config.get('chat.set_command.unmodified_style')}:" + str(lair.config.get(key))]
     assert rows == [expected]
 
     # When show_only_differences is True the row is omitted
-    assert list(ci._iter_config_rows(True, fr"^{key}$", None)) == []
+    assert list(ci._iter_config_rows(True, rf"^{key}$", None)) == []

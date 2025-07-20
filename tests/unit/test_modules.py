@@ -213,6 +213,7 @@ def test_util_run_markdown_with_session(monkeypatch):
     util.run(make_args(markdown=True))
     assert "resp" in calls and updated
 
+
 def test_util_module_info_func():
     info = util_mod._module_info()
     assert info["class"] is util_mod.Util
@@ -243,12 +244,16 @@ def test_get_user_messages_content():
 class _SM:
     def __init__(self):
         pass
+
     def switch_to_session(self, alias, chat_session):
         raise lair.sessions.UnknownSessionException("missing")
+
     def is_alias_available(self, alias):
         return False
+
     def add_from_chat_session(self, chat_session):
         pass
+
 
 def test_init_session_manager_unknown_no_create(monkeypatch):
     util = make_util()

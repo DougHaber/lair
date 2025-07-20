@@ -43,6 +43,7 @@ def test_module_loader_validate(tmp_path):
     with pytest.raises(Exception, match="_module_info not defined"):
         loader._validate_module(bad)
 
+
 def test_get_module_files(tmp_path):
     (tmp_path / "a.py").write_text("")
     (tmp_path / "__init__.py").write_text("")
