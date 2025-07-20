@@ -109,8 +109,7 @@ MESSAGES_SCHEMA = {
 
 
 def validate_messages(messages):
-    """
-    Validate a list of messages
+    """Validate a list of messages
     Raise an exception if it is invalid
     """
     try:

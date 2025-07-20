@@ -530,8 +530,7 @@ class Comfy:
         chat_interface.register_command("/comfy", comfy_command, "Call ComfyUI workflows")
 
     def _save_output__save_to_disk(self, item, filename):
-        """
-        Save the given item to disk. Supports PIL.Image and HTTP response.raw objects.
+        """Save the given item to disk. Supports PIL.Image and HTTP response.raw objects.
 
         :param item: The item to save (PIL.Image.Image or HTTP response.raw).
         :param filename: The file path to save the item to.
@@ -549,13 +548,13 @@ class Comfy:
             raise TypeError("Unsupported output type. Unable to save output file.")
 
     def _save_output(self, results, filename, start_index=0, single_output=False):
-        """
-        Saves a list of outputs to disk.
+        """Saves a list of outputs to disk.
 
         Args:
             results (list): List of outputs to be saved.
             filename (str): Base filename to save the outputs. If multiple outputs, filenames
                             will increment as {basename}{x}.{extension}.
+
         """
         output_files = []
 

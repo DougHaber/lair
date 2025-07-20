@@ -4,11 +4,11 @@ from lair.logging import logger
 
 class ToolSet:
     def __init__(self, *, tools=None):
-        """
-        Create a collection of tools
+        """Create a collection of tools
 
         Arguments:
            tools: A list of tool classes to include. When not provided, the default tools are included
+
         """
         self.requested_tools = None
         self.tools = {}  # function name -> {}
@@ -22,23 +22,23 @@ class ToolSet:
             tool().add_to_tool_set(self)
 
     def update_tools(self, tools=None):
-        """
-        Recreate all tools in the tool set
+        """Recreate all tools in the tool set
 
         Arguments:
            tools: A list of tool classes to include. When not provided, the default tools are included
+
         """
         self._init_tools(tools)
 
     def add_tool(self, *, name, flags, definition=None, definition_handler=None, handler, class_name):
-        """
-        Register a new tool
+        """Register a new tool
 
         Arguments:
           flags: A list of config keys, each of which must be true for the tool to be enabled
           definition: The structured definition of the function and its parameter in OpenAI API format
           definition_handler: A function that returns a definition, allowing for dynamic definitions.
               When provided, definition_handler takes precedence over definition
+
         """
         if name in self.tools:
             raise ValueError(f"ToolSet.add_tool(): A tool named '{name}' is already registered")
@@ -71,9 +71,7 @@ class ToolSet:
         return all(lair.config.get(flag) for flag in flags)
 
     def get_all_tools(self):
-        """
-        Return all tools, adding in an extra 'enabled' field
-        """
+        """Return all tools, adding in an extra 'enabled' field"""
         all_tools = []
         for tool in self.tools.values():
             tool["enabled"] = lair.config.get("tools.enabled") and self.all_flags_enabled(tool["flags"]) is True

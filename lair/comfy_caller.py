@@ -83,8 +83,7 @@ class ComfyCaller:
         lair.events.subscribe("config.update", lambda d: self._init_defaults(), instance=self)
 
     def _monkey_patch_comfy_script(self):
-        """
-        Disable SSL verification in ComfyScript
+        """Disable SSL verification in ComfyScript
         ComfyScript provides no mechanism to accomplish this, so a monkey patch is necessary.
         A PR against ComfyScript would be a better solution.
         """

@@ -120,9 +120,7 @@ class Configuration:
         lair.events.fire("config.update")
 
     def update(self, entries, *, force=False):
-        """
-        Updates only apply to the active runtime configuration.
-        """
+        """Updates only apply to the active runtime configuration."""
         if force:
             self.active.update(entries)
         else:
@@ -132,9 +130,7 @@ class Configuration:
         lair.events.fire("config.update")
 
     def get(self, key, allow_not_found=False, default=None):
-        """
-        Retrieve a value from the active mode, failing if undefined unless `allow_not_found` is True.
-        """
+        """Retrieve a value from the active mode, failing if undefined unless `allow_not_found` is True."""
         if allow_not_found:
             return self.active.get(key, default)
         elif key in self.active:
@@ -200,7 +196,5 @@ class Configuration:
         lair.events.fire("config.update")
 
     def get_modified_config(self):
-        """
-        Return a dictionary of the active configuration's settings that don't match the defaults.
-        """
+        """Return a dictionary of the active configuration's settings that don't match the defaults."""
         return {k: v for k, v in self.active.items() if self.default_settings.get(k) != v}

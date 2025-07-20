@@ -154,11 +154,11 @@ class SessionManager:
                 txn.put(f"alias:{chat_session.session_alias}".encode(), str(chat_session.session_id).encode())
 
     def delete_session(self, id_or_alias, txn=None):
-        """
-        Delete a session
+        """Delete a session
 
         Arguments:
           txn: When provided, this lmdb transaction is used instead of creating a new one
+
         """
         session_id = self.get_session_id(id_or_alias)
         should_commit = txn is None  # Track if we need to start a transaction

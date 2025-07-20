@@ -88,9 +88,7 @@ class ChatHistory:
         return len(self._history)
 
     def get_messages(self, *, extra_messages=None):
-        """
-        Return the message history, truncating as necessary
-        """
+        """Return the message history, truncating as necessary"""
         max_length = lair.config.get("session.max_history_length") or 0
 
         if extra_messages is None:
@@ -116,9 +114,7 @@ class ChatHistory:
         self.finalized_index = None
 
     def _truncate(self):
-        """
-        If max_history_length is set, trim the history
-        """
+        """If max_history_length is set, trim the history"""
         # This should only be called by commit() or set_history()
         # The history normally is not stored truncated otherwise so that
         # it is possible to rollback to the previous state.
@@ -127,16 +123,12 @@ class ChatHistory:
             self._history = self._history[-max_length:]
 
     def commit(self):
-        """
-        Mark the current history as being finalized
-        """
+        """Mark the current history as being finalized"""
         self.finalized_index = len(self._history)
         logger.debug(f"Committing history (finalized_index={self.finalized_index})")
 
     def rollback(self):
-        """
-        Remove any non-finalized items in the history, such as after a chat attempt fails
-        """
+        """Remove any non-finalized items in the history, such as after a chat attempt fails"""
         if self.finalized_index is None:
             logger.debug(f"Rolling back history (finalized_index=null, removing={len(self._history)})")
             self.clear()

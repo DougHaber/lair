@@ -25,9 +25,7 @@ def get_tool_class_by_name(name):
 
 
 def get_tool_classes_from_str(tool_names_str):
-    """
-    Take a comma delimited list of tool names and return a list of classes
-    """
+    """Take a comma delimited list of tool names and return a list of classes"""
     classes = []
     for name in tool_names_str.split(","):
         name = name.strip()

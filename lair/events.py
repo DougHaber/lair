@@ -17,8 +17,7 @@ _squash_duplicates = True
 
 
 def subscribe(event_name, handler, instance=None):
-    """
-    Subscribe a handler to an event, optionally associating it with an instance.
+    """Subscribe a handler to an event, optionally associating it with an instance.
 
     If an instance is provided, all its subscriptions will be auto-cleaned up when it is deleted.
     """

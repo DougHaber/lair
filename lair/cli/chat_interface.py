@@ -281,8 +281,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.session_manager.add_from_chat_session(self.chat_session)
 
     def _rebuild_chat_session(self):
-        """
-        Regenerate the current chat session
+        """Regenerate the current chat session
         This is necessary, since changes to session.type can alter the chat session class used
         """
         old_chat_session = self.chat_session
@@ -290,8 +289,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.chat_session.import_state(old_chat_session)
 
     def _switch_to_session(self, id_or_alias, raise_exceptions=True):
-        """
-        Switch to a new session.
+        """Switch to a new session.
 
         Arguments:
           id_or_alias: Either a session ID or session alias to switch to.
@@ -301,6 +299,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         Raises:
           lair.sessions.UnknownSessionException: If the session ID is unknown
                                                  and `raise_exceptions` is True.
+
         """
         try:
             with lair.events.defer_events():
@@ -316,8 +315,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 logger.error(f"Unknown session: {id_or_alias}")
 
     def _get_default_switch_session_id(self):
-        """
-        Return a session id to default to for quick-switch
+        """Return a session id to default to for quick-switch
         This will be either the last used session id or the next session_id
         """
         if self.last_used_session_id is not None and self.session_manager.get_session_id(
@@ -430,11 +428,11 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         return True
 
     def _handle_request(self, request):
-        """
-        Process a request, calling the necessary command or model.
+        """Process a request, calling the necessary command or model.
 
         Returns:
           bool: True if a request was properly handled, otherwise False
+
         """
         try:
             if request == "":

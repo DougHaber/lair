@@ -53,7 +53,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
     def style(self, *args, **kwargs):
         """Style a string using rich.
-        If no style parameter is provided, convert to plaintext so that rich markup isn't processed"""
+        If no style parameter is provided, convert to plaintext so that rich markup isn't processed
+        """
         return rich.text.Text(*args, **kwargs)
 
     def filter_keys_dict_list(self, rows_of_dicts, allowed_keys):
@@ -100,8 +101,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             return value
 
     def table(self, rows, *, column_names=None, column_formatters=None, style=None, markup=False):
-        """
-        Display a table from a 2-dimensional array.
+        """Display a table from a 2-dimensional array.
 
         Args:
             rows (Iterable): A 2-dimensional array of row data.
@@ -121,6 +121,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         Returns:
             None
+
         """
         if rows is None:
             return
@@ -163,11 +164,10 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             traceback.print_exception(*sys.exc_info())
 
     def error(self, message, show_exception=None):
-        """
-        When show_exception is:
-          - None - Show if DEBUG is enabled
-          - true - Always show
-          - false - Never show
+        """When show_exception is:
+        - None - Show if DEBUG is enabled
+        - true - Always show
+        - false - Never show
         """
         if show_exception or show_exception is None and lair.util.is_debug_enabled():
             self.exception()
@@ -344,9 +344,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         inverse=False,
         styles=None,
     ):
-        """
-        Color a value based on where it falls within a range
-        """
+        """Color a value based on where it falls within a range"""
         if styles is None:
             styles = [
                 "rgb(51,0,0)",

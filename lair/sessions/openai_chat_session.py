@@ -40,9 +40,7 @@ class OpenAIChatSession(BaseChatSession):
         model: Optional[str] = None,
         temperature: Optional[float] = None,
     ):
-        """
-        Call the underlying model without altering state (no history)
-        """
+        """Call the underlying model without altering state (no history)"""
         if messages is None:
             messages = []
 
@@ -94,13 +92,13 @@ class OpenAIChatSession(BaseChatSession):
             logger.debug(f"Tool result: {tool_response_messsage}")
 
     def invoke_with_tools(self, messages: Optional[list[dict[str, Any]]] = None, disable_system_prompt: bool = False):
-        """
-        Call the underlying model without altering state (no history)
+        """Call the underlying model without altering state (no history)
 
         Returns:
             tuple[str, list[dict]]: A tuple containing:
               - str: The response for the model
               - list[dict]: New messages from assistant & tool responses
+
         """
         if messages is None:
             messages = []
@@ -139,20 +137,21 @@ class OpenAIChatSession(BaseChatSession):
                 return (content.strip() if content is not None else ""), tool_messages
 
     def list_models(self, *, ignore_errors: bool = False) -> Optional[list[dict[str, Any]]]:
-        """
-        Retrieve a list of available models and their metadata.
+        """Retrieve a list of available models and their metadata.
 
         This method fetches a list of models using the OpenAI API and returns a
         formatted list of dictionaries containing metadata about each model, such as
         its ID, creation date, object type, and ownership.
 
-        Parameters:
+        Parameters
+        ----------
             ignore_errors (bool, optional):
                 If True, any exceptions encountered during the retrieval of models
                 will be logged at the debug level, and the method will return `None`
                 instead of raising the exception. If False, exceptions will be propagated.
 
-        Returns:
+        Returns
+        -------
             list[dict] | None:
                 A list of dictionaries, each representing a model with the following keys:
                 - 'id' (str): The model's unique identifier.
@@ -162,9 +161,11 @@ class OpenAIChatSession(BaseChatSession):
 
                 Returns `None` if an exception occurs and `ignore_errors` is True.
 
-        Raises:
+        Raises
+        ------
             Exception:
                 If an error occurs during model retrieval and `ignore_errors` is False.
+
         """
         try:
             models: list[dict[str, Any]] = []

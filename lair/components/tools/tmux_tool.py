@@ -116,9 +116,7 @@ class TmuxTool:
                 raise RuntimeError(f"Tmux server unavailable: {connect_error}") from connect_error
 
     def _get_output(self, return_mode, *, prune_line=None, window_id=None):
-        """
-        Return the output dict based on the return_mode
-        """
+        """Return the output dict based on the return_mode"""
         if return_mode == "stream":
             return self.read_new_output(prune_line=prune_line, window_id=window_id)
         elif return_mode == "screen":
@@ -341,6 +339,7 @@ class TmuxTool:
           prune_line (str): When provided and tools.tmux.read_new_output.remove_echoed_commands is
               enabled, this will remove the first first line if it matches, so that echoed
               characters are sent back
+
         """
         self._ensure_connection()
         if not self.session.windows:

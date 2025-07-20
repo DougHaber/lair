@@ -50,7 +50,6 @@ def save_file(filename, contents):
 
 def parse_yaml_text(text: str) -> dict:
     """Parse YAML content using PyYAML."""
-
     data = yaml.safe_load(text)
     return data or {}
 
@@ -80,7 +79,8 @@ def get_lib_path(end=""):
 def read_package_file(path, name):
     """Read a file within the packages libdir.
     path - Package path (dot delimited, such as lair.files)
-    name - Filename within the path"""
+    name - Filename within the path
+    """
     with importlib.resources.open_text(path, name) as fd:
         return fd.read()
 
@@ -206,8 +206,7 @@ def _get_attachments_content__text_file(filename):
 
 
 def get_attachments_content(filenames):
-    """
-    Take a list of filenames and return the content
+    """Take a list of filenames and return the content
     Parameters:
         filenames: A list of filenames to generate attachments for. Globs and homedir
             expansion are supported.
@@ -215,6 +214,7 @@ def get_attachments_content(filenames):
     Returns:
         content_parts = list of OpenAI API style `content` messages
         messages = list of strings of chat messages for each text section.
+
     """
     content_parts = []
     messages = []
@@ -232,8 +232,7 @@ def get_attachments_content(filenames):
 
 
 def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | None:
-    """
-    Edit the content in an external editor
+    """Edit the content in an external editor
     Return the new content or None if unchanged
     """
     editor_cmd = lair.config.get("misc.editor_command") or os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
@@ -255,9 +254,7 @@ def edit_content_in_editor(content: str, suffix: Optional[str] = None) -> str | 
 
 
 def decode_jsonl(jsonl_str):
-    """
-    Decode JSONL content and return a list of each decoded line
-    """
+    """Decode JSONL content and return a list of each decoded line"""
     records = []
     for line in jsonl_str.split("\n"):
         if line:  # Process only non-blank lines
