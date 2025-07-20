@@ -154,8 +154,7 @@ def read_package_file(path: str, name: str) -> str:
         The file contents as a string.
 
     """
-    with importlib.resources.open_text(path, name) as fd:
-        return fd.read()
+    return importlib.resources.files(path).joinpath(name).read_text()
 
 
 def get_log_level() -> str:
