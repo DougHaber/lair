@@ -196,12 +196,13 @@ class Util:
         if message:
             messages.append(lair.util.get_message("user", message))
 
-        messages.append(
-            {
-                "role": "user",
-                "content": attachment_content_parts,
-            }
-        )
+        if attachment_content_parts:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": attachment_content_parts,
+                }
+            )
 
         return messages
 

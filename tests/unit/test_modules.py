@@ -8,6 +8,7 @@ import lair
 from lair.modules import chat as chat_mod
 from lair.modules import util as util_mod
 from lair.modules.util import logger
+from lair.sessions.base_chat_session import BaseChatSession
 
 
 class DummyChatSession:
@@ -307,3 +308,33 @@ def test_util_run_sets_model_and_include(monkeypatch):
     util.run(make_args(model="model-x", include_filenames=True))
     assert ("model.name", "model-x") in sets
     assert ("misc.provide_attachment_filenames", True) in sets
+
+
+class DummyHistorySession(BaseChatSession):
+    def __init__(self):
+        super().__init__()
+
+    def invoke(self, messages=None, disable_system_prompt=False, model=None, temperature=None):
+        return "answer"
+
+    def invoke_with_tools(self, messages=None, disable_system_prompt=False):
+        return "answer", []
+
+    def list_models(self, ignore_errors=False):
+        return []
+
+
+def test_util_run_session_message_count(monkeypatch):
+    util = make_util()
+    chat = DummyHistorySession()
+    monkeypatch.setattr(lair.sessions, "get_chat_session", lambda session_type: chat)
+    monkeypatch.setattr(util, "_init_session_manager", lambda cs, args: None)
+    monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
+    monkeypatch.setattr(sys, "stdout", SimpleNamespace(write=lambda s: None, flush=lambda: None))
+
+    util.run(make_args(session="a", allow_create_session=True, instructions="hi"))
+
+    messages = chat.history.get_messages()
+    assert len(messages) == 2
+    assert messages[0]["role"] == "user"
+    assert messages[1]["role"] == "assistant"

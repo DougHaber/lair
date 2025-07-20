@@ -4,6 +4,7 @@
 - cli: Resolve circular import preventing `lair chat --help`
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
+- util: Avoid adding empty user messages when using util sessions
 - cli: Reduce complexity of keybindings setup
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
