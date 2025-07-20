@@ -21,25 +21,18 @@ def get_chat_session(
 ) -> BaseChatSession:
     """Instantiate a concrete chat session implementation.
 
-    Parameters
-    ----------
-    session_type:
-        The type of session to create. Currently only ``"openai_chat"`` is
-        supported.
-    history:
-        Optional chat history to attach to the session.
-    tool_set:
-        Optional tool set used by the session.
+    Args:
+        session_type: The type of session to create. Currently only ``"openai_chat"``
+            is supported.
+        history: Optional chat history to attach to the session.
+        tool_set: Optional tool set used by the session.
 
-    Returns
-    -------
-    BaseChatSession
-        The initialized chat session instance.
+    Returns:
+        BaseChatSession: The initialized chat session instance.
 
-    Raises
-    ------
-    ValueError
-        If ``session_type`` does not reference a known session implementation.
+    Raises:
+        ValueError: If ``session_type`` does not reference a known session
+            implementation.
 
     """
     if session_type == "openai_chat":
