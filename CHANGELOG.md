@@ -1,6 +1,7 @@
 # WIP - v0.8.2+dev
 
 ### Bug Fixes
+- cli: Resolve circular import preventing `lair chat --help`
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
 - cli: Reduce complexity of keybindings setup

@@ -11,12 +11,10 @@ import pytest
 STUB_SCRIPT = """
 import sys, types
 for name in [
-    'lair.cli.chat_interface', 'openai', 'requests', 'trafilatura', 'PIL',
+    'openai', 'requests', 'trafilatura', 'PIL',
     'diffusers', 'transformers', 'torch', 'comfy_script', 'lair.comfy_caller'
 ]:
     mod = types.ModuleType(name)
-    if name == 'lair.cli.chat_interface':
-        mod.ChatInterface = object
     sys.modules[name] = mod
 import lair.cli.run as run
 class Dummy:

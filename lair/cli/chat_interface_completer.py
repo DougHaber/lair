@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
 
 import lair
 
-from .chat_interface import ChatInterface
+if TYPE_CHECKING:
+    from .chat_interface import ChatInterface
 
 
 class ChatInterfaceCompleter(Completer):
