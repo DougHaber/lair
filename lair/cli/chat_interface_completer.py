@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from typing import cast
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
@@ -86,7 +87,7 @@ class ChatInterfaceCompleter(Completer):
 
         """
         components = re.split(r"\s+", text, maxsplit=1)
-        current_prompt = lair.config.get("session.system_prompt_template")
+        current_prompt = cast(str, lair.config.get("session.system_prompt_template"))
         if len(components) != 2:
             return
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import Any
+from typing import Any, cast
 
 import libtmux
 from libtmux.pane import Pane
@@ -95,7 +95,7 @@ class TmuxTool:
         self.session = None
         self.active_window = None
 
-        session_name: str | None = lair.config.get("tools.tmux.session_name")
+        session_name = cast(str | None, lair.config.get("tools.tmux.session_name"))
 
         for session in self.server.sessions:
             if session.name == session_name:
@@ -213,7 +213,7 @@ class TmuxTool:
 
     def get_log_file_name_and_create_directories(self, window: Window) -> str:
         """Return a log file path for the provided window and ensure directories exist."""
-        template: str = lair.config.get("tools.tmux.capture_file_name")
+        template = cast(str, lair.config.get("tools.tmux.capture_file_name"))
         template = template.format(
             pid=os.getpid(),
             window_id=window.get("window_id"),
@@ -244,7 +244,7 @@ class TmuxTool:
             if self.session is None:
                 raise RuntimeError("Tmux session not initialized")
 
-            window_limit: int = lair.config.get("tools.tmux.window_limit")
+            window_limit = cast(int, lair.config.get("tools.tmux.window_limit"))
             if len(self.session.windows) >= window_limit:
                 return {"error": "Window limit reached. Close an existing window before opening a new one."}
             elif return_mode not in {"stream", "screen"}:
@@ -484,8 +484,8 @@ class TmuxTool:
         if not self.session.windows:
             raise RuntimeError("No active tmux windows available.")
 
-        default_size: int = lair.config.get("tools.tmux.read_new_output.max_size_default")
-        limit_size: int = lair.config.get("tools.tmux.read_new_output.max_size_limit")
+        default_size = cast(int, lair.config.get("tools.tmux.read_new_output.max_size_default"))
+        limit_size = cast(int, lair.config.get("tools.tmux.read_new_output.max_size_limit"))
         max_size = min(max_size or default_size, limit_size)
 
         pane_id, log_file, offset = self._get_pane_info(window_id)

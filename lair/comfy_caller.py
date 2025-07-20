@@ -110,7 +110,8 @@ class ComfyCaller:
             kwargs["ssl"] = ssl_context
             return original_init(self, *args, **kwargs)
 
-        aiohttp.TCPConnector.__init__ = cast(Any, patched_init)
+        attr_name = "__init__"
+        setattr(aiohttp.TCPConnector, attr_name, cast(Any, patched_init))
 
     def _import_comfy_script(self) -> None:
         """Import ``comfy_script`` and load node definitions."""
