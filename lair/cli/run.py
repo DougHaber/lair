@@ -3,7 +3,7 @@
 import argparse
 import sys
 import traceback
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import lair.logging
 import lair.module_loader
@@ -12,7 +12,7 @@ import lair.util
 from lair.logging import logger
 
 
-def init_subcommands(parent_parser: argparse.ArgumentParser) -> Dict[str, Any]:
+def init_subcommands(parent_parser: argparse.ArgumentParser) -> dict[str, Any]:
     """Initialize all CLI subcommands.
 
     Args:
@@ -42,7 +42,7 @@ def init_subcommands(parent_parser: argparse.ArgumentParser) -> Dict[str, Any]:
     return commands
 
 
-def parse_arguments() -> Tuple[argparse.Namespace, Any]:
+def parse_arguments() -> tuple[argparse.Namespace, Any]:
     """Parse command line arguments.
 
     Returns:
@@ -83,7 +83,7 @@ def parse_arguments() -> Tuple[argparse.Namespace, Any]:
     return arguments, subcommands[arguments.subcommand]
 
 
-def set_config_from_arguments(overrides: List[str] | None) -> None:
+def set_config_from_arguments(overrides: list[str] | None) -> None:
     """Apply ``--set`` command line overrides to the active configuration.
 
     Args:
