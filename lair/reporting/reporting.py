@@ -396,20 +396,31 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             self.print_rich(self.style(message), style=str(lair.config.get("style.system_message")))
 
     def _llm_output__with_thoughts(self, message: str) -> None:
-        sections = re.split(r"(<(?:thought|think|thinking)>.*?</(?:thought|think|thinking)>)", message, flags=re.DOTALL)
+        sections = re.split(
+            r"(<(?:thought|think|thinking)>.*?</(?:thought|think|thinking)>)",
+            message,
+            flags=re.DOTALL,
+        )
         pattern = re.compile(r"<(thought|think|thinking)>.*?</\1>", re.DOTALL)
 
         for section in sections:
-            if pattern.search(section.strip()):  # Search for a thought-like tag
-                if lair.config.get("style.thoughts.hide_thoughts"):
-                    continue
-                elif lair.config.get("style.thoughts.hide_tags"):
-                    section = re.sub(r"(<(/?)(thought|think|thinking)>)", r"", section)
-                else:  # Protect the tags from markdown rendering
-                    section = re.sub(r"(<(/?)(thought|think|thinking)>)", r"\\\1", section)
-                self.print_rich(rich.markdown.Markdown(section), style=lair.config.get("style.llm_output_thought"))
-            elif section.strip():  # Ignore completely empty sections
-                self.print_rich(rich.markdown.Markdown(section), style=lair.config.get("style.llm_output"))
+            self._render_thought_section(section, pattern)
+
+    def _render_thought_section(self, section: str, pattern: re.Pattern[str]) -> None:
+        if not section.strip():
+            return
+        if pattern.search(section.strip()):
+            if lair.config.get("style.thoughts.hide_thoughts"):
+                return
+            if lair.config.get("style.thoughts.hide_tags"):
+                section = re.sub(r"(<(/?)(thought|think|thinking)>)", r"", section)
+            else:
+                section = re.sub(r"(<(/?)(thought|think|thinking)>)", r"\\\1", section)
+            style = lair.config.get("style.llm_output_thought")
+        else:
+            style = lair.config.get("style.llm_output")
+
+        self.print_rich(rich.markdown.Markdown(section), style=style)
 
     def llm_output(self, message: str, show_heading: bool = False) -> None:
         """Render large language model output."""
@@ -441,25 +452,37 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
     def message(self, message: Mapping[str, Any]) -> None:
         """Display a message object in history style."""
-        if isinstance(message["content"], str):
-            content = message["content"].rstrip()
-        else:
-            content = self.format_content_list(message["content"])
+        content = self._get_message_content(message)
+        role = message["role"]
 
-        if message["role"] == "user":
-            self.print_rich("HUMAN", style=lair.config.get("style.human_output_heading"))
-            self.print_rich(content, style=lair.config.get("style.human_output"))
-        elif message["role"] == "assistant":
-            if "tool_calls" in message:
-                self.assistant_tool_calls(message, show_heading=True)
-            else:
-                self.llm_output(content, show_heading=True)
-        elif message["role"] == "system":
+        if role == "user":
+            self._render_user_message(content)
+            return
+        if role == "assistant":
+            self._render_assistant_message(message, content)
+            return
+        if role == "system":
             self.system_message(content, show_heading=True)
-        elif message["role"] == "tool":
+            return
+        if role == "tool":
             self.tool_message(message, show_heading=True)
+            return
+        self.system_message(content, show_heading=True)
+
+    def _get_message_content(self, message: Mapping[str, Any]) -> str:
+        if isinstance(message["content"], str):
+            return message["content"].rstrip()
+        return self.format_content_list(message["content"])
+
+    def _render_user_message(self, content: str) -> None:
+        self.print_rich("HUMAN", style=lair.config.get("style.human_output_heading"))
+        self.print_rich(content, style=lair.config.get("style.human_output"))
+
+    def _render_assistant_message(self, message: Mapping[str, Any], content: str) -> None:
+        if "tool_calls" in message:
+            self.assistant_tool_calls(message, show_heading=True)
         else:
-            self.system_message(content, show_heading=True)
+            self.llm_output(content, show_heading=True)
 
     def messages_to_str(self, messages: Iterable[Mapping[str, Any]]) -> str:
         """Convert a list of message dicts to a human-readable string."""

@@ -105,7 +105,7 @@ def fire(event_name: str, data: object | None = None) -> bool:
         data = {}
 
     if _deferring:
-        if not (_squash_duplicates and (event_name, data) in _deferred_events):
+        if not _should_squash(event_name, data):
             _deferred_events.append((event_name, data))
         return True
 
@@ -115,6 +115,10 @@ def fire(event_name: str, data: object | None = None) -> bool:
         if callable(handler):
             handler(data)
     return True
+
+
+def _should_squash(event_name: str, data: object) -> bool:
+    return _squash_duplicates and (event_name, data) in _deferred_events
 
 
 @contextmanager

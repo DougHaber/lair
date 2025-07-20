@@ -104,24 +104,10 @@ class Configuration:
         default_mode: str | None = None
 
         for mode, mode_config in config.items():
-            if mode == "default_mode":  # Default mode definition -- Not a real mode
+            if mode == "default_mode":
                 default_mode = str(config[mode])
             else:
-                mode_dict = dict(cast(Mapping[str, object], mode_config))
-                if mode not in self.modes:
-                    # A newly defined mode starts with a copy of the defaults
-                    self.modes[mode] = self.modes["_default"].copy()
-                    # We also need a copy of only the keys that are explicitly set for inheritance
-                    self.explicit_mode_settings[mode] = mode_dict.copy()
-
-                # If there is an `_inherit` section, copy each mode's settings in order
-                inherit = _parse_inherit(cast(str | Iterable[str], mode_dict.get("_inherit", [])))
-
-                for inherit_from_mode in inherit:
-                    self.modes[mode].update(self.explicit_mode_settings.get(inherit_from_mode, {}))
-
-                # Finally, give precedence to the mode's own settings
-                self.modes[mode].update(mode_dict)
+                self._process_mode_config(mode, cast(Mapping[str, object], mode_config))
 
         if default_mode is None:
             return
@@ -129,6 +115,18 @@ class Configuration:
             sys.exit(f"ERROR: Configuration file's default_mode is not found: {default_mode}")
         else:
             self.change_mode(default_mode)
+
+    def _process_mode_config(self, mode: str, mode_config: Mapping[str, object]) -> None:
+        mode_dict = dict(mode_config)
+        if mode not in self.modes:
+            self.modes[mode] = self.modes["_default"].copy()
+            self.explicit_mode_settings[mode] = mode_dict.copy()
+
+        inherit = _parse_inherit(cast(str | Iterable[str], mode_dict.get("_inherit", [])))
+        for inherit_from_mode in inherit:
+            self.modes[mode].update(self.explicit_mode_settings.get(inherit_from_mode, {}))
+
+        self.modes[mode].update(mode_dict)
 
     def change_mode(self, mode: str) -> None:
         """Switch to a different configuration mode."""
@@ -205,10 +203,10 @@ class Configuration:
             raise ConfigUnknownKeyError(f"Unknown Key: {key}")
 
         try:
-            value = self._cast_value(key, value)
-            if value is not None and not isinstance(value, self.types[key]):
-                value = self.types[key](value)
-            self.active[key] = value
+            casted = self._cast_value(key, value)
+            if casted is not None and not isinstance(casted, self.types[key]):
+                casted = self.types[key](casted)
+            self.active[key] = casted
             if not no_event:
                 lair.events.fire("config.update")
 
@@ -219,11 +217,7 @@ class Configuration:
         """Cast ``value`` to the appropriate type for ``key`` if possible."""
         current_type = self.types[key]
         if current_type is bool:
-            if value in {True, "true", "True"}:
-                return True
-            if value in {False, "false", "False"}:
-                return False
-            raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
+            return self._cast_bool(key, value)
 
         if value is None and current_type is str:
             return ""
@@ -232,6 +226,13 @@ class Configuration:
             return None
 
         return value
+
+    def _cast_bool(self, key: str, value: object) -> bool:
+        if value in {True, "true", "True"}:
+            return True
+        if value in {False, "false", "False"}:
+            return False
+        raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}' [key={key}]")
 
     def reload(self) -> None:
         """Reload configuration from disk without altering mode definitions."""

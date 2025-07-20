@@ -199,30 +199,34 @@ class FileTool:
         """
         try:
             workspace = os.path.abspath(str(lair.config.get("tools.file.path")))
-
             pattern = os.path.join(workspace, path) if not os.path.isabs(path) else path
-
             file_paths = glob.glob(pattern, recursive=True)
             if not file_paths:
                 return {"error": f"No files match the pattern: {path}"}
 
-            file_contents = {}
+            file_contents: dict[str, str] = {}
             for file_path in file_paths:
-                file_path = os.path.abspath(file_path)
-                if not file_path.startswith(workspace):
-                    return {"error": f"Access denied: {file_path} is outside the workspace."}
-                elif not os.path.isfile(file_path):
-                    continue  # Skip non-files (e.g., directories)
-
-                with open(file_path) as f:
-                    content = f.read()
-                    relative_path = os.path.relpath(file_path, workspace)
-                    file_contents[relative_path] = content
+                error = self._collect_file_content(file_path, workspace, file_contents)
+                if error:
+                    return {"error": error}
 
             return {"file_content": file_contents}
         except Exception as error:
             logger.warning(f"read_file(): Error encountered: {error}")
             return {"error": str(error)}
+
+    def _collect_file_content(self, file_path: str, workspace: str, file_contents: dict[str, str]) -> str | None:
+        file_path = os.path.abspath(file_path)
+        if not file_path.startswith(workspace):
+            return f"Access denied: {file_path} is outside the workspace."
+        if not os.path.isfile(file_path):
+            return None
+
+        with open(file_path) as f:
+            content = f.read()
+            relative_path = os.path.relpath(file_path, workspace)
+            file_contents[relative_path] = content
+        return None
 
     def _generate_write_file_definition(self) -> dict[str, Any]:
         """Return the definition for the ``write_file`` tool."""

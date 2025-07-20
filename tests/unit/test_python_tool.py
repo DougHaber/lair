@@ -73,14 +73,14 @@ def test_run_python_success(monkeypatch):
 
     def fake_run(cmd, capture_output=True, text=True, timeout=None):
         calls.append(cmd)
-        if cmd[1] == "run":
-            return DummyProc(stdout="cid\n")
-        if cmd[1] == "wait":
-            return DummyProc(stdout="not-int\n")
-        if cmd[1] == "logs":
-            return DummyProc(stdout="out\n", stderr="err\n")
-        if cmd[1] == "rm":
-            return DummyProc()
+        mapping = {
+            "run": DummyProc(stdout="cid\n"),
+            "wait": DummyProc(stdout="not-int\n"),
+            "logs": DummyProc(stdout="out\n", stderr="err\n"),
+            "rm": DummyProc(),
+        }
+        if cmd[1] in mapping:
+            return mapping[cmd[1]]
         raise AssertionError("unexpected")
 
     monkeypatch.setattr("lair.components.tools.python_tool.subprocess.run", fake_run)

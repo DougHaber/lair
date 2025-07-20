@@ -138,57 +138,15 @@ class PythonTool:
         temp_file_path: Optional[str] = None
 
         try:
-            with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as temp_file:
-                temp_file.write(script)
-                temp_file_path = os.path.abspath(temp_file.name)
-            container_script_path = os.path.join(tempfile.gettempdir(), os.path.basename(temp_file_path))
+            temp_file_path, container_path = self._create_temp_script(script)
+            container_id, start_status = self._start_container(temp_file_path, container_path)
+            if container_id is None:
+                return self._format_output(error="ERROR: Failed to start_container", exit_status=start_status)
 
-            run = subprocess.run
-            run_proc = run(
-                [
-                    shlex.quote(self._docker),
-                    "run",
-                    "-d",
-                    "-v",
-                    f"{shlex.quote(temp_file_path)}:{shlex.quote(container_script_path)}:ro",
-                    shlex.quote(cast(str, lair.config.get("tools.python.docker_image"))),
-                    "python",
-                    shlex.quote(container_script_path),
-                ],
-                capture_output=True,
-                text=True,
-            )
-            if run_proc.returncode != 0:
-                return self._format_output(error="ERROR: Failed to start_container", exit_status=run_proc.returncode)
-
-            container_id = run_proc.stdout.strip()
-
-            try:  # Wait for the container to finish execution, with a timeout.
-                wait_proc = run(
-                    [shlex.quote(self._docker), "wait", shlex.quote(container_id)],
-                    capture_output=True,
-                    text=True,
-                    timeout=cast(float, lair.config.get("tools.python.timeout")),
-                )
-            except subprocess.TimeoutExpired:
-                self._cleanup_container(container_id)
-                return self._format_output(
-                    error=f"ERROR: Timeout after {lair.config.get('tools.python.timeout')} seconds"
-                )
-            try:
-                exit_status = int(wait_proc.stdout.strip())
-            except ValueError:
-                exit_status = None
-
-            logs_proc = run(
-                [shlex.quote(self._docker), "logs", shlex.quote(container_id)],
-                capture_output=True,
-                text=True,
-            )
-
-            self._cleanup_container(container_id)
-
-            return self._format_output(stdout=logs_proc.stdout, stderr=logs_proc.stderr, exit_status=exit_status)
+            exit_status, stdout, stderr = self._get_container_output(container_id)
+            return self._format_output(stdout=stdout, stderr=stderr, exit_status=exit_status)
+        except subprocess.TimeoutExpired:
+            return self._format_output(error=f"ERROR: Timeout after {lair.config.get('tools.python.timeout')} seconds")
         except Exception as error:
             if container_id:
                 self._cleanup_container(container_id)
@@ -197,3 +155,57 @@ class PythonTool:
         finally:
             if temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
+
+    def _create_temp_script(self, script: str) -> tuple[str, str]:
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as temp_file:
+            temp_file.write(script)
+            temp_file_path = os.path.abspath(temp_file.name)
+        container_script_path = os.path.join(tempfile.gettempdir(), os.path.basename(temp_file_path))
+        return temp_file_path, container_script_path
+
+    def _start_container(self, host_path: str, container_path: str) -> tuple[str | None, int | None]:
+        run = subprocess.run
+        proc = run(
+            [
+                shlex.quote(self._docker),
+                "run",
+                "-d",
+                "-v",
+                f"{shlex.quote(host_path)}:{shlex.quote(container_path)}:ro",
+                shlex.quote(cast(str, lair.config.get("tools.python.docker_image"))),
+                "python",
+                shlex.quote(container_path),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            return None, proc.returncode
+        return proc.stdout.strip(), None
+
+    def _get_container_output(self, container_id: str) -> tuple[Optional[int], str, str]:
+        run = subprocess.run
+        try:
+            wait_proc = run(
+                [shlex.quote(self._docker), "wait", shlex.quote(container_id)],
+                capture_output=True,
+                text=True,
+                timeout=cast(float, lair.config.get("tools.python.timeout")),
+            )
+        except subprocess.TimeoutExpired:
+            self._cleanup_container(container_id)
+            raise
+
+        try:
+            exit_status = int(wait_proc.stdout.strip())
+        except ValueError:
+            exit_status = None
+
+        logs_proc = run(
+            [shlex.quote(self._docker), "logs", shlex.quote(container_id)],
+            capture_output=True,
+            text=True,
+        )
+
+        self._cleanup_container(container_id)
+        return exit_status, logs_proc.stdout, logs_proc.stderr

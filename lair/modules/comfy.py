@@ -519,32 +519,32 @@ class Comfy:
 
     def _on_chat_init(self, chat_interface: "ChatInterface") -> None:
         """Register the ``/comfy`` command with the chat interface."""
+        chat_interface.register_command(
+            "/comfy",
+            lambda cmd, args, args_str: self._comfy_chat_command(chat_interface, args),
+            "Call ComfyUI workflows",
+        )
 
-        def comfy_command(command: str, arguments: Iterable[str], arguments_str: str) -> None:
-            """Execute a ComfyUI workflow from the chat interface."""
-            try:
-                chat_command_parser = self._get_chat_command_parser()
-                new_arguments = shlex.split(" ".join(arguments))
-                try:
-                    params = chat_command_parser.parse_args(new_arguments)
-                    params.comfy_url = lair.config.get("comfy.url")
-                except ArgumentParserHelpException as error:  # Display help with styles
-                    chat_interface.reporting.error(str(error), show_exception=False)
-                    return
-                except ArgumentParserExitException:  # Ignore exits
-                    return
-            except argparse.ArgumentError as error:
-                message = str(error)
-                if message == "the following arguments are required: comfy_command":
-                    # If /comfy --help is run, display the full help with styles
-                    chat_interface.reporting.error(chat_command_parser.format_help(), show_exception=False)
-                    return
+    def _comfy_chat_command(self, chat_interface: "ChatInterface", arguments: Iterable[str]) -> None:
+        try:
+            chat_command_parser = self._get_chat_command_parser()
+            new_arguments = shlex.split(" ".join(arguments))
+            params = chat_command_parser.parse_args(new_arguments)
+            params.comfy_url = lair.config.get("comfy.url")
+        except ArgumentParserHelpException as error:
+            chat_interface.reporting.error(str(error), show_exception=False)
+            return
+        except ArgumentParserExitException:
+            return
+        except argparse.ArgumentError as error:
+            message = str(error)
+            if message == "the following arguments are required: comfy_command":
+                chat_interface.reporting.error(chat_command_parser.format_help(), show_exception=False)
+            else:
                 logger.error(message)
-                return
+            return
 
-            self.run(params)
-
-        chat_interface.register_command("/comfy", comfy_command, "Call ComfyUI workflows")
+        self.run(params)
 
     def _save_output__save_to_disk(self, item: object, filename: str) -> None:
         """
@@ -589,27 +589,27 @@ class Comfy:
         """
         output_files = []
 
-        if single_output:  # Save single output with provided filename
+        if single_output:
             if filename == "-":
                 sys.stdout.buffer.write(cast(bytes, results[0]) + b"\n")
                 return
 
             self._save_output__save_to_disk(results[0], filename)
             output_files.append(filename)
-        else:
-            if filename == "-":
-                raise Exception("Writing to STDOUT is only supported for single-file output")
-            elif not os.path.splitext(filename)[1]:
-                raise ValueError("Filename must have an extension (e.g., 'output.png').")
+            logger.debug(f"saved: {', '.join(output_files)}")
+            return
 
-            basename, extension = os.path.splitext(filename)
+        if filename == "-":
+            raise Exception("Writing to STDOUT is only supported for single-file output")
+        if not os.path.splitext(filename)[1]:
+            raise ValueError("Filename must have an extension (e.g., 'output.png').")
 
-            # Save multiple outputs with incrementing filenames
-            for i, output in enumerate(results, start=start_index):
-                padded_index = f"{i:06d}"  # Zero-padded to 6 digits
-                output_filename = f"{basename}{padded_index}{extension}"
-                self._save_output__save_to_disk(output, output_filename)
-                output_files.append(output_filename)
+        basename, extension = os.path.splitext(filename)
+        for i, output in enumerate(results, start=start_index):
+            padded_index = f"{i:06d}"  # Zero-padded to 6 digits
+            output_filename = f"{basename}{padded_index}{extension}"
+            self._save_output__save_to_disk(output, output_filename)
+            output_files.append(output_filename)
 
         logger.debug(f"saved: {', '.join(output_files)}")
 

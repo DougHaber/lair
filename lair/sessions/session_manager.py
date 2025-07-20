@@ -197,32 +197,31 @@ class SessionManager:
             txn: Optional existing LMDB transaction to use.
 
         """
-        session_id = self.get_session_id(id_or_alias)
-        should_commit = txn is None  # Track if we need to start a transaction
-
-        if should_commit:
-            txn = self.env.begin(write=True)  # Create a new transaction if none is provided
-
-        if txn is None:
+        session_id = cast(int, self.get_session_id(id_or_alias))
+        should_commit = txn is None
+        transaction = txn or self.env.begin(write=True)
+        if transaction is None:
             raise RuntimeError("Transaction is unexpectedly None")
 
         try:
-            session_data = txn.get(f"session:{session_id:08d}".encode())
-            session = json.loads(session_data.decode())
-
-            alias = session.get("alias")
-            if alias:
-                txn.delete(f"alias:{alias}".encode())
-
-            txn.delete(f"session:{session_id:08d}".encode())
-            logger.debug(f"SessionManager(): delete_session({session_id})")
-
+            self._delete_session_txn(session_id, transaction)
             if should_commit:
-                txn.commit()  # Commit only if we started the transaction
+                transaction.commit()
         except Exception:
             if should_commit:
-                txn.abort()  # Abort if we started the transaction and something went wrong
+                transaction.abort()
             raise
+
+    def _delete_session_txn(self, session_id: int, txn: lmdb.Transaction) -> None:
+        session_data = txn.get(f"session:{session_id:08d}".encode())
+        session = json.loads(session_data.decode())
+
+        alias = session.get("alias")
+        if alias:
+            txn.delete(f"alias:{alias}".encode())
+
+        txn.delete(f"session:{session_id:08d}".encode())
+        logger.debug(f"SessionManager(): delete_session({session_id})")
 
     def delete_sessions(self, session_list: Sequence[str | int]) -> None:
         """Delete multiple sessions."""

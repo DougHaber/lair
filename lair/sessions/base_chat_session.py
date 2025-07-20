@@ -116,18 +116,10 @@ class BaseChatSession(abc.ABC):
         if self.history.num_messages() < 2 or not lair.config.get("session.auto_generate_titles.enabled"):
             return None
 
-        user_message = None
-        assistant_reply = None
-        for history_message in self.history.get_messages():
-            if not user_message and history_message["role"] == "user" and history_message["content"]:
-                user_message = history_message["content"]
-            elif not assistant_reply and history_message["role"] == "assistant" and history_message["content"]:
-                assistant_reply = history_message["content"]
+        user_message = self._first_message_by_role("user")
+        assistant_reply = self._first_message_by_role("assistant")
 
-            if user_message and assistant_reply:
-                break
-
-        if not (user_message and assistant_reply):
+        if user_message is None or assistant_reply is None:
             logger.debug(
                 "auto_generate_title(): failed: Could not find a user message "
                 f"and assistant reply  (session={self.session_id})"
@@ -155,6 +147,12 @@ class BaseChatSession(abc.ABC):
         logger.debug(f"auto_generate_title(): session={self.session_id}, title={message}")
         self.session_title = message
         return message
+
+    def _first_message_by_role(self, role: str) -> str | None:
+        for history_message in self.history.get_messages():
+            if history_message["role"] == role and history_message["content"]:
+                return history_message["content"]
+        return None
 
     def get_system_prompt(self) -> str:
         """Return the filled system prompt template."""

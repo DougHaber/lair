@@ -1,6 +1,7 @@
 """Tools for performing DuckDuckGo web and news searches."""
 
-from typing import Any, cast
+from collections.abc import Iterable, Mapping
+from typing import Any, Callable, cast
 
 import requests
 import trafilatura
@@ -117,21 +118,14 @@ class SearchTool:
 
         """
         max_results = cast(int, lair.config.get("tools.search.max_results"))
-
         try:
             results = self.ddgs.text(query, max_results=max_results * 4)
-            final_results = []
-            for result in results:
-                content = self._get_content(result["href"])
-                if content:
-                    final_results.append({"title": result["title"], "url": result["href"], "content": content})
-                    if len(final_results) > max_results:
-                        break
-
-            if final_results:
-                return {"results": final_results}
-            else:
-                return {"error": "Search failed"}
+            return self._filter_results(
+                results,
+                max_results,
+                "href",
+                lambda r, c: {"title": r["title"], "url": r["href"], "content": c},
+            )
         except Exception as error:
             logger.warning(f"search_web(): Encountered error: {error}")
             return {"error": str(error)}
@@ -152,20 +146,35 @@ class SearchTool:
 
         try:
             results = self.ddgs.news(query, max_results=max_results * 4)
-            final_results = []
-            for result in results:
-                content = self._get_content(result["url"])
-                if content:
-                    final_results.append(
-                        {"date": result["date"], "title": result["title"], "url": result["url"], "content": content}
-                    )
-                if len(final_results) > max_results:
-                    break
-
-            if final_results:
-                return {"results": final_results}
-            else:
-                return {"error": "Search failed"}
+            return self._filter_results(
+                results,
+                max_results,
+                "url",
+                lambda r, c: {
+                    "date": r["date"],
+                    "title": r["title"],
+                    "url": r["url"],
+                    "content": c,
+                },
+            )
         except Exception as error:
             logger.warning(f"search_news(): Encountered error: {error}")
             return {"error": str(error)}
+
+    def _filter_results(
+        self,
+        results: Iterable[Mapping[str, Any]],
+        max_results: int,
+        url_key: str,
+        builder: Callable[[Mapping[str, Any], str], Mapping[str, Any]],
+    ) -> dict[str, Any]:
+        final_results = []
+        for result in results:
+            content = self._get_content(result[url_key])
+            if not content:
+                continue
+            final_results.append(builder(result, content))
+            if len(final_results) > max_results:
+                break
+
+        return {"results": final_results} if final_results else {"error": "Search failed"}
