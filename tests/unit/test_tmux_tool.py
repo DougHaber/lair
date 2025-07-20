@@ -1,8 +1,9 @@
 import os
 
-import lair
 import libtmux
 import pytest
+
+import lair
 from lair.components.tools.tmux_tool import TmuxTool
 
 

@@ -1,7 +1,9 @@
 import importlib
-import sys
-import pytest
 import json
+import sys
+
+import pytest
+
 import lair
 from lair.components.history.chat_history import ChatHistory
 
@@ -32,8 +34,7 @@ class DummyCursor:
         return bool(self.items)
 
     def __iter__(self):
-        for item in self.items:
-            yield item
+        yield from self.items
 
 
 class DummyTxn:
