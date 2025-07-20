@@ -110,7 +110,7 @@ def test_get_window_by_id_and_errors(tool):
     assert tool._get_window_by_id(w1.get("window_id")) is w1
     assert tool._get_window_by_id(w1.get("window_id").lstrip("@")) is w1
     assert tool._get_window_by_id(None) is None
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool._get_window_by_id("@99")
 
 
@@ -131,7 +131,7 @@ def test_get_output_modes(tool, monkeypatch):
     assert called["mode"] == "stream"
     assert tool._get_output("screen") == {"out": "screen"}
     assert called["mode"] == "screen"
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool._get_output("bad")
 
 
@@ -179,7 +179,7 @@ def test_send_keys_valid_and_errors(tool, monkeypatch):
 
 
 def test_capture_output_and_errors(tool):
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.capture_output()
     tool.session.new_window("one")
     tool.active_window = tool.session.windows[0]
@@ -215,7 +215,7 @@ def test_read_new_output_flow(tool, tmp_path):
 
     # connection lost
     del tool.log_files[pane.get("pane_id")]
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.read_new_output()
 
 
@@ -271,13 +271,13 @@ def test_ensure_connection_and_failure(tmp_path, monkeypatch):
 
     new_tool.server = DummyServer(fail=True)
     monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_fail)
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         new_tool._ensure_connection()
     restore_config(old)
 
 
 def test_read_new_output_no_windows(tool):
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.read_new_output()
 
 

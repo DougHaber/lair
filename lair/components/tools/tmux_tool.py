@@ -101,7 +101,7 @@ class TmuxTool:
             if window.get("window_id") == window_id:
                 return window
 
-        raise Exception(f"Requested window id not found: {window_id}")
+        raise ValueError(f"Requested window id not found: {window_id}")
 
     def _ensure_connection(self):
         try:
@@ -113,7 +113,7 @@ class TmuxTool:
             try:
                 self._connect_to_tmux()
             except Exception as connect_error:
-                raise Exception(f"Tmux server unavailable: {connect_error}") from connect_error
+                raise RuntimeError(f"Tmux server unavailable: {connect_error}") from connect_error
 
     def _get_output(self, return_mode, *, prune_line=None, window_id=None):
         """
@@ -124,7 +124,7 @@ class TmuxTool:
         elif return_mode == "screen":
             return self.capture_output(window_id=window_id)
         else:
-            raise Exception("Invalid return_mode. Accepted values are stream or screen (screen capture)")
+            raise ValueError("Invalid return_mode. Accepted values are stream or screen (screen capture)")
 
     def _generate_run_definition(self):
         return {
@@ -301,7 +301,7 @@ class TmuxTool:
     def capture_output(self, *, window_id=None):
         self._ensure_connection()
         if not self.session.windows:
-            raise Exception("No active tmux windows available.")
+            raise RuntimeError("No active tmux windows available.")
 
         window = self.active_window if window_id is None else self._get_window_by_id(window_id)
         pane = window.attached_pane or window.active_pane
@@ -344,7 +344,7 @@ class TmuxTool:
         """
         self._ensure_connection()
         if not self.session.windows:
-            raise Exception("No active tmux windows available.")
+            raise RuntimeError("No active tmux windows available.")
 
         max_size = min(
             max_size or lair.config.get("tools.tmux.read_new_output.max_size_default"),
@@ -367,7 +367,7 @@ class TmuxTool:
         pane = window.attached_pane or window.active_pane
         pane_id = pane.get("pane_id")
         if pane_id not in self.log_files:
-            raise Exception("Connection to pane lost.")
+            raise RuntimeError("Connection to pane lost.")
         log_file = self.log_files[pane_id]
         offset = self.log_offsets.get(pane_id, 0)
         return pane_id, log_file, offset
