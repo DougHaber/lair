@@ -120,23 +120,25 @@ def start() -> None:
     try:
         lair.logging.init_logging()
         arguments, subcommand = parse_arguments()
-
-        if arguments.debug:
-            logger.setLevel("DEBUG")
-
-        if arguments.mode:
-            lair.config.change_mode(arguments.mode)
-        set_config_from_arguments(arguments.set)
-        if arguments.model:
-            lair.config.set("model.name", arguments.model)
-
-        lair.reporting.Reporting(
-            disable_color=arguments.disable_color,
-            force_color=arguments.force_color,
-        )
-
+        _configure_from_args(arguments)
         subcommand.run(arguments)
     except KeyboardInterrupt:
         sys.exit("Received interrupt.  Exiting")
     except Exception as error:
         _handle_error(error, "arguments" in locals())
+
+
+def _configure_from_args(arguments: argparse.Namespace) -> None:
+    """Apply runtime options from the CLI arguments."""
+    if arguments.debug:
+        logger.setLevel("DEBUG")
+    if arguments.mode:
+        lair.config.change_mode(arguments.mode)
+    set_config_from_arguments(arguments.set)
+    if arguments.model:
+        lair.config.set("model.name", arguments.model)
+
+    lair.reporting.Reporting(
+        disable_color=arguments.disable_color,
+        force_color=arguments.force_color,
+    )

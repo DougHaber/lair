@@ -199,19 +199,29 @@ class Configuration:
             self.active[key] = value
             return
 
-        if key not in self.modes["_default"]:
-            raise ConfigUnknownKeyError(f"Unknown Key: {key}")
+        self._validate_key(key)
 
         try:
             casted = self._cast_value(key, value)
-            if casted is not None and not isinstance(casted, self.types[key]):
-                casted = self.types[key](casted)
-            self.active[key] = casted
-            if not no_event:
-                lair.events.fire("config.update")
-
+            casted = self._ensure_type(key, casted)
         except ValueError as error:
             raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}'") from error
+
+        self._store_value(key, casted, no_event)
+
+    def _validate_key(self, key: str) -> None:
+        if key not in self.modes["_default"]:
+            raise ConfigUnknownKeyError(f"Unknown Key: {key}")
+
+    def _ensure_type(self, key: str, value: object) -> object:
+        if value is not None and not isinstance(value, self.types[key]):
+            return self.types[key](value)
+        return value
+
+    def _store_value(self, key: str, value: object, no_event: bool) -> None:
+        self.active[key] = value
+        if not no_event:
+            lair.events.fire("config.update")
 
     def _cast_value(self, key: str, value: object) -> object:
         """Cast ``value`` to the appropriate type for ``key`` if possible."""

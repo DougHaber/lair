@@ -316,18 +316,10 @@ class ChatInterfaceCommands:
             None
 
         """
-        if len(arguments) > 2:
-            self.reporting.user_error("ERROR: usage: /extract [position?] [filename?]")
+        parsed = self._parse_extract_args(arguments)
+        if parsed is None:
             return
-
-        position = arguments[0] if arguments else 0
-        filename = arguments[1] if len(arguments) > 1 else None
-
-        if not isinstance(lair.util.safe_int(position), int):
-            logger.error("Position must be an integer")
-            return
-
-        position = int(position)
+        position, filename = parsed
 
         if not self.chat_session.last_response:
             logger.error("Extract failed: Last response is not set")
@@ -338,6 +330,24 @@ class ChatInterfaceCommands:
             logger.error("Extract failed: No matching section found")
             return
 
+        self._output_extracted_response(response, filename)
+
+    def _parse_extract_args(self, arguments: list[str]) -> tuple[int, str | None] | None:
+        """Validate and normalize arguments for ``/extract``."""
+        if len(arguments) > 2:
+            self.reporting.user_error("ERROR: usage: /extract [position?] [filename?]")
+            return None
+
+        position = arguments[0] if arguments else 0
+        if not isinstance(lair.util.safe_int(position), int):
+            logger.error("Position must be an integer")
+            return None
+
+        filename = arguments[1] if len(arguments) > 1 else None
+        return int(position), filename
+
+    def _output_extracted_response(self, response: str, filename: str | None) -> None:
+        """Save or display ``response`` based on ``filename``."""
         if filename:
             lair.util.save_file(filename, response + "\n")
             self.reporting.system_message(f"Section saved  ({len(response)} bytes)")
