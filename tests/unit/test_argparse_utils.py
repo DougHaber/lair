@@ -1,9 +1,11 @@
 import argparse
+
 import pytest
+
 from lair.util.argparse import (
-    ErrorRaisingArgumentParser,
     ArgumentParserExitException,
     ArgumentParserHelpException,
+    ErrorRaisingArgumentParser,
 )
 
 

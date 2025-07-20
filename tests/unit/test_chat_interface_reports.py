@@ -1,12 +1,14 @@
 # ruff: noqa: E402
 import sys
-
-sys.modules.pop("pdfplumber", None)
-import pdfplumber  # noqa: F401,E402
 import types
+
+import pdfplumber  # noqa: F401,E402
+
 import lair
 from lair.cli.chat_interface_reports import ChatInterfaceReports
 from lair.logging import logger
+
+sys.modules.pop("pdfplumber", None)
 
 
 class DummyReporting:
@@ -130,7 +132,7 @@ def test_print_help_and_current_model():
 def test_iter_config_rows_unmodified():
     ci = make_ci()
     rows = list(ci._iter_config_rows(False, r"^model\.name$", None))
-    expected = ["model.name", f"{lair.config.get('chat.set_command.modified_style')}:" + lair.config.get('model.name')]
+    expected = ["model.name", f"{lair.config.get("chat.set_command.modified_style")}:" + lair.config.get("model.name")]
     assert rows[0] == expected
 
 

@@ -1,5 +1,10 @@
+import io
+import os
+import runpy
 import subprocess
 import sys
+import tempfile
+from contextlib import redirect_stderr, redirect_stdout
 
 import pytest
 
@@ -31,9 +36,24 @@ run.start()
 
 
 def run_command(*args):
-    cmd = [sys.executable, "-c", STUB_SCRIPT]
-    cmd.extend(args)
-    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    argv = ["prog", *args]
+    stdout = io.StringIO()
+    orig_argv = sys.argv
+    with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
+        tmp.write(STUB_SCRIPT)
+        tmp_name = tmp.name
+    try:
+        sys.argv = argv
+        with redirect_stdout(stdout), redirect_stderr(stdout):
+            try:
+                runpy.run_path(tmp_name, run_name="__main__")
+                code = 0
+            except SystemExit as exc:
+                code = exc.code
+    finally:
+        sys.argv = orig_argv
+        os.remove(tmp_name)
+    return subprocess.CompletedProcess(argv, code, stdout.getvalue(), "")
 
 
 @pytest.mark.integration
