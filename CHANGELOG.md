@@ -8,6 +8,7 @@
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
 - comfy: Raise ValueError for invalid image path type
+- tests: Stub prompt_toolkit run_in_terminal to remove warnings
 - tests: Support environments where `openai_local` mode is renamed
 
 ### New Features

@@ -163,6 +163,13 @@ def make_interface(monkeypatch):
     monkeypatch.setattr(lair.sessions, "get_chat_session", lambda t: DummyChatSession())
     monkeypatch.setattr(lair.sessions, "SessionManager", SimpleSessionManager)
     monkeypatch.setattr(lair.reporting, "Reporting", DummyReporting)
+    import prompt_toolkit.application
+
+    monkeypatch.setattr(
+        prompt_toolkit.application,
+        "run_in_terminal",
+        lambda func, *args, **kwargs: func(),
+    )
 
     lair.config.set("chat.history_file", None)
 
