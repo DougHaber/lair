@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import zoneinfo
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, cast
 
 import openai
@@ -19,7 +20,10 @@ from lair.logging import logger
 from .base_chat_session import BaseChatSession
 
 if TYPE_CHECKING:
-    from openai.types.chat import ChatCompletionMessage
+    from openai.types.chat import ChatCompletionMessage, ChatCompletionToolParam
+else:
+    ChatCompletionMessage = Any  # type: ignore
+    ChatCompletionToolParam = Any  # type: ignore
 
 
 class OpenAIChatSession(BaseChatSession):
@@ -41,11 +45,11 @@ class OpenAIChatSession(BaseChatSession):
 
     def _get_openai_client(self) -> None:
         """Instantiate the underlying OpenAI client using current configuration."""
-        logger.debug(f"Create OpenAI() client: base_url={lair.config.get('openai.api_base')}")
-        self.openai = openai.OpenAI(
-            api_key=os.environ.get(lair.config.get("openai.api_key_environment_variable")) or "none",
-            base_url=lair.config.get("openai.api_base"),
-        )
+        base_url = cast(str | None, lair.config.get("openai.api_base"))
+        logger.debug(f"Create OpenAI() client: base_url={base_url}")
+        api_key_env = cast(str, lair.config.get("openai.api_key_environment_variable"))
+        api_key = os.environ.get(api_key_env) or "none"
+        self.openai = openai.OpenAI(api_key=api_key, base_url=base_url)
 
     def recreate_openai_client(self) -> None:
         """Recreate the OpenAI client when configuration changes."""
@@ -55,8 +59,7 @@ class OpenAIChatSession(BaseChatSession):
         self,
         messages: list[dict[str, Any]] | None = None,
         disable_system_prompt: bool = False,
-        model: str | None = None,
-        temperature: float | None = None,
+        **kwargs: object,
     ) -> str:
         """Call the underlying model without altering the chat history.
 
@@ -64,8 +67,8 @@ class OpenAIChatSession(BaseChatSession):
             messages: Optional list of messages to send. If ``None``, the current
                 chat history is used.
             disable_system_prompt: If ``True``, the system prompt is omitted.
-            model: Unused override for the model name.
-            temperature: Optional temperature override.
+            **kwargs: Additional options passed to the API client. Supported keys:
+                ``model`` and ``temperature``.
 
         Returns:
             str: The model response with surrounding whitespace stripped.
@@ -82,15 +85,23 @@ class OpenAIChatSession(BaseChatSession):
         messages_str = self.reporting.messages_to_str(messages)
         self.last_prompt = messages_str
 
-        model_name = lair.config.get("model.name")
+        model_name = cast(str, lair.config.get("model.name"))
+        model_override = cast(str | None, kwargs.get("model"))
+        if model_override is not None:
+            model_name = model_override
+        temperature_override = cast(float | None, kwargs.get("temperature"))
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
         if self.openai is None:
             raise RuntimeError("OpenAI client is not initialized")
         answer = self.openai.chat.completions.create(
             messages=cast(Any, messages),
             model=model_name,
-            temperature=temperature if temperature is not None else lair.config.get("model.temperature"),
-            max_completion_tokens=lair.config.get("model.max_tokens"),
+            temperature=(
+                temperature_override
+                if temperature_override is not None
+                else cast(float | None, lair.config.get("model.temperature"))
+            ),
+            max_completion_tokens=cast(int | None, lair.config.get("model.max_tokens")),
         )
         content = answer.choices[0].message.content
         return content.strip() if content is not None else ""
@@ -134,7 +145,10 @@ class OpenAIChatSession(BaseChatSession):
             logger.debug(f"Tool result: {tool_response_messsage}")
 
     def invoke_with_tools(
-        self, messages: list[dict[str, Any]] | None = None, disable_system_prompt: bool = False
+        self,
+        messages: list[dict[str, Any]] | None = None,
+        disable_system_prompt: bool = False,
+        **kwargs: object,
     ) -> tuple[str, list[dict[str, Any]]]:
         """Call the model and process tool calls without altering the chat history.
 
@@ -142,6 +156,7 @@ class OpenAIChatSession(BaseChatSession):
             messages: Optional list of messages to send. If ``None``, the current
                 chat history is used.
             disable_system_prompt: If ``True``, the system prompt is omitted.
+            **kwargs: Additional options passed to the API client.
 
         Returns:
             tuple[str, list[dict[str, Any]]]: The response from the model and the
@@ -169,10 +184,10 @@ class OpenAIChatSession(BaseChatSession):
                 raise RuntimeError("OpenAI client is not initialized")
             answer = self.openai.chat.completions.create(
                 messages=cast(Any, messages),
-                model=lair.config.get("model.name"),
-                temperature=lair.config.get("model.temperature"),
-                max_completion_tokens=lair.config.get("model.max_tokens"),
-                tools=self.tool_set.get_definitions(),
+                model=cast(str, lair.config.get("model.name")),
+                temperature=cast(float | None, lair.config.get("model.temperature")),
+                max_completion_tokens=cast(int | None, lair.config.get("model.max_tokens")),
+                tools=cast(Iterable[ChatCompletionToolParam], self.tool_set.get_definitions()),
             )
 
             message = answer.choices[0].message
