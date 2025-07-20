@@ -8,6 +8,8 @@ import time
 from typing import Any
 
 import libtmux
+from libtmux.pane import Pane
+from libtmux.session import Session
 from libtmux.window import Window
 
 import lair
@@ -23,12 +25,12 @@ class TmuxTool:
     def __init__(self) -> None:
         """Initialize default state for server and session."""
         self.server: libtmux.Server | None = None
-        self.session: Any | None = None
+        self.session: Session | None = None
 
         self.log_files: dict[str, str] = {}
         self.log_offsets: dict[str, int] = {}
 
-        self.active_window: Any | None = None
+        self.active_window: Window | None = None
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
         """Register tmux related tools with the provided tool set.
@@ -77,7 +79,7 @@ class TmuxTool:
             name="kill",
             flags=["tools.tmux.enabled", "tools.tmux.kill.enabled"],
             definition_handler=lambda: self._generate_kill_definition(),
-            handler=lambda *args, **kwargs: self.kill(),
+            handler=lambda *args, **kwargs: self.kill(**kwargs),
         )
         tool_set.add_tool(
             class_name=self.__class__.__name__,
@@ -93,15 +95,15 @@ class TmuxTool:
         self.session = None
         self.active_window = None
 
+        session_name: str | None = lair.config.get("tools.tmux.session_name")
+
         for session in self.server.sessions:
-            if session.name == lair.config.get("tools.tmux.session_name"):
+            if session.name == session_name:
                 self.session = session
                 break
 
         if not self.session:
-            self.session = self.server.new_session(
-                session_name=lair.config.get("tools.tmux.session_name"), attach=False
-            )
+            self.session = self.server.new_session(session_name=session_name, attach=False)
             self.log_files = {}
             self.log_offsets = {}
 
@@ -128,6 +130,9 @@ class TmuxTool:
         if isinstance(window_id, int) or not window_id.startswith("@"):
             window_id = f"@{window_id}"
 
+        if self.session is None:
+            raise RuntimeError("No tmux session available.")
+
         for window in self.session.list_windows():
             if window.get("window_id") == window_id:
                 return window
@@ -139,6 +144,8 @@ class TmuxTool:
         try:
             if self.server is None:  # First time connecting in
                 self._connect_to_tmux()
+            if self.server is None:
+                raise RuntimeError("Tmux server not initialized")
             self.server.list_sessions()
         except Exception as error:
             logger.error(f"Tmux server connection error: {error}. Attempting to reconnect.")
@@ -206,7 +213,8 @@ class TmuxTool:
 
     def get_log_file_name_and_create_directories(self, window: Window) -> str:
         """Return a log file path for the provided window and ensure directories exist."""
-        template = lair.config.get("tools.tmux.capture_file_name").format(
+        template: str = lair.config.get("tools.tmux.capture_file_name")
+        template = template.format(
             pid=os.getpid(),
             window_id=window.get("window_id"),
         )
@@ -233,14 +241,19 @@ class TmuxTool:
         """
         try:
             self._ensure_connection()
+            if self.session is None:
+                raise RuntimeError("Tmux session not initialized")
 
-            if len(self.session.windows) >= lair.config.get("tools.tmux.window_limit"):
+            window_limit: int = lair.config.get("tools.tmux.window_limit")
+            if len(self.session.windows) >= window_limit:
                 return {"error": "Window limit reached. Close an existing window before opening a new one."}
             elif return_mode not in {"stream", "screen"}:
                 return {"error": "run(): return_mode must be either 'stream' or 'screen'"}
 
             window = self.session.new_window(window_name="lair", attach=False)
-            pane = window.attached_pane or window.active_pane
+            pane: Pane | None = window.attached_pane or window.active_pane
+            if pane is None:
+                raise RuntimeError("Unable to locate pane for new window.")
             pane_id = pane.get("pane_id")
 
             self.active_window = window
@@ -348,6 +361,8 @@ class TmuxTool:
         """
         try:
             self._ensure_connection()
+            if self.session is None:
+                raise RuntimeError("Tmux session not initialized")
 
             if not self.session.windows:
                 return {"error": "No active tmux windows available."}
@@ -355,7 +370,12 @@ class TmuxTool:
                 return {"error": "send_keys(): return_mode must be either 'stream' or 'screen'"}
 
             window = self.active_window if window_id is None else self._get_window_by_id(window_id)
-            pane = window.attached_pane or window.active_pane
+            if window is None:
+                return {"error": "Requested window not found."}
+
+            pane: Pane | None = window.attached_pane or window.active_pane
+            if pane is None:
+                return {"error": "No pane available in the target window."}
 
             pane.send_keys(keys, enter=enter, literal=literal)
             time.sleep(delay)
@@ -397,11 +417,18 @@ class TmuxTool:
 
         """
         self._ensure_connection()
+        if self.session is None:
+            raise RuntimeError("Tmux session not initialized")
         if not self.session.windows:
             raise RuntimeError("No active tmux windows available.")
 
         window = self.active_window if window_id is None else self._get_window_by_id(window_id)
-        pane = window.attached_pane or window.active_pane
+        if window is None:
+            raise RuntimeError("Requested window not found.")
+
+        pane: Pane | None = window.attached_pane or window.active_pane
+        if pane is None:
+            raise RuntimeError("No pane available in the target window.")
 
         return {"current_screen": "\n".join(pane.capture_pane())}
 
@@ -452,17 +479,18 @@ class TmuxTool:
 
         """
         self._ensure_connection()
+        if self.session is None:
+            raise RuntimeError("Tmux session not initialized")
         if not self.session.windows:
             raise RuntimeError("No active tmux windows available.")
 
-        max_size = min(
-            max_size or lair.config.get("tools.tmux.read_new_output.max_size_default"),
-            lair.config.get("tools.tmux.read_new_output.max_size_limit"),
-        )
+        default_size: int = lair.config.get("tools.tmux.read_new_output.max_size_default")
+        limit_size: int = lair.config.get("tools.tmux.read_new_output.max_size_limit")
+        max_size = min(max_size or default_size, limit_size)
 
         pane_id, log_file, offset = self._get_pane_info(window_id)
-        new_data, new_offset = self._read_pane_file(log_file, offset)
-        new_data = self._clean_new_data(new_data, offset, prune_line)
+        new_data_bytes, new_offset = self._read_pane_file(log_file, offset)
+        new_data = self._clean_new_data(new_data_bytes, offset, prune_line)
 
         self.log_offsets[pane_id] = new_offset
 
@@ -474,7 +502,13 @@ class TmuxTool:
     def _get_pane_info(self, window_id: int | str | None) -> tuple[str, str, int]:
         """Return pane information for the given window id."""
         window = self.active_window if window_id is None else self._get_window_by_id(window_id)
-        pane = window.attached_pane or window.active_pane
+        if window is None:
+            raise RuntimeError("Requested window not found.")
+
+        pane: Pane | None = window.attached_pane or window.active_pane
+        if pane is None:
+            raise RuntimeError("No pane available in the target window.")
+
         pane_id = pane.get("pane_id")
         if pane_id not in self.log_files:
             raise RuntimeError("Connection to pane lost.")
@@ -523,10 +557,14 @@ class TmuxTool:
         """Close the specified tmux window."""
         try:
             self._ensure_connection()
+            if self.session is None:
+                raise RuntimeError("Tmux session not initialized")
             if not self.session.windows:
                 return {"error": "No active tmux windows to kill."}
 
             window = self._get_window_by_id(window_id)
+            if window is None:
+                return {"error": "Requested window not found."}
             window.kill_window()
 
             return {"message": f"Window {window_id} closed.  ({window.get('window_name')})"}
@@ -548,6 +586,8 @@ class TmuxTool:
         """Return a list of existing tmux windows."""
         try:
             self._ensure_connection()
+            if self.session is None:
+                raise RuntimeError("Tmux session not initialized")
 
             return {
                 "windows": [
@@ -579,11 +619,15 @@ class TmuxTool:
         """Attach to an existing tmux window and make it active."""
         try:
             self._ensure_connection()
+            if self.session is None:
+                raise RuntimeError("Tmux session not initialized")
 
             if not self.session.windows:
                 return {"error": "No tmux windows available to attach."}
 
             window = self._get_window_by_id(window_id)
+            if window is None:
+                return {"error": "Requested window not found."}
             self.active_window = window
             window.select_window()
 
