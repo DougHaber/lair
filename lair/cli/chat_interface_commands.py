@@ -3,7 +3,7 @@
 import json
 import os
 import shlex
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 import lair
 import lair.sessions as sessions
@@ -578,7 +578,8 @@ class ChatInterfaceCommands:
         elif len(arguments) == 1:  # Set mode
             lair.config.change_mode(arguments[0])
             old_session = self.chat_session
-            self.chat_session = sessions.get_chat_session(lair.config.get("session.type"))
+            session_type = cast(str, lair.config.get("session.type"))
+            self.chat_session = sessions.get_chat_session(session_type)
             self.chat_session.import_state(old_session)
         else:
             self.reporting.user_error("ERROR: Invalid arguments: Usage: /mode [name?]")
@@ -666,7 +667,7 @@ class ChatInterfaceCommands:
                 if self.chat_session.session_id == session_id:
                     self.chat_session.session_alias = new_alias
                 self.session_manager.set_alias(session_id, new_alias)
-            elif isinstance(lair.util.safe_int(new_alias), int):
+            elif new_alias is not None and isinstance(lair.util.safe_int(new_alias), int):
                 self.reporting.user_error("ERROR: Aliases may not be integers")
             else:
                 self.reporting.user_error("ERROR: That alias is unavailable")
