@@ -299,21 +299,22 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         if max_length is not None and len(json_text) > max_length:
             json_text = json_text[:max_length]
-            json_text.append("...", style=lair.config.get("style.ellipsis"))
+            json_text.append("...", style=str(lair.config.get("style.ellipsis")))
 
         return json_text
 
     def assistant_tool_calls(self, message: Mapping[str, Any], show_heading: bool = False) -> None:
         """Display assistant tool calls contained in a message."""
-        if lair.config.get("style.llm_output.tool_call.background"):
-            background_style = " on " + lair.config.get("style.llm_output.tool_call.background")
+        background_val = lair.config.get("style.llm_output.tool_call.background")
+        if background_val:
+            background_style = " on " + str(background_val)
         else:
             background_style = ""
 
         if show_heading:
             self.print_rich(
                 "AI" + " " * (self.console.width - 2),
-                style=lair.config.get("style.llm_output_heading") + background_style,
+                style=str(lair.config.get("style.llm_output_heading")) + background_style,
                 soft_wrap=True,
             )
 
@@ -321,19 +322,19 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             function = tool_call["function"]
 
             text = rich.text.Text()
-            text.append("- ", style=lair.config.get("style.llm_output.tool_call.bullet"))
-            text.append("TOOL CALL: ", style=lair.config.get("style.llm_output.tool_call.prefix"))
-            text.append(f"{function['name']}(", style=lair.config.get("style.llm_output.tool_call.function"))
+            text.append("- ", style=str(lair.config.get("style.llm_output.tool_call.bullet")))
+            text.append("TOOL CALL: ", style=str(lair.config.get("style.llm_output.tool_call.prefix")))
+            text.append(f"{function['name']}(", style=str(lair.config.get("style.llm_output.tool_call.function")))
             arguments = self.format_json(
                 function["arguments"],
-                max_length=lair.config.get("style.llm_output.tool_call.max_arguments_length"),
-                plain_style=lair.config.get("style.llm_output.tool_call.arguments"),
-                enable_highlighting=lair.config.get("style.llm_output.tool_call.arguments_syntax_highlighting"),
+                max_length=cast(int | None, lair.config.get("style.llm_output.tool_call.max_arguments_length")),
+                plain_style=cast(str | None, lair.config.get("style.llm_output.tool_call.arguments")),
+                enable_highlighting=bool(lair.config.get("style.llm_output.tool_call.arguments_syntax_highlighting")),
             )
             text.append(arguments)
 
-            text.append(")", style=lair.config.get("style.llm_output.tool_call.function"))
-            text.append(f"  ({tool_call['id']})", style=lair.config.get("style.llm_output.tool_call.id"))
+            text.append(")", style=str(lair.config.get("style.llm_output.tool_call.function")))
+            text.append(f"  ({tool_call['id']})", style=str(lair.config.get("style.llm_output.tool_call.id")))
             self.console.print(text, markup=False, style=background_style, soft_wrap=True, end="")
 
             remaining_characters = self.console.width - len(text) % self.console.width
@@ -341,28 +342,29 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
     def tool_message(self, message: Mapping[str, Any], show_heading: bool = False) -> None:
         """Display a tool response message."""
-        if lair.config.get("style.tool_message.background"):
-            background_style = " on " + lair.config.get("style.tool_message.background")
+        background_val = lair.config.get("style.tool_message.background")
+        if background_val:
+            background_style = " on " + str(background_val)
         else:
             background_style = ""
 
         if show_heading:
             self.console.print(
                 "TOOL" + " " * (self.console.width - 4),
-                style=lair.config.get("style.tool_message.heading") + background_style,
+                style=str(lair.config.get("style.tool_message.heading")) + background_style,
                 soft_wrap=True,
             )
 
         text = rich.text.Text()
-        text.append("- ", style=lair.config.get("style.tool_message.bullet"))
-        text.append(f"({message['tool_call_id']})", style=lair.config.get("style.tool_message.id"))
-        text.append(" -> ", style=lair.config.get("style.tool_message.arrow"))
+        text.append("- ", style=str(lair.config.get("style.tool_message.bullet")))
+        text.append(f"({message['tool_call_id']})", style=str(lair.config.get("style.tool_message.id")))
+        text.append(" -> ", style=str(lair.config.get("style.tool_message.arrow")))
 
         response = self.format_json(
             message["content"],
-            max_length=lair.config.get("style.tool_message.max_response_length"),
-            plain_style=lair.config.get("style.tool_message.response"),
-            enable_highlighting=lair.config.get("style.tool_message.response_syntax_highlighting"),
+            max_length=cast(int | None, lair.config.get("style.tool_message.max_response_length")),
+            plain_style=cast(str | None, lair.config.get("style.tool_message.response")),
+            enable_highlighting=bool(lair.config.get("style.tool_message.response_syntax_highlighting")),
         )
         text.append(response)
         self.console.print(text, end="", soft_wrap=True, style=background_style)
@@ -372,7 +374,7 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
     def user_error(self, message: str) -> None:
         """Display a user-facing error message."""
-        self.print_rich(self.style(message), style=lair.config.get("style.user_error"))
+        self.print_rich(self.style(message), style=str(lair.config.get("style.user_error")))
 
     def system_message(
         self,
@@ -382,12 +384,12 @@ class Reporting(metaclass=ReportingSingletoneMeta):
     ) -> None:
         """Display a system message."""
         if show_heading:
-            self.print_rich("SYSTEM", style=lair.config.get("style.system_message_heading"))
+            self.print_rich("SYSTEM", style=str(lair.config.get("style.system_message_heading")))
 
         if lair.config.get("style.render_markdown") and not disable_markdown:
-            self.print_rich(rich.markdown.Markdown(message), style=lair.config.get("style.system_message"))
+            self.print_rich(rich.markdown.Markdown(message), style=str(lair.config.get("style.system_message")))
         else:
-            self.print_rich(self.style(message), style=lair.config.get("style.system_message"))
+            self.print_rich(self.style(message), style=str(lair.config.get("style.system_message")))
 
     def _llm_output__with_thoughts(self, message: str) -> None:
         sections = re.split(r"(<(?:thought|think|thinking)>.*?</(?:thought|think|thinking)>)", message, flags=re.DOTALL)

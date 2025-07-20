@@ -3,6 +3,7 @@
 import os
 import sys
 from collections.abc import Iterable, Mapping
+from typing import cast
 
 import lair.util
 from lair.logging import logger  # noqa
@@ -46,9 +47,9 @@ class Configuration:
 
     def __init__(self) -> None:
         """Initialize configuration modes and load user overrides."""
-        self.modes = {}
-        self.explicit_mode_settings = {}
-        self.types = {}  # Preserve the valid type for each key (key -> type)
+        self.modes: dict[str, dict[str, object]] = {}
+        self.explicit_mode_settings: dict[str, dict[str, object]] = {}
+        self.types: dict[str, type] = {}  # Preserve the valid type for each key (key -> type)
         self._init_default_mode()
         self.default_settings = self.modes["_default"].copy()  # Immutable copy of the defaults
 
@@ -97,28 +98,29 @@ class Configuration:
         with open(os.path.expanduser("~/.lair/config.yaml"), "w") as fd:
             fd.write(config_yaml)
 
-    def _add_config(self, config: Mapping[str, object]) -> None:
+    def _add_config(self, config: Mapping[str, dict[str, object] | str]) -> None:
         """Merge a configuration dictionary into the existing modes."""
-        default_mode = None
+        default_mode: str | None = None
 
         for mode, mode_config in config.items():
             if mode == "default_mode":  # Default mode definition -- Not a real mode
-                default_mode = config[mode]
+                default_mode = str(config[mode])
             else:
+                mode_dict = dict(cast(Mapping[str, object], mode_config))
                 if mode not in self.modes:
                     # A newly defined mode starts with a copy of the defaults
                     self.modes[mode] = self.modes["_default"].copy()
                     # We also need a copy of only the keys that are explicitly set for inheritance
-                    self.explicit_mode_settings[mode] = mode_config.copy()
+                    self.explicit_mode_settings[mode] = mode_dict.copy()
 
                 # If there is an `_inherit` section, copy each mode's settings in order
-                inherit = _parse_inherit(mode_config.get("_inherit", []))
+                inherit = _parse_inherit(cast(str | Iterable[str], mode_dict.get("_inherit", [])))
 
                 for inherit_from_mode in inherit:
                     self.modes[mode].update(self.explicit_mode_settings.get(inherit_from_mode, {}))
 
                 # Finally, give precedence to the mode's own settings
-                self.modes[mode].update(mode_config)
+                self.modes[mode].update(mode_dict)
 
         if default_mode is None:
             return

@@ -15,7 +15,7 @@ import re
 import shlex
 import subprocess
 import tempfile
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import pdfplumber
 import yaml
@@ -244,7 +244,7 @@ def read_pdf(filename: str, *, enforce_limits: bool = False) -> str:
         The extracted text.
 
     """
-    limit = lair.config.get("misc.text_attachment_max_size")
+    limit = cast(int, lair.config.get("misc.text_attachment_max_size"))
 
     with pdfplumber.open(filename) as pdf_reader:
         contents = ""
@@ -297,7 +297,7 @@ def _get_attachments_content__text_file(filename: str) -> dict[str, str]:
         A message dictionary containing the file text.
 
     """
-    limit = lair.config.get("misc.text_attachment_max_size")
+    limit = cast(int, lair.config.get("misc.text_attachment_max_size"))
     do_truncate = False
     if os.path.getsize(filename) > limit:
         if not lair.config.get("misc.text_attachment_truncate"):
@@ -363,7 +363,7 @@ def edit_content_in_editor(content: str, suffix: str | None = None) -> str | Non
         The modified content, or ``None`` if unchanged.
 
     """
-    editor_cmd = lair.config.get("misc.editor_command") or os.getenv("VISUAL") or os.getenv("EDITOR") or "vi"
+    editor_cmd = str(lair.config.get("misc.editor_command") or os.getenv("VISUAL") or os.getenv("EDITOR") or "vi")
     editor_args = shlex.split(editor_cmd)
 
     with tempfile.NamedTemporaryFile(mode="w+t", delete=False, suffix=suffix) as temp_file:
