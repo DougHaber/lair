@@ -3,12 +3,10 @@
 ### Bug Fixes
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
-- core: Rely exclusively on PyYAML for configuration parsing
 - cli: Reduce complexity of keybindings setup
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
 - tests: Support environments where `openai_local` mode is renamed
-- tests: Add coverage for comfy_caller workflows
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
@@ -16,36 +14,12 @@
 
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
-- tests: Add pytest suite and extended chat interface coverage
-- tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
 - internal: update code for new ruff version
-- tests: Enable coverage and add new utility tests
+- tests: Enforce 90% minimum test coverage and add many new tests.
 - docker: Add lair into youtube image
-- tests: Increase ChatHistory coverage
-- tests: Fix Python tool cleanup path assertions
-- tests: adjust ruff strictness and replace broad exception checks
-- tests: Increase ToolSet coverage
-- deps: Replace pyflakes with ruff for linting
 - documentation: Expand README outpainting example
-- tests: Fix ruff lint issues in test suite
-- tests: Add coverage for all chat sub-commands
-- tests: Add search tool coverage
-- tests: Add extra coverage for chat interface commands
-- tests: Add completer, attachment, and argument parsing coverage
-- tests: Increase coverage for cli.run module
-- tests: Add validation and tool parsing coverage
-- tests: Increase util.core coverage
-- tests: Add ComfyCaller helper and workflow coverage
-- tests: Increase chat interface toolbar and alias handling coverage
-- documentation: Update AGENTS instructions to use Poetry
 - cleanup: refactor workflow and tool call helpers for readability
-- tests: Add FileTool unit tests
-- tests: Add ComfyCaller SSL and URL handling coverage
-- tests: Improve ComfyCaller defaults and workflow coverage
-- tests: Add PythonTool unit tests
-- tests: Increase tmux tool coverage
-- internal: Fix import order to satisfy new ruff checks
-- internal: Add type annotations to fix mypy errors
+- internal: Enforce strict ruff checks, ruff formatting, and mypy validation
 
 # v0.8.1 - Bug fixes
 
@@ -229,4 +203,4 @@
 ### New Features
 - add `chat` module, w/ auto-complete, file based sessions, & markdown rendering
 - add `util` module for CLI scripting with image support
-- tests: Add additional coverage for chat interface
+
