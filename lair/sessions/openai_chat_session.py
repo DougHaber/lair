@@ -169,10 +169,8 @@ class OpenAIChatSession(BaseChatSession):
         """
         if messages is None:
             messages = []
-
             if not disable_system_prompt:
                 messages.append({"role": "system", "content": self.get_system_prompt()})
-
             messages.extend(self.history.get_messages())
 
         tool_messages: list[dict[str, Any]] = []
@@ -181,27 +179,28 @@ class OpenAIChatSession(BaseChatSession):
         while True:
             logger.debug(
                 "OpenAIChatSession(): completions.create("
-                f"model={lair.config.get('model.name')}, len(messages)={len(messages)}), "
-                f"cycle={cycle}"
+                f"model={lair.config.get('model.name')}, len(messages)={len(messages)}), cycle={cycle}"
             )
-            if self.openai is None:
-                raise RuntimeError("OpenAI client is not initialized")
-            answer = self.openai.chat.completions.create(
-                messages=cast(Any, messages),
-                model=cast(str, lair.config.get("model.name")),
-                temperature=cast(float | None, lair.config.get("model.temperature")),
-                max_completion_tokens=cast(int | None, lair.config.get("model.max_tokens")),
-                tools=cast(Iterable[ChatCompletionToolParam], self.tool_set.get_definitions()),
-            )
-
-            message = answer.choices[0].message
-            if message.tool_calls:
-                self._process_tool_calls(message, messages, tool_messages)
-                cycle += 1
-            else:
+            message = self._invoke_once(messages)
+            if not message.tool_calls:
                 self.last_prompt = self.reporting.messages_to_str(messages)
                 content = message.content
                 return (content.strip() if content is not None else ""), tool_messages
+
+            self._process_tool_calls(message, messages, tool_messages)
+            cycle += 1
+
+    def _invoke_once(self, messages: list[dict[str, Any]]) -> ChatCompletionMessage:
+        if self.openai is None:
+            raise RuntimeError("OpenAI client is not initialized")
+        answer = self.openai.chat.completions.create(
+            messages=cast(Any, messages),
+            model=cast(str, lair.config.get("model.name")),
+            temperature=cast(float | None, lair.config.get("model.temperature")),
+            max_completion_tokens=cast(int | None, lair.config.get("model.max_tokens")),
+            tools=cast(Iterable[ChatCompletionToolParam], self.tool_set.get_definitions()),
+        )
+        return answer.choices[0].message
 
     def list_models(self, *, ignore_errors: bool = False) -> list[dict[str, Any]] | None:
         """

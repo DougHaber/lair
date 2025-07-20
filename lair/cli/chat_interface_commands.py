@@ -318,28 +318,31 @@ class ChatInterfaceCommands:
         """
         if len(arguments) > 2:
             self.reporting.user_error("ERROR: usage: /extract [position?] [filename?]")
+            return
+
+        position = arguments[0] if arguments else 0
+        filename = arguments[1] if len(arguments) > 1 else None
+
+        if not isinstance(lair.util.safe_int(position), int):
+            logger.error("Position must be an integer")
+            return
+
+        position = int(position)
+
+        if not self.chat_session.last_response:
+            logger.error("Extract failed: Last response is not set")
+            return
+
+        response = self._get_embedded_response(self.chat_session.last_response, position)
+        if not response:
+            logger.error("Extract failed: No matching section found")
+            return
+
+        if filename:
+            lair.util.save_file(filename, response + "\n")
+            self.reporting.system_message(f"Section saved  ({len(response)} bytes)")
         else:
-            position = arguments[0] if len(arguments) >= 1 else 0
-            filename = arguments[1] if len(arguments) >= 2 else None
-
-            if not isinstance(lair.util.safe_int(position), int):
-                logger.error("Position must be an integer")
-                return
-            else:
-                position = int(position)
-
-            if self.chat_session.last_response:
-                response = self._get_embedded_response(self.chat_session.last_response, position)
-                if response:
-                    if filename is not None:
-                        lair.util.save_file(filename, response + "\n")
-                        self.reporting.system_message(f"Section saved  ({len(response)} bytes)")
-                    else:
-                        self.reporting.print_rich(self.reporting.style(response))
-                else:
-                    logger.error("Extract failed: No matching section found")
-            else:
-                logger.error("Extract failed: Last response is not set")
+            self.reporting.print_rich(self.reporting.style(response))
 
     def command_help(
         self,

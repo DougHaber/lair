@@ -127,19 +127,18 @@ class TmuxTool:
         if window_id is None:
             return None
 
-        # We request window ids as ints, but tmux uses them as strings `@{id}`
-        # This converts them back for the matching
-        if isinstance(window_id, int) or not window_id.startswith("@"):
-            window_id = f"@{window_id}"
+        window_id_str = str(window_id)
+        if not window_id_str.startswith("@"):
+            window_id_str = f"@{window_id_str}"
 
         if self.session is None:
             raise RuntimeError("No tmux session available.")
 
         for window in self.session.list_windows():
-            if window.get("window_id") == window_id:
+            if window.get("window_id") == window_id_str:
                 return window
 
-        raise ValueError(f"Requested window id not found: {window_id}")
+        raise ValueError(f"Requested window id not found: {window_id_str}")
 
     def _ensure_connection(self) -> None:
         """Ensure a tmux server connection exists."""
@@ -244,15 +243,12 @@ class TmuxTool:
 
         """
         try:
-            self._ensure_connection()
+            error = self._validate_run_preconditions(return_mode)
+            if error:
+                return error
+
             if self.session is None:
                 raise RuntimeError("Tmux session not initialized")
-
-            window_limit = cast(int, lair.config.get("tools.tmux.window_limit"))
-            if len(self.session.windows) >= window_limit:
-                return {"error": "Window limit reached. Close an existing window before opening a new one."}
-            elif return_mode not in {"stream", "screen"}:
-                return {"error": "run(): return_mode must be either 'stream' or 'screen'"}
 
             window = self.session.new_window(window_name="lair", attach=False)
             pane: Pane | None = window.attached_pane or window.active_pane
@@ -289,6 +285,18 @@ class TmuxTool:
             }
         except Exception as error:
             return {"error": str(error)}
+
+    def _validate_run_preconditions(self, return_mode: str) -> dict[str, Any] | None:
+        self._ensure_connection()
+        if self.session is None:
+            raise RuntimeError("Tmux session not initialized")
+
+        window_limit = cast(int, lair.config.get("tools.tmux.window_limit"))
+        if len(self.session.windows) >= window_limit:
+            return {"error": "Window limit reached. Close an existing window before opening a new one."}
+        if return_mode not in {"stream", "screen"}:
+            return {"error": "run(): return_mode must be either 'stream' or 'screen'"}
+        return None
 
     def _generate_send_keys_definition(self) -> dict[str, Any]:
         """Return the OpenAI function definition for ``send_keys``."""
@@ -365,14 +373,9 @@ class TmuxTool:
 
         """
         try:
-            self._ensure_connection()
-            if self.session is None:
-                raise RuntimeError("Tmux session not initialized")
-
-            if not self.session.windows:
-                return {"error": "No active tmux windows available."}
-            elif return_mode not in {"stream", "screen"}:
-                return {"error": "send_keys(): return_mode must be either 'stream' or 'screen'"}
+            error = self._validate_send_keys_preconditions(return_mode)
+            if error:
+                return error
 
             window = self.active_window if window_id is None else self._get_window_by_id(window_id)
             if window is None:
@@ -388,6 +391,17 @@ class TmuxTool:
             return self._get_output(return_mode=return_mode, prune_line=keys if enter else None, window_id=window_id)
         except Exception as e:
             return {"error": str(e)}
+
+    def _validate_send_keys_preconditions(self, return_mode: str) -> dict[str, Any] | None:
+        self._ensure_connection()
+        if self.session is None:
+            raise RuntimeError("Tmux session not initialized")
+
+        if not self.session.windows:
+            return {"error": "No active tmux windows available."}
+        if return_mode not in {"stream", "screen"}:
+            return {"error": "send_keys(): return_mode must be either 'stream' or 'screen'"}
+        return None
 
     def _generate_capture_output_definition(self) -> dict[str, Any]:
         """Return the OpenAI function definition for ``capture_output``."""

@@ -66,6 +66,26 @@ class DummySession:
         return list(self.windows)
 
 
+class DummyServer:
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+        self.sessions: list[object] = []
+
+    def list_sessions(self):
+        if self.fail:
+            raise RuntimeError("nope")
+
+
+def _connect_first(tool: TmuxTool, calls: list[str]) -> None:
+    calls.append("c")
+    tool.server = DummyServer(fail=len(calls) == 1)
+    tool.session = DummySession()
+
+
+def _connect_fail() -> None:
+    raise RuntimeError("boom")
+
+
 def setup_config(tmp_path):
     cfg = lair.config
     keys = [
@@ -247,30 +267,13 @@ def test_ensure_connection_and_failure(tmp_path, monkeypatch):
     old = setup_config(tmp_path)
     calls = []
 
-    class DummyServer:
-        def __init__(self, fail=False):
-            self.fail = fail
-            self.sessions = []
-
-        def list_sessions(self):
-            if self.fail:
-                raise RuntimeError("nope")
-
-    def connect_first():
-        calls.append("c")
-        new_tool.server = DummyServer(fail=len(calls) == 1)
-        new_tool.session = DummySession()
-
-    monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_first)
+    monkeypatch.setattr(new_tool, "_connect_to_tmux", lambda: _connect_first(new_tool, calls))
     new_tool.server = None
     new_tool._ensure_connection()
     assert len(calls) == 2  # called twice due to retry
 
-    def connect_fail():
-        raise RuntimeError("boom")
-
     new_tool.server = DummyServer(fail=True)
-    monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_fail)
+    monkeypatch.setattr(new_tool, "_connect_to_tmux", _connect_fail)
     with pytest.raises(RuntimeError):
         new_tool._ensure_connection()
     restore_config(old)

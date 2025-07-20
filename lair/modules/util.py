@@ -174,24 +174,22 @@ class Util:
             list[dict[str, Any]]: Messages prepared for sending to the model.
 
         """
-        # Read the user "content" message
-        message = None
-        if arguments.pipe:
-            message = sys.stdin.read()
-        elif arguments.content_file:
-            message = self._read_file(arguments.content_file)
-        elif arguments.content:
-            message = arguments.content
+        message = (
+            sys.stdin.read()
+            if arguments.pipe
+            else self._read_file(arguments.content_file)
+            if arguments.content_file
+            else arguments.content
+        )
 
-        if message:  # These extra instructions helps a lot in some models
+        if message:
             message = "CONTENT is found below. Everything above is instructions and rules:\n" + message
 
         messages: list[dict[str, Any]] = []
+        attachment_content_parts: list[dict[str, object]] = []
         if arguments.attachments:
             attachment_content_parts, attachment_messages = lair.util.get_attachments_content(arguments.attachments)
             messages.extend(attachment_messages)
-        else:
-            attachment_content_parts = []
 
         # Add the regular message as a standard message, or image sections if there are images
 
@@ -233,20 +231,29 @@ class Util:
                 logger.error(f"Unknown session: {arguments.session}")
                 sys.exit(1)
 
-            if arguments.read_only_session:
-                logger.error("Unable to create a new session with the --read-only-session flag.")
-                sys.exit(1)
+            return self._create_session(session_manager, chat_session, arguments)
 
-            if not session_manager.is_alias_available(arguments.session):
-                if isinstance(lair.util.safe_int(arguments.session), int):
-                    logger.error("Failed to create new session. Session aliases may not be integers.")
-                else:
-                    logger.error("Failed to create new session. Alias is already used.")
-                sys.exit(1)
+        return session_manager
 
-            chat_session.session_alias = arguments.session
-            session_manager.add_from_chat_session(chat_session)
+    def _create_session(
+        self,
+        session_manager: lair.sessions.SessionManager,
+        chat_session: BaseChatSession,
+        arguments: argparse.Namespace,
+    ) -> lair.sessions.SessionManager:
+        if arguments.read_only_session:
+            logger.error("Unable to create a new session with the --read-only-session flag.")
+            sys.exit(1)
 
+        if not session_manager.is_alias_available(arguments.session):
+            if isinstance(lair.util.safe_int(arguments.session), int):
+                logger.error("Failed to create new session. Session aliases may not be integers.")
+            else:
+                logger.error("Failed to create new session. Alias is already used.")
+            sys.exit(1)
+
+        chat_session.session_alias = arguments.session
+        session_manager.add_from_chat_session(chat_session)
         return session_manager
 
     def run(self, arguments: argparse.Namespace) -> None:

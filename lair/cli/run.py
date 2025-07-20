@@ -107,6 +107,14 @@ def set_config_from_arguments(overrides: list[str] | None) -> None:
     lair.events.fire("config.update")
 
 
+def _handle_error(error: Exception, arguments_defined: bool) -> None:
+    logger.error(f"An error has occurred: ({error})\n")
+    if not arguments_defined or lair.util.is_debug_enabled():
+        traceback.print_exc()
+        sys.exit(1)
+    sys.exit("Enable debugging (--debug) for more details")
+
+
 def start() -> None:
     """Initialize logging, parse arguments, and run the chosen subcommand."""
     try:
@@ -131,9 +139,4 @@ def start() -> None:
     except KeyboardInterrupt:
         sys.exit("Received interrupt.  Exiting")
     except Exception as error:
-        logger.error(f"An error has occurred: ({error})\n")
-        if "arguments" not in locals() or lair.util.is_debug_enabled():
-            traceback.print_exc()
-            sys.exit(1)
-        else:
-            sys.exit("Enable debugging (--debug) for more details")
+        _handle_error(error, "arguments" in locals())

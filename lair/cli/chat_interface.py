@@ -102,25 +102,29 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         create_session_if_missing: bool,
     ) -> None:
         """Prepare the initial chat session."""
-        if id_or_alias:
-            try:
-                self._switch_to_session(id_or_alias)
-            except lair.sessions.UnknownSessionException:
-                if create_session_if_missing:
-                    if not self.session_manager.is_alias_available(id_or_alias):
-                        if isinstance(lair.util.safe_int(id_or_alias), int):
-                            logger.error("Failed to create new session. Session aliases may not be integers.")
-                        else:
-                            logger.error("Failed to create new session. Alias is already used.")
-                        sys.exit(1)
-
-                    self.chat_session.session_alias = id_or_alias
-                    self.session_manager.add_from_chat_session(self.chat_session)
-                else:
-                    logger.error(f"Unknown session: {id_or_alias}")
-                    sys.exit(1)
-        else:
+        if not id_or_alias:
             self.session_manager.add_from_chat_session(self.chat_session)
+            return
+
+        try:
+            self._switch_to_session(id_or_alias)
+            return
+        except lair.sessions.UnknownSessionException:
+            pass
+
+        if not create_session_if_missing:
+            logger.error(f"Unknown session: {id_or_alias}")
+            sys.exit(1)
+
+        if not self.session_manager.is_alias_available(id_or_alias):
+            if isinstance(lair.util.safe_int(id_or_alias), int):
+                logger.error("Failed to create new session. Session aliases may not be integers.")
+            else:
+                logger.error("Failed to create new session. Alias is already used.")
+            sys.exit(1)
+
+        self.chat_session.session_alias = id_or_alias
+        self.session_manager.add_from_chat_session(self.chat_session)
 
     def _get_shortcut_details(self) -> dict[str, str]:
         """Return a mapping of shortcuts to descriptions."""
