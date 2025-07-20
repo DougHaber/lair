@@ -1,11 +1,40 @@
+"""Utility methods for reporting chat interface information."""
+
 import re
+from collections.abc import Iterator
+from typing import Any
 
 import lair
-from lair.logging import logger  # noqa
+from lair.logging import logger
 
 
 class ChatInterfaceReports:
-    def _iter_config_rows(self, show_only_differences, filter_regex, baseline):
+    """Mixin that provides chat report printing helpers."""
+
+    chat_session: Any
+    session_manager: Any
+    commands: dict[str, Any]
+    reporting: Any
+    _models: list[dict[str, Any]] | None
+    _get_shortcut_details: Any
+
+    def _iter_config_rows(
+        self,
+        show_only_differences: bool,
+        filter_regex: str | None,
+        baseline: str | None,
+    ) -> Iterator[list[str]]:
+        """Generate formatted configuration rows.
+
+        Args:
+            show_only_differences: If ``True`` only return values that differ from the baseline.
+            filter_regex: Optional regular expression used to filter keys.
+            baseline: Name of the baseline mode to compare against.
+
+        Returns:
+            Iterator over ``[key, formatted_value]`` pairs for display.
+
+        """
         default_settings = lair.config.default_settings if baseline is None else lair.config.modes[baseline]
         modified_style = lair.config.get("chat.set_command.modified_style")
         unmodified_style = lair.config.get("chat.set_command.unmodified_style")
@@ -23,7 +52,21 @@ class ChatInterfaceReports:
 
             yield [key, display_value]
 
-    def print_config_report(self, *, show_only_differences=False, filter_regex=None, baseline=None):
+    def print_config_report(
+        self,
+        *,
+        show_only_differences: bool = False,
+        filter_regex: str | None = None,
+        baseline: str | None = None,
+    ) -> None:
+        """Display the current configuration table.
+
+        Args:
+            show_only_differences: When ``True`` hide values that match the baseline.
+            filter_regex: Regex used to filter configuration keys.
+            baseline: Mode to compare values against. If ``None``, compares against defaults.
+
+        """
         if baseline:
             if baseline not in lair.config.modes:
                 logger.error(f"Unknown mode: {baseline}")
@@ -39,7 +82,8 @@ class ChatInterfaceReports:
         else:
             self.reporting.system_message("No matching keys")
 
-    def print_current_model_report(self):
+    def print_current_model_report(self) -> None:
+        """Print information about the active model."""
         active_config = lair.config.active
         self.reporting.table_system(
             [
@@ -50,7 +94,8 @@ class ChatInterfaceReports:
             ]
         )
 
-    def print_help(self):
+    def print_help(self) -> None:
+        """Display available commands and shortcuts."""
         rows = []
         for command, details in sorted(self.commands.items()):
             rows.append([command, details["description"]])
@@ -63,7 +108,13 @@ class ChatInterfaceReports:
 
         self.reporting.table_system(rows)
 
-    def print_history(self, *, num_messages=None):
+    def print_history(self, *, num_messages: int | None = None) -> None:
+        """Print the conversation history.
+
+        Args:
+            num_messages: Optional number of recent messages to display. If ``None`` all messages are shown.
+
+        """
         messages = self.chat_session.history.get_messages()
 
         if not messages:
@@ -74,7 +125,13 @@ class ChatInterfaceReports:
             for message in messages:
                 self.reporting.message(message)
 
-    def print_models_report(self, update_cache=False):
+    def print_models_report(self, update_cache: bool = False) -> None:
+        """Show available models.
+
+        Args:
+            update_cache: If ``True`` refresh the cached model list.
+
+        """
         models = sorted(self.chat_session.list_models(), key=lambda m: m["id"])
         if update_cache:  # Update the cached list of models with the latest results
             self._models = models
@@ -84,7 +141,8 @@ class ChatInterfaceReports:
         }
         self.reporting.table_from_dicts_system(models, column_formatters=column_formatters)
 
-    def print_modes_report(self):
+    def print_modes_report(self) -> None:
+        """Display all available configuration modes."""
         rows = []
         for mode in sorted(filter(lambda m: not m.startswith("_"), lair.config.modes.keys())):
             if mode == lair.config.active_mode:
@@ -96,7 +154,8 @@ class ChatInterfaceReports:
 
         self.reporting.table_system(rows)
 
-    def print_sessions_report(self):
+    def print_sessions_report(self) -> None:
+        """List all sessions with basic metadata."""
         current_session_id = self.chat_session.session_id
         rows = []
         for details in sorted(self.session_manager.all_sessions(), key=lambda s: s["id"]):
@@ -124,7 +183,8 @@ class ChatInterfaceReports:
                 column_names=["id", "alias", "mode", "model", "title", "num_messages"],
             )
 
-    def print_tools_report(self):
+    def print_tools_report(self) -> None:
+        """Display all available tools and their status."""
         tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: (m["class_name"], m["name"]))
         column_formatters = {
             "enabled": lambda v: self.reporting.color_bool(v, true_str="yes", false_str="-", false_style="dim"),
