@@ -9,7 +9,11 @@ import pytest
 
 import lair
 from lair.modules.comfy import Comfy
-from lair.util.argparse import ArgumentParserHelpException, ErrorRaisingArgumentParser
+from lair.util.argparse import (
+    ArgumentParserExitException,
+    ArgumentParserHelpException,
+    ErrorRaisingArgumentParser,
+)
 
 
 class DummyComfyCaller:
@@ -401,3 +405,91 @@ def test_on_chat_init_argument_error(monkeypatch):
     module._on_chat_init(chat_interface)
     holder["func2"]("/comfy", [], "")
     assert logs == ["bad"]
+
+
+def test_comfy_parser_defaults(monkeypatch):
+    class LocalCaller(DummyComfyCaller):
+        def __init__(self):
+            super().__init__()
+            self.defaults.update(
+                {
+                    "hunyuan-video-t2v": {
+                        "clip_name_1": "c1",
+                        "clip_name_2": "c2",
+                        "frame_rate": 24,
+                        "num_frames": 8,
+                        "guidance_scale": 1.0,
+                        "height": 10,
+                        "width": 10,
+                        "model_name": "model",
+                        "model_weight_dtype": "fp16",
+                        "sampler": "euler",
+                        "scheduler": "normal",
+                        "seed": None,
+                    },
+                    "ltxv-i2v": {
+                        "cfg": 1.0,
+                        "clip_name": "clip",
+                        "frame_rate_save": 30,
+                        "num_frames": 8,
+                        "model_name": "model",
+                        "steps": 1,
+                        "sampler": "euler",
+                        "scheduler": "normal",
+                        "seed": None,
+                        "output_format": "mp4",
+                        "frame_rate_conditioning": 30,
+                    },
+                    "ltxv-prompt": {"florence_seed": None},
+                }
+            )
+
+    monkeypatch.setattr(lair.events, "subscribe", lambda *a, **k: None)
+    dummy = SimpleNamespace(ComfyCaller=LocalCaller)
+    monkeypatch.setitem(sys.modules, "lair.comfy_caller", dummy)
+    monkeypatch.setattr(lair, "comfy_caller", dummy, raising=False)
+
+    config = {
+        "comfy.image.output_file": "img.png",
+        "comfy.hunyuan_video.output_file": "video.mp4",
+        "comfy.ltxv_i2v.output_file": "i2v.mp4",
+        "comfy.ltxv_prompt.output_file": "prompt.txt",
+        "comfy.url": "http://server",
+    }
+    monkeypatch.setattr(lair.config, "get", lambda key: config.get(key))
+
+    parser = argparse.ArgumentParser(prog="test", add_help=False)
+    Comfy(parser)
+
+    assert parser.parse_args(["image"]).output_file == "img.png"
+    assert parser.parse_args(["hunyuan-video-t2v"]).output_file == "video.mp4"
+    assert parser.parse_args(["ltxv-i2v", "-i", "in.png"]).output_file == "i2v.mp4"
+    assert parser.parse_args(["ltxv-prompt", "-i", "in.png"]).output_file == "prompt.txt"
+    assert parser.parse_args(["outpaint", "in.png"]).outpaint_files == ["in.png"]
+    assert parser.parse_args(["upscale", "in.png"]).scale_files == ["in.png"]
+
+
+def test_comfy_chat_command_exit(monkeypatch):
+    module = make_module()
+
+    class ExitParser:
+        def parse_args(self, _args):
+            raise ArgumentParserExitException()
+
+    monkeypatch.setattr(module, "_get_chat_command_parser", lambda: ExitParser())
+    called = []
+    monkeypatch.setattr(module, "run", lambda *_a, **_k: called.append(True))
+    interface = SimpleNamespace(reporting=SimpleNamespace(error=lambda *a, **k: None))
+    module._comfy_chat_command(interface, ["image"])
+    assert not called
+
+
+def test_run_upscale(monkeypatch):
+    caller = DummyComfyCaller()
+    module = make_module(caller)
+    args = SimpleNamespace(comfy_command="upscale", comfy_url="http://server", scale_files=["f.png"])
+    captured = []
+    monkeypatch.setattr(module, "run_workflow_upscale", lambda *a, **k: captured.append(True))
+    module.run(args)
+    assert captured == [True]
+    assert caller.set_url_called == "http://server"
