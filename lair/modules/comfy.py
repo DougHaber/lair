@@ -49,7 +49,7 @@ class Comfy:
         self._add_argparse_outpaint(sub_parser)
         self._add_argparse_upscale(sub_parser)
 
-        lair.events.subscribe("chat.init", lambda d: self._on_chat_init(d), instance=self)
+        lair.events.subscribe("chat.init", lambda d: self._on_chat_init(cast(ChatInterface, d)), instance=self)
 
     def _add_argparse_image(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("image", help="Basic image creation workflow")
@@ -657,7 +657,10 @@ class Comfy:
             logger.warning(f"Skipping existing file: {output_filename}")
             return
 
-        output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+        output = cast(
+            Sequence[object],
+            self.comfy.run_workflow(arguments.comfy_command, **function_arguments),
+        )
         if not output:
             raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
         self._save_output(output, output_filename, single_output=True)
@@ -689,7 +692,7 @@ class Comfy:
             defaults,
             function_arguments,
             queue=[*arguments.outpaint_files],
-            output_filename_template=lair.config.get("comfy.outpaint.output_filename"),
+            output_filename_template=cast(str, lair.config.get("comfy.outpaint.output_filename")),
         )
 
     def run_workflow_upscale(
@@ -704,7 +707,7 @@ class Comfy:
             defaults,
             function_arguments,
             queue=[*arguments.scale_files],
-            output_filename_template=lair.config.get("comfy.upscale.output_filename"),
+            output_filename_template=cast(str, lair.config.get("comfy.upscale.output_filename")),
         )
 
     def run_workflow_default(
@@ -719,7 +722,10 @@ class Comfy:
         single_output = arguments.repeat == 1 and batch_size == 1
 
         for i in range(0, arguments.repeat):
-            output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+            output = cast(
+                Sequence[object],
+                self.comfy.run_workflow(arguments.comfy_command, **function_arguments),
+            )
 
             if output is None or len(output) == 0:
                 raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
@@ -732,7 +738,7 @@ class Comfy:
         arguments_dict = vars(arguments)
         # If a prompt-file is provided, set the prompt attribute from that
         if arguments_dict.get("prompt_file") is not None:
-            arguments_dict["prompt"] = lair.util.slurp_file(arguments_dict.get("prompt_file"))
+            arguments_dict["prompt"] = lair.util.slurp_file(cast(str, arguments_dict.get("prompt_file")))
             del arguments_dict["prompt_file"]
         defaults = self.comfy.defaults[arguments.comfy_command]
         function_arguments = {
