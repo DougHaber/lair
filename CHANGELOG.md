@@ -3,7 +3,7 @@
 ### Bug Fixes
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
-- config: Provide simple YAML parser when PyYAML is unavailable
+- core: Rely exclusively on PyYAML for configuration parsing
 - cli: Reduce complexity of keybindings setup
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly

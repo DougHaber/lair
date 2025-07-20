@@ -10,7 +10,6 @@ modules_to_stub = [
     "trafilatura",
     "PIL",
     "duckduckgo_search",
-    "yaml",
     "requests",
     "libtmux",
     "lmdb",
@@ -25,8 +24,6 @@ for name in modules_to_stub:
         # pdfplumber is only used in tests and may not be installed. Provide a
         # minimal stub so monkeypatching works without raising AttributeError.
         module.open = lambda *args, **kwargs: None
-    elif name == "yaml":
-        module.safe_load = lambda *a, **k: {}
 
 
 def pytest_collection_modifyitems(config, items):

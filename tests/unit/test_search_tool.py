@@ -51,7 +51,7 @@ def make_tool(monkeypatch):
             self.params.append(("news", query, max_results))
             return []
 
-    monkeypatch.setattr(lair.components.tools.search_tool.duckduckgo_search, "DDGS", DummyDDGS)
+    monkeypatch.setattr(lair.components.tools.search_tool, "DDGS", DummyDDGS)
     return SearchTool()
 
 
