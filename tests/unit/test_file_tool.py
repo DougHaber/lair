@@ -1,6 +1,8 @@
 import os
-import lair
+
 import pytest
+
+import lair
 from lair.components.tools.file_tool import FileTool
 
 
@@ -78,7 +80,7 @@ def test_directory_creation_and_removal(file_tool):
 
 def test_generate_definitions(file_tool):
     defs = file_tool._generate_list_directory_definition()
-    assert "list_directory" == defs["function"]["name"]
+    assert defs["function"]["name"] == "list_directory"
     write_def = file_tool._generate_write_file_definition()
     assert lair.config.get("tools.file.path") in write_def["function"]["description"]
 
@@ -120,7 +122,8 @@ def test_read_file_skips_directories(file_tool):
     base = lair.config.get("tools.file.path")
     dir1 = os.path.join(base, "dir")
     os.makedirs(dir1)
-    open(os.path.join(dir1, "f.txt"), "w").write("data")
+    with open(os.path.join(dir1, "f.txt"), "w") as fh:
+        fh.write("data")
     os.makedirs(os.path.join(base, "dir2"))
     res = file_tool.read_file("**")
     assert list(res["file_content"].values()) == ["data"]
