@@ -1,12 +1,11 @@
-import gc
 import copy
+import gc
 
 import pytest
 
 import lair
-from lair.components.history.chat_history import ChatHistory
 from lair.components.history import schema
-from lair.components.history.chat_history import logger
+from lair.components.history.chat_history import ChatHistory, logger
 
 
 @pytest.fixture(autouse=True)

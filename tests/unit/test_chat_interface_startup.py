@@ -1,7 +1,9 @@
-import pytest
 import types
-import lair
+
 import prompt_toolkit
+import pytest
+
+import lair
 from tests.helpers.chat_interface import make_interface
 
 

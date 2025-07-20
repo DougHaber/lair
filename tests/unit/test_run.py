@@ -1,5 +1,7 @@
 import argparse
+import importlib
 import types
+
 import pytest
 
 import lair
@@ -26,6 +28,7 @@ def make_loader(modules):
 
 
 def test_init_subcommands_success(monkeypatch):
+    importlib.reload(run)
     modules = {"chat": {"description": "desc", "class": DummyCommand, "aliases": ["alias"]}}
     loader_cls = make_loader(modules)
     monkeypatch.setattr(run.lair.module_loader, "ModuleLoader", loader_cls)
@@ -41,6 +44,7 @@ def test_init_subcommands_success(monkeypatch):
 
 
 def test_init_subcommands_failure(monkeypatch):
+    importlib.reload(run)
     class BadCommand:
         def __init__(self, parser):
             raise RuntimeError("boom")
