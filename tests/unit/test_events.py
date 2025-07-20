@@ -1,5 +1,6 @@
-import lair.events as events
 import pytest
+
+import lair.events as events
 
 
 def test_subscribe_and_fire():

@@ -1,4 +1,5 @@
 import types
+
 import pytest
 
 import lair.logging as logging_mod
@@ -30,7 +31,7 @@ def test_module_loader_register(tmp_path):
     loader._register_module(mod, tmp_path)
     name = loader._get_module_name(mod, tmp_path)
     assert name in loader.modules
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="repeat name"):
         loader._register_module(mod, tmp_path)
 
 
@@ -39,7 +40,7 @@ def test_module_loader_validate(tmp_path):
     mod = make_dummy_module(tmp_path)
     loader._validate_module(mod)
     bad = types.ModuleType("bad")
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="_module_info not defined"):
         loader._validate_module(bad)
 
 def test_get_module_files(tmp_path):

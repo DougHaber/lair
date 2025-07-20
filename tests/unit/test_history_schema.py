@@ -1,5 +1,5 @@
-import pytest
 import jsonschema
+import pytest
 
 from lair.components.history import schema
 
