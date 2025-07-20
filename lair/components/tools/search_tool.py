@@ -1,12 +1,19 @@
+"""Tools for performing DuckDuckGo web and news searches."""
+
+from typing import Any
+
 import requests
 import trafilatura
 from ddgs import DDGS  # Duck Duck Go Search
 
 import lair
+from lair.components.tools.tool_set import ToolSet
 from lair.logging import logger
 
 
 class SearchTool:
+    """Tool for performing web and news searches using DuckDuckGo."""
+
     name = "search"
     SEARCH_WEB_DEFINITION = {
         "type": "function",
@@ -39,10 +46,17 @@ class SearchTool:
         },
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Instantiate the underlying DuckDuckGo search client."""
         self.ddgs = DDGS()
 
-    def add_to_tool_set(self, tool_set):
+    def add_to_tool_set(self, tool_set: ToolSet) -> None:
+        """Register the search tools with a :class:`ToolSet` instance.
+
+        Args:
+            tool_set: The :class:`ToolSet` to register the tools with.
+
+        """
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name="search_web",
@@ -58,7 +72,17 @@ class SearchTool:
             handler=self.search_news,
         )
 
-    def _get_content(self, url):
+    def _get_content(self, url: str) -> str:
+        """Fetch content from a URL and extract readable text.
+
+        Args:
+            url: The URL to download.
+
+        Returns:
+            The extracted text truncated to ``tools.search.max_length`` characters
+            or an empty string if extraction fails.
+
+        """
         max_length = lair.config.get("tools.search.max_length")
 
         try:
@@ -77,7 +101,17 @@ class SearchTool:
             logger.debug(f"Failed to get content from {url}: {e}")
             return ""
 
-    def search_web(self, query):
+    def search_web(self, query: str) -> dict[str, Any]:
+        """Perform a DuckDuckGo web search.
+
+        Args:
+            query: The search query string.
+
+        Returns:
+            A dictionary containing the search results or an ``error`` key on
+            failure.
+
+        """
         max_results = lair.config.get("tools.search.max_results")
 
         try:
@@ -98,7 +132,17 @@ class SearchTool:
             logger.warning(f"search_web(): Encountered error: {error}")
             return {"error": str(error)}
 
-    def search_news(self, query):
+    def search_news(self, query: str) -> dict[str, Any]:
+        """Perform a DuckDuckGo news search.
+
+        Args:
+            query: The news search query string.
+
+        Returns:
+            A dictionary containing the search results or an ``error`` key on
+            failure.
+
+        """
         max_results = lair.config.get("tools.search.max_results")
 
         try:
