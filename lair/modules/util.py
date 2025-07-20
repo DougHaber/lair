@@ -1,19 +1,47 @@
+"""Utility module providing a thin wrapper around LLM chat sessions."""
+
+from __future__ import annotations
+
+import argparse
 import re
 import sys
+from collections.abc import Iterable
+from typing import Any
 
 import lair
 import lair.cli
 import lair.reporting
+import lair.sessions
 import lair.util
 from lair.logging import logger  # noqa
+from lair.sessions.base_chat_session import BaseChatSession
 
 
-def _module_info():
-    return {"description": "Make simple calls to LLMs", "class": Util, "tags": [], "aliases": []}
+def _module_info() -> dict[str, Any]:
+    """Return metadata describing this module.
+
+    Returns:
+        dict[str, Any]: Information used by the module loader.
+
+    """
+    return {
+        "description": "Make simple calls to LLMs",
+        "class": Util,
+        "tags": [],
+        "aliases": [],
+    }
 
 
 class Util:
-    def __init__(self, parser):
+    """Expose utility commands for interacting with chat models."""
+
+    def __init__(self, parser: argparse.ArgumentParser) -> None:
+        """Initialize argument parser options for the ``util`` command.
+
+        Args:
+            parser: The argument parser to register options with.
+
+        """
         parser.add_argument(
             "-a",
             "--attach-file",
@@ -54,7 +82,26 @@ class Util:
         )
         parser.add_argument("-t", "--enable-tools", action="store_true", help="Allow the model to call tools")
 
-    def call_llm(self, chat_session, *, instructions, user_messages, enable_tools=True):
+    def call_llm(
+        self,
+        chat_session: BaseChatSession,
+        *,
+        instructions: str,
+        user_messages: Iterable[dict[str, Any]],
+        enable_tools: bool = True,
+    ) -> str:
+        """Send the composed messages to the LLM.
+
+        Args:
+            chat_session: The chat session to send messages through.
+            instructions: System level instructions for the model.
+            user_messages: Additional user messages to include.
+            enable_tools: Whether tool calls are permitted.
+
+        Returns:
+            str: The model's response.
+
+        """
         messages = [
             lair.util.get_message("user", instructions),
             *user_messages,
@@ -65,25 +112,61 @@ class Util:
 
         return response
 
-    def clean_response(self, response):
+    def clean_response(self, response: str) -> str:
+        """Strip formatting markup from the LLM response.
+
+        Args:
+            response: The raw response returned by the model.
+
+        Returns:
+            str: The cleaned response.
+
+        """
         response = re.sub(r"^```.*\n?", "", response, flags=re.MULTILINE)
 
         return response
 
-    def _read_file(self, filename):
+    def _read_file(self, filename: str) -> str:
+        """Return the contents of ``filename``.
+
+        Args:
+            filename: Path to the file to read.
+
+        Returns:
+            str: The file contents.
+
+        """
         with open(filename) as fd:
             return fd.read()
 
-    def _get_instructions(self, arguments):
+    def _get_instructions(self, arguments: argparse.Namespace) -> str:
+        """Return instructions text from command line arguments.
+
+        Args:
+            arguments: Parsed command-line arguments.
+
+        Returns:
+            str: The instruction text.
+
+        """
         if arguments.instructions_file:
             return self._read_file(arguments.instructions_file)
-        elif arguments.instructions:
+        if arguments.instructions:
             return arguments.instructions
-        else:
-            logger.error("Either --instructions or --instructions-file must be proved")
-            sys.exit(1)
 
-    def _get_user_messages(self, arguments):
+        logger.error("Either --instructions or --instructions-file must be proved")
+        sys.exit(1)
+
+    def _get_user_messages(self, arguments: argparse.Namespace) -> list[dict[str, Any]]:
+        """Build the list of user messages based on the provided arguments.
+
+        Args:
+            arguments: Parsed command-line arguments.
+
+        Returns:
+            list[dict[str, Any]]: Messages prepared for sending to the model.
+
+        """
         # Read the user "content" message
         message = None
         if arguments.pipe:
@@ -117,7 +200,19 @@ class Util:
 
         return messages
 
-    def _init_session_manager(self, chat_session, arguments):
+    def _init_session_manager(
+        self, chat_session: BaseChatSession, arguments: argparse.Namespace
+    ) -> lair.sessions.SessionManager | None:
+        """Prepare a session manager based on user options.
+
+        Args:
+            chat_session: The chat session in use.
+            arguments: Parsed command-line arguments.
+
+        Returns:
+            Optional[lair.sessions.SessionManager]: The session manager instance or ``None``.
+
+        """
         if not arguments.session:
             chat_session.session_title = "N/A"  # Prevent wasteful auto-title generation
             return None
@@ -146,7 +241,13 @@ class Util:
 
         return session_manager
 
-    def run(self, arguments):
+    def run(self, arguments: argparse.Namespace) -> None:
+        """Execute the util command with the provided arguments.
+
+        Args:
+            arguments: Parsed command-line arguments.
+
+        """
         chat_session = lair.sessions.get_chat_session(
             session_type=lair.config.get("session.type"),
         )
