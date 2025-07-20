@@ -45,7 +45,7 @@ def safe_dump_json(document: object) -> str:
     return json.dumps(document, default=fix_date)
 
 
-def safe_int(number: str | int | float) -> int | str | float:
+def safe_int(number: str | float) -> int | str | float:
     """Convert a value to ``int`` if possible.
 
     Args:

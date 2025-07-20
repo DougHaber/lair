@@ -1,10 +1,9 @@
 """Entry point for the ``lair`` command line interface."""
 
-from typing import Any, Dict, List, Tuple
-
 import argparse
 import sys
 import traceback
+from typing import Any, Dict, List, Tuple
 
 import lair.logging
 import lair.module_loader
@@ -21,8 +20,8 @@ def init_subcommands(parent_parser: argparse.ArgumentParser) -> Dict[str, Any]:
 
     Returns:
         Mapping of command names and aliases to instantiated command objects.
-    """
 
+    """
     sub_parsers = parent_parser.add_subparsers(dest="subcommand")
 
     module_loader = lair.module_loader.ModuleLoader()
@@ -48,6 +47,7 @@ def parse_arguments() -> Tuple[argparse.Namespace, Any]:
 
     Returns:
         A tuple containing the parsed arguments and the subcommand object to run.
+
     """
 
     class HelpFormatter(argparse.HelpFormatter):
@@ -88,8 +88,8 @@ def set_config_from_arguments(overrides: List[str] | None) -> None:
 
     Args:
         overrides: A list of ``key=value`` strings to apply, or ``None``.
-    """
 
+    """
     if not overrides:
         return
 
@@ -106,7 +106,6 @@ def set_config_from_arguments(overrides: List[str] | None) -> None:
 
 def start() -> None:
     """Initialize logging, parse arguments, and run the chosen subcommand."""
-
     try:
         lair.logging.init_logging()
         arguments, subcommand = parse_arguments()
