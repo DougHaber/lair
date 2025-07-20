@@ -1,6 +1,7 @@
+import importlib
 import sys
 import types
-import importlib
+
 from lair.components.history.chat_history import ChatHistory
 from lair.logging import logger
 

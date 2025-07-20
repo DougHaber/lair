@@ -1,8 +1,10 @@
 import os
-import time
 import shutil
-import lair
+import time
+
 import prompt_toolkit
+
+import lair
 from tests.helpers.chat_interface import make_interface
 
 

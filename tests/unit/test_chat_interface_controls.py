@@ -1,10 +1,12 @@
-import types
 import os
 import shutil
 import time
-import pytest
-import lair
+import types
+
 import prompt_toolkit
+import pytest
+
+import lair
 from tests.helpers.chat_interface import make_interface
 
 
