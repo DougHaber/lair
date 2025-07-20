@@ -35,7 +35,7 @@ types-jsonschema = "^4.24.0.20250708"
 line-length = 120
 
 [tool.ruff.lint.mccabe]
-max-complexity = 7
+max-complexity = 5
 
 [tool.ruff.format]
 quote-style = "double"
