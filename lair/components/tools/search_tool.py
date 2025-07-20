@@ -1,6 +1,6 @@
 """Tools for performing DuckDuckGo web and news searches."""
 
-from typing import Any
+from typing import Any, cast
 
 import requests
 import trafilatura
@@ -83,10 +83,11 @@ class SearchTool:
             or an empty string if extraction fails.
 
         """
-        max_length = lair.config.get("tools.search.max_length")
+        max_length = cast(int, lair.config.get("tools.search.max_length"))
 
         try:
-            response = requests.get(url, timeout=lair.config.get("tools.search.timeout"))
+            timeout = cast(float, lair.config.get("tools.search.timeout"))
+            response = requests.get(url, timeout=timeout)
             response.raise_for_status()
 
             text_content = trafilatura.extract(response.text, include_comments=False, include_tables=False)
@@ -112,7 +113,7 @@ class SearchTool:
             failure.
 
         """
-        max_results = lair.config.get("tools.search.max_results")
+        max_results = cast(int, lair.config.get("tools.search.max_results"))
 
         try:
             results = self.ddgs.text(query, max_results=max_results * 4)
@@ -143,7 +144,7 @@ class SearchTool:
             failure.
 
         """
-        max_results = lair.config.get("tools.search.max_results")
+        max_results = cast(int, lair.config.get("tools.search.max_results"))
 
         try:
             results = self.ddgs.news(query, max_results=max_results * 4)
