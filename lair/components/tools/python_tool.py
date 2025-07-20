@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import traceback
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import lair
 from lair.components.tools.tool_set import ToolSet
@@ -147,7 +147,7 @@ class PythonTool:
                     "-d",
                     "-v",
                     f"{shlex.quote(temp_file_path)}:{shlex.quote(container_script_path)}:ro",
-                    shlex.quote(lair.config.get("tools.python.docker_image")),
+                    shlex.quote(cast(str, lair.config.get("tools.python.docker_image"))),
                     "python",
                     shlex.quote(container_script_path),
                 ],
@@ -164,7 +164,7 @@ class PythonTool:
                     [shlex.quote(self._docker), "wait", shlex.quote(container_id)],
                     capture_output=True,
                     text=True,
-                    timeout=lair.config.get("tools.python.timeout"),
+                    timeout=cast(float, lair.config.get("tools.python.timeout")),
                 )
             except subprocess.TimeoutExpired:
                 self._cleanup_container(container_id)
