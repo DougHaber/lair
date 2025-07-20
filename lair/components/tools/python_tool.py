@@ -23,7 +23,8 @@ class PythonTool:
         self._docker = shutil.which("docker") or "docker"
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
-        """Register this tool with a :class:`ToolSet` instance.
+        """
+        Register this tool with a :class:`ToolSet` instance.
 
         Args:
             tool_set: The :class:`ToolSet` to register the tool with.
@@ -68,7 +69,8 @@ class PythonTool:
         }
 
     def _cleanup_container(self, container_id: str) -> None:
-        """Force remove a container by ID.
+        """
+        Force remove a container by ID.
 
         Args:
             container_id: The ID of the Docker container to remove.
@@ -94,7 +96,8 @@ class PythonTool:
         stderr: Optional[str] = None,
         exit_status: Optional[int] = None,
     ) -> dict[str, Any]:
-        """Normalize subprocess output for return to the caller.
+        """
+        Normalize subprocess output for return to the caller.
 
         Args:
             error: Error message to include.
@@ -120,7 +123,8 @@ class PythonTool:
         return output
 
     def run_python(self, script: str) -> dict[str, Any]:
-        """Execute the provided Python script inside a temporary Docker container.
+        """
+        Execute the provided Python script inside a temporary Docker container.
 
         Args:
             script: The Python source code to run.

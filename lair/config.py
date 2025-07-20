@@ -22,7 +22,8 @@ class ConfigInvalidTypeError(Exception):
 
 
 def _parse_inherit(value: str | Iterable[str]) -> list[str]:
-    """Normalize the `_inherit` option to a list of mode names.
+    """
+    Normalize the `_inherit` option to a list of mode names.
 
     Args:
         value: The raw `_inherit` value which may be a string or an iterable of
@@ -143,7 +144,8 @@ class Configuration:
         lair.events.fire("config.update")
 
     def update(self, entries: Mapping[str, object], *, force: bool = False) -> None:
-        """Update only the active runtime configuration.
+        """
+        Update only the active runtime configuration.
 
         Args:
             entries: Key-value pairs to update.
@@ -159,7 +161,8 @@ class Configuration:
         lair.events.fire("config.update")
 
     def get(self, key: str, allow_not_found: bool = False, default: object | None = None) -> object | None:
-        """Return a value from the active mode.
+        """
+        Return a value from the active mode.
 
         Args:
             key: Configuration key to retrieve.
@@ -180,7 +183,8 @@ class Configuration:
         raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {key}")
 
     def set(self, key: str, value: object, *, force: bool = False, no_event: bool = False) -> None:
-        """Set a configuration value with type validation.
+        """
+        Set a configuration value with type validation.
 
         Args:
             key: Configuration key to modify.

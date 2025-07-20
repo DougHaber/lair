@@ -25,7 +25,8 @@ TOOLS: dict[str, type] = {
 
 
 def get_tool_class_by_name(name: str) -> Optional[type]:
-    """Return the registered tool class for ``name`` if it exists.
+    """
+    Return the registered tool class for ``name`` if it exists.
 
     Args:
         name: The friendly name of the tool.
@@ -38,7 +39,8 @@ def get_tool_class_by_name(name: str) -> Optional[type]:
 
 
 def get_tool_classes_from_str(tool_names_str: str) -> None:
-    """Build a list of classes from a comma-separated string of tool names.
+    """
+    Build a list of classes from a comma-separated string of tool names.
 
     Args:
         tool_names_str: Comma-separated friendly tool names.

@@ -55,7 +55,8 @@ class ChatHistory:
             lair.config.active["session.max_history_length"] = None
 
     def add_tool_messages(self, messages: Iterable[dict[str, Any]]) -> None:
-        """Append assistant or tool messages to the history.
+        """
+        Append assistant or tool messages to the history.
 
         Args:
             messages: Sequence of messages from the API to add.
@@ -89,7 +90,8 @@ class ChatHistory:
                 )
 
     def add_message(self, role: str, message: object, *, meta: dict[str, object] | None = None) -> None:
-        """Append a single message to the history.
+        """
+        Append a single message to the history.
 
         Args:
             role: The role of the message sender.

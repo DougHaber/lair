@@ -48,7 +48,8 @@ class ChatInterfaceCommands:
     _new_chat_session: Callable[..., None]
 
     def _get_commands(self) -> dict[str, dict[str, Any]]:
-        """Return a mapping of command definitions.
+        """
+        Return a mapping of command definitions.
 
         Returns:
             dict[str, dict[str, Any]]: Mapping of command names to command
@@ -225,7 +226,8 @@ class ChatInterfaceCommands:
         callback: Callable[[str, list[str], str], None],
         description: str,
     ) -> None:
-        """Register a new chat command.
+        """
+        Register a new chat command.
 
         Args:
             command: The command string, including the leading ``/``.
@@ -249,7 +251,8 @@ class ChatInterfaceCommands:
         arguments: list[str],
         arguments_str: str,
     ) -> None:
-        """Clear the current conversation history.
+        """
+        Clear the current conversation history.
 
         Args:
             command: The raw command string.
@@ -273,7 +276,8 @@ class ChatInterfaceCommands:
         arguments: list[str],
         arguments_str: str,
     ) -> None:
-        """Toggle debugging output verbosity.
+        """
+        Toggle debugging output verbosity.
 
         Args:
             command: The raw command string.
@@ -300,7 +304,8 @@ class ChatInterfaceCommands:
         arguments: list[str],
         arguments_str: str,
     ) -> None:
-        """Extract a section from the last response.
+        """
+        Extract a section from the last response.
 
         Args:
             command: The raw command string.
@@ -342,7 +347,8 @@ class ChatInterfaceCommands:
         arguments: list[str],
         arguments_str: str,
     ) -> None:
-        """Display help for available commands.
+        """
+        Display help for available commands.
 
         Args:
             command: The raw command string.

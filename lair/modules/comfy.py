@@ -547,7 +547,8 @@ class Comfy:
         chat_interface.register_command("/comfy", comfy_command, "Call ComfyUI workflows")
 
     def _save_output__save_to_disk(self, item: object, filename: str) -> None:
-        """Save a workflow output to disk.
+        """
+        Save a workflow output to disk.
 
         Args:
             item: The object to save. ``PIL.Image.Image`` and file-like objects are supported.
@@ -576,7 +577,8 @@ class Comfy:
         start_index: int = 0,
         single_output: bool = False,
     ) -> None:
-        """Save workflow outputs to disk.
+        """
+        Save workflow outputs to disk.
 
         Args:
             results: Items returned from the workflow.

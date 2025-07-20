@@ -20,7 +20,8 @@ _squash_duplicates = True
 
 
 def subscribe(event_name: str, handler: Callable[[object], object], instance: Optional[object] = None) -> int:
-    """Subscribe a handler to an event.
+    """
+    Subscribe a handler to an event.
 
     Args:
         event_name: Name of the event to subscribe to.
@@ -56,7 +57,8 @@ def subscribe(event_name: str, handler: Callable[[object], object], instance: Op
 
 
 def _cleanup_instance_subscriptions(instance: object) -> None:
-    """Remove all event subscriptions tied to ``instance``.
+    """
+    Remove all event subscriptions tied to ``instance``.
 
     Args:
         instance: Object whose event subscriptions should be removed.
@@ -68,7 +70,8 @@ def _cleanup_instance_subscriptions(instance: object) -> None:
 
 
 def unsubscribe(subscription_id: int) -> bool:
-    """Remove a subscription by ID.
+    """
+    Remove a subscription by ID.
 
     Args:
         subscription_id: Identifier returned by :func:`subscribe`.
@@ -87,7 +90,8 @@ def unsubscribe(subscription_id: int) -> bool:
 
 
 def fire(event_name: str, data: object | None = None) -> bool:
-    """Trigger an event and call all subscribed handlers.
+    """
+    Trigger an event and call all subscribed handlers.
 
     Args:
         event_name: Name of the event to fire.
@@ -115,7 +119,8 @@ def fire(event_name: str, data: object | None = None) -> bool:
 
 @contextmanager
 def defer_events(squash_duplicates: bool = True) -> Iterator[None]:
-    """Temporarily defer firing of events.
+    """
+    Temporarily defer firing of events.
 
     Args:
         squash_duplicates: If ``True``, repeated events with the same payload are

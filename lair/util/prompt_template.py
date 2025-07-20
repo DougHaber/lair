@@ -8,7 +8,8 @@ import lair
 
 
 def fill(prompt_template: str) -> str:
-    """Render a template using predefined context variables.
+    """
+    Render a template using predefined context variables.
 
     Args:
         prompt_template: The Jinja2 template string to be rendered.

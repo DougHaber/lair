@@ -1,4 +1,5 @@
-"""Utility helpers used across the Lair project.
+"""
+Utility helpers used across the Lair project.
 
 This module exports various utility functions for interacting with files,
 parsing content, and handling attachments. Importing from this package makes

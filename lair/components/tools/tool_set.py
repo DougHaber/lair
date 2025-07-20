@@ -11,7 +11,8 @@ class ToolSet:
     """Container for managing and invoking individual tools."""
 
     def __init__(self, *, tools: list[type] | None = None) -> None:
-        """Initialize the tool set.
+        """
+        Initialize the tool set.
 
         Args:
             tools: List of tool classes to include. When ``None`` the default
@@ -23,7 +24,8 @@ class ToolSet:
         self._init_tools(tools)
 
     def _init_tools(self, tools: list[type] | None) -> None:
-        """Instantiate each tool class and register its tools.
+        """
+        Instantiate each tool class and register its tools.
 
         Args:
             tools: List of tool classes to instantiate. If ``None`` the default
@@ -37,7 +39,8 @@ class ToolSet:
             tool().add_to_tool_set(self)
 
     def update_tools(self, tools: list[type] | None = None) -> None:
-        """Recreate the tool set with the provided tool classes.
+        """
+        Recreate the tool set with the provided tool classes.
 
         Args:
             tools: List of tool classes to include. When ``None`` the default
@@ -56,7 +59,8 @@ class ToolSet:
         handler: Callable[..., dict[str, Any]],
         class_name: str,
     ) -> None:
-        """Register a new tool in the collection.
+        """
+        Register a new tool in the collection.
 
         Args:
             name: Unique name used to call the tool.
@@ -123,7 +127,8 @@ class ToolSet:
         return [self._get_definition(tool) for tool in tools]
 
     def call_tool(self, name: str, arguments: dict[str, Any], tool_call_id: str) -> dict[str, Any]:
-        """Invoke a tool handler with the provided arguments.
+        """
+        Invoke a tool handler with the provided arguments.
 
         Args:
             name: The name of the tool to call.

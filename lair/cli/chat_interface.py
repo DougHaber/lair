@@ -32,7 +32,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         starting_session_id_or_alias: str | int | None = None,
         create_session_if_missing: bool = False,
     ) -> None:
-        """Initialize the interface and attach to a chat session.
+        """
+        Initialize the interface and attach to a chat session.
 
         Args:
             starting_session_id_or_alias: Session identifier or alias to start
@@ -343,7 +344,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.chat_session.import_state(old_chat_session)
 
     def _switch_to_session(self, id_or_alias: str | int, raise_exceptions: bool = True) -> None:
-        """Switch to a different session.
+        """
+        Switch to a different session.
 
         Args:
             id_or_alias: Session ID or alias to switch to.
@@ -368,7 +370,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
                 logger.error(f"Unknown session: {id_or_alias}")
 
     def _get_default_switch_session_id(self) -> int | None:
-        """Return the session ID used for quick switching.
+        """
+        Return the session ID used for quick switching.
 
         If the previously used session still exists it is returned; otherwise
         the next available session ID is used.
@@ -486,7 +489,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         return True
 
     def _handle_request(self, request: str) -> bool:
-        """Process a request by dispatching to commands or chat handling.
+        """
+        Process a request by dispatching to commands or chat handling.
 
         Returns:
             bool: ``True`` if the request was handled successfully.
@@ -508,7 +512,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         self.reporting.system_message("Welcome to the LAIR")
 
     def _flash(self, message: str, duration: float = 1.2) -> None:
-        """Flash a message on the bottom toolbar.
+        """
+        Flash a message on the bottom toolbar.
 
         Args:
             message: Prompt Toolkit HTML message to display.

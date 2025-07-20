@@ -29,7 +29,8 @@ subprocess_run = subprocess.run
 
 
 def safe_dump_json(document: object) -> str:
-    """Serialize a document to JSON while handling ``datetime`` objects.
+    """
+    Serialize a document to JSON while handling ``datetime`` objects.
 
     Args:
         document: Any JSON serializable structure.
@@ -46,7 +47,8 @@ def safe_dump_json(document: object) -> str:
 
 
 def safe_int(number: str | float) -> int | str | float:
-    """Convert a value to ``int`` if possible.
+    """
+    Convert a value to ``int`` if possible.
 
     Args:
         number: Value to convert.
@@ -62,7 +64,8 @@ def safe_int(number: str | float) -> int | str | float:
 
 
 def slurp_file(filename: str) -> str:
-    """Read a file and return its contents.
+    """
+    Read a file and return its contents.
 
     Args:
         filename: Path to the file. ``~`` expansion is supported.
@@ -78,7 +81,8 @@ def slurp_file(filename: str) -> str:
 
 
 def save_file(filename: str, contents: str) -> None:
-    """Write ``contents`` to ``filename``.
+    """
+    Write ``contents`` to ``filename``.
 
     Args:
         filename: Destination path. ``~`` expansion is supported.
@@ -96,7 +100,8 @@ def parse_yaml_text(text: str) -> dict:
 
 
 def parse_yaml_file(filename: str) -> dict:
-    """Read a YAML file from disk.
+    """
+    Read a YAML file from disk.
 
     Args:
         filename: Path to the YAML file.
@@ -124,7 +129,8 @@ def save_json_file(filename: str, document: object) -> None:
 
 
 def get_lib_path(end: str = "") -> str:
-    """Return the path to the library directory.
+    """
+    Return the path to the library directory.
 
     Args:
         end: Optional suffix to append to the base path.
@@ -137,7 +143,8 @@ def get_lib_path(end: str = "") -> str:
 
 
 def read_package_file(path: str, name: str) -> str:
-    """Read a file bundled with the package.
+    """
+    Read a file bundled with the package.
 
     Args:
         path: Dot-delimited package path, e.g. ``"lair.files"``.
@@ -177,7 +184,8 @@ def get_message(role: str, message: str) -> dict[str, str]:
 def expand_filename_list(
     filenames: list[str], *, fail_on_not_found: bool = True, sort_results: bool = True
 ) -> list[str]:
-    """Expand user paths and globs.
+    """
+    Expand user paths and globs.
 
     Args:
         filenames: A list of filename patterns.
@@ -202,7 +210,8 @@ def expand_filename_list(
 
 
 def _get_attachments_content__image_file(filename: str) -> list[dict[str, object]]:
-    """Return image parts for an attachment.
+    """
+    Return image parts for an attachment.
 
     Args:
         filename: Path to the image file.
@@ -234,7 +243,8 @@ def _get_attachments_content__image_file(filename: str) -> list[dict[str, object
 
 
 def read_pdf(filename: str, *, enforce_limits: bool = False) -> str:
-    """Extract text from a PDF file.
+    """
+    Extract text from a PDF file.
 
     Args:
         filename: Path to the PDF file.
@@ -268,7 +278,8 @@ def read_pdf(filename: str, *, enforce_limits: bool = False) -> str:
 
 
 def _get_attachments_content__pdf_file(filename: str) -> dict[str, str]:
-    """Create a chat message from a PDF attachment.
+    """
+    Create a chat message from a PDF attachment.
 
     Args:
         filename: Path to the PDF file.
@@ -288,7 +299,8 @@ def _get_attachments_content__pdf_file(filename: str) -> dict[str, str]:
 
 
 def _get_attachments_content__text_file(filename: str) -> dict[str, str]:
-    """Create a chat message from a text attachment.
+    """
+    Create a chat message from a text attachment.
 
     Args:
         filename: Path to the text file.
@@ -327,7 +339,8 @@ def _get_attachments_content__text_file(filename: str) -> dict[str, str]:
 def get_attachments_content(
     filenames: list[str],
 ) -> tuple[list[dict[str, object]], list[dict[str, str]]]:
-    """Generate chat-ready content from a list of filenames.
+    """
+    Generate chat-ready content from a list of filenames.
 
     Args:
         filenames: Filenames or glob patterns. ``~`` expansion is supported.
@@ -353,7 +366,8 @@ def get_attachments_content(
 
 
 def edit_content_in_editor(content: str, suffix: str | None = None) -> str | None:
-    """Edit text in an external editor.
+    """
+    Edit text in an external editor.
 
     Args:
         content: The text to edit.
@@ -382,7 +396,8 @@ def edit_content_in_editor(content: str, suffix: str | None = None) -> str | Non
 
 
 def decode_jsonl(jsonl_str: str) -> list[dict[str, object]]:
-    """Decode JSONL content into a list of records.
+    """
+    Decode JSONL content into a list of records.
 
     Args:
         jsonl_str: The JSONL-formatted string.
@@ -400,7 +415,8 @@ def decode_jsonl(jsonl_str: str) -> list[dict[str, object]]:
 
 
 def slice_from_str(original_list: list[T], slice_str: str) -> list[T]:
-    """Apply a ``slice`` string to a list.
+    """
+    Apply a ``slice`` string to a list.
 
     Args:
         original_list: The list to slice.

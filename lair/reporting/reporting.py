@@ -24,7 +24,8 @@ class ReportingSingletoneMeta(type):
     _instances: dict[type, Any] = {}
 
     def __call__(cls, *args: object, **kwargs: object) -> object:
-        """Return a single instance of ``cls``.
+        """
+        Return a single instance of ``cls``.
 
         Args:
             *args: Positional arguments forwarded to ``cls``.
@@ -44,7 +45,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
     """Utility class for formatting and printing messages with rich."""
 
     def __init__(self, *, disable_color: bool = False, force_color: bool = False) -> None:
-        """Initialize the reporting system.
+        """
+        Initialize the reporting system.
 
         Args:
             disable_color: Disable any color output.
@@ -64,7 +66,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         self.json_highlighter = rich.highlighter.JSONHighlighter()
 
     def print_rich(self, *args: rich.console.RenderableType, **kwargs: object) -> None:
-        """Print using the internal rich console.
+        """
+        Print using the internal rich console.
 
         Args:
             *args: Objects to print.
@@ -76,7 +79,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         self.console.print(*args, **kw_dict)
 
     def print_highlighted_json(self, json_str: str) -> None:
-        """Print JSON with optional syntax highlighting.
+        """
+        Print JSON with optional syntax highlighting.
 
         Args:
             json_str: The JSON string to display.
@@ -88,7 +92,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             rich.print(json_str)
 
     def style(self, *args: object, **kwargs: Mapping[str, object]) -> rich.text.Text:
-        """Create a :class:`rich.text.Text` instance.
+        """
+        Create a :class:`rich.text.Text` instance.
 
         If no ``style`` parameter is provided the text is converted to plain
         text so that rich markup is not processed.
@@ -108,7 +113,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         rows_of_dicts: Sequence[Mapping[str, Any]] | None,
         allowed_keys: Iterable[str],
     ) -> list[dict[str, Any]]:
-        """Filter dictionaries to only include specified keys.
+        """
+        Filter dictionaries to only include specified keys.
 
         Args:
             rows_of_dicts: Iterable of dictionaries to filter.
@@ -134,7 +140,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         style: str | None = None,
         markup: bool = False,
     ) -> None:
-        """Render a table from a sequence of dictionaries.
+        """
+        Render a table from a sequence of dictionaries.
 
         Args:
             rows_of_dicts: Data to render.
@@ -187,7 +194,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         style: str | None = None,
         markup: bool = False,
     ) -> None:
-        """Display a table from a 2-dimensional array.
+        """
+        Display a table from a 2-dimensional array.
 
         Args:
             rows (Iterable): A 2-dimensional array of row data.
@@ -260,7 +268,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
             traceback.print_exception(*sys.exc_info())
 
     def error(self, message: str, show_exception: bool | None = None) -> None:
-        """Print an error message and optionally the current exception.
+        """
+        Print an error message and optionally the current exception.
 
         Args:
             message: The error text to display.
@@ -280,7 +289,8 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         plain_style: str | None = None,
         enable_highlighting: bool = True,
     ) -> rich.text.Text:
-        """Format a JSON string for console output.
+        """
+        Format a JSON string for console output.
 
         Args:
             json_str: The JSON content to format.

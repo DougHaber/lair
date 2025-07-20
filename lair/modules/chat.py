@@ -23,7 +23,8 @@ class Chat:
     """Interface for starting and managing chat sessions."""
 
     def __init__(self, parser: argparse.ArgumentParser) -> None:
-        """Initialize the chat subcommand.
+        """
+        Initialize the chat subcommand.
 
         Args:
             parser: Parser to which chat arguments are added.
@@ -38,7 +39,8 @@ class Chat:
         )
 
     def run(self, arguments: argparse.Namespace) -> None:
-        """Start the chat interface with the provided arguments.
+        """
+        Start the chat interface with the provided arguments.
 
         Args:
             arguments: Parsed command line arguments.

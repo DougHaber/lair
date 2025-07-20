@@ -27,7 +27,8 @@ class FileTool:
         pass
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
-        """Register file manipulation tools with a :class:`ToolSet`.
+        """
+        Register file manipulation tools with a :class:`ToolSet`.
 
         Args:
             tool_set: The tool set to update with file operations.
@@ -77,7 +78,8 @@ class FileTool:
         )
 
     def _resolve_path(self, path: str) -> str:
-        """Resolve a path relative to the workspace.
+        """
+        Resolve a path relative to the workspace.
 
         Args:
             path: The input path, absolute or relative to the workspace.
@@ -119,7 +121,8 @@ class FileTool:
         }
 
     def list_directory(self, directory: str) -> dict[str, Any]:
-        """List the contents of a directory within the workspace.
+        """
+        List the contents of a directory within the workspace.
 
         Args:
             directory: The directory path relative to the workspace.
@@ -184,7 +187,8 @@ class FileTool:
         }
 
     def read_file(self, path: str) -> dict[str, Any]:
-        """Read files matched by ``path`` and return their contents.
+        """
+        Read files matched by ``path`` and return their contents.
 
         Args:
             path: File path or glob pattern relative to the workspace.
@@ -243,7 +247,8 @@ class FileTool:
         }
 
     def write_file(self, path: str, content: str) -> dict[str, Any]:
-        """Write ``content`` to ``path`` within the workspace.
+        """
+        Write ``content`` to ``path`` within the workspace.
 
         Args:
             path: Destination file path relative to the workspace.
@@ -283,7 +288,8 @@ class FileTool:
         }
 
     def delete_file(self, path: str) -> dict[str, Any]:
-        """Delete a file from the workspace.
+        """
+        Delete a file from the workspace.
 
         Args:
             path: File path relative to the workspace.
@@ -324,7 +330,8 @@ class FileTool:
         }
 
     def make_directory(self, path: str) -> dict[str, Any]:
-        """Create a directory inside the workspace.
+        """
+        Create a directory inside the workspace.
 
         Args:
             path: Directory path relative to the workspace.
@@ -363,7 +370,8 @@ class FileTool:
         }
 
     def remove_directory(self, path: str) -> dict[str, Any]:
-        """Remove an empty directory from the workspace.
+        """
+        Remove an empty directory from the workspace.
 
         Args:
             path: Directory path relative to the workspace.

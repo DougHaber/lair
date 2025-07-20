@@ -86,7 +86,8 @@ class SessionManager:
             return session_id
 
     def get_session_id(self, id_or_alias: str | int, raise_exception: bool = True) -> int | None:
-        """Resolve a session ID or alias.
+        """
+        Resolve a session ID or alias.
 
         Args:
             id_or_alias: Numeric ID or alias string to look up.
@@ -188,7 +189,8 @@ class SessionManager:
                 txn.put(f"alias:{chat_session.session_alias}".encode(), str(chat_session.session_id).encode())
 
     def delete_session(self, id_or_alias: str | int, txn: lmdb.Transaction | None = None) -> None:
-        """Delete a session.
+        """
+        Delete a session.
 
         Args:
             id_or_alias: The numeric ID or alias of the session to delete.

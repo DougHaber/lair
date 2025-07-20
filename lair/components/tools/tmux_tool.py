@@ -33,7 +33,8 @@ class TmuxTool:
         self.active_window: Window | None = None
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
-        """Register tmux related tools with the provided tool set.
+        """
+        Register tmux related tools with the provided tool set.
 
         Args:
             tool_set: The :class:`ToolSet` instance to register tools with.
@@ -108,7 +109,8 @@ class TmuxTool:
             self.log_offsets = {}
 
     def _get_window_by_id(self, window_id: int | str | None) -> Window | None:
-        """Retrieve a tmux window by id.
+        """
+        Retrieve a tmux window by id.
 
         Args:
             window_id: The numeric or string id of the window. ``None`` returns
@@ -161,7 +163,8 @@ class TmuxTool:
         prune_line: str | None = None,
         window_id: int | str | None = None,
     ) -> dict[str, Any]:
-        """Return output based on the requested mode.
+        """
+        Return output based on the requested mode.
 
         Args:
             return_mode: Either ``"stream"`` or ``"screen"``.
@@ -229,7 +232,8 @@ class TmuxTool:
         return file_name
 
     def run(self, *, delay: float = 2.0, return_mode: str = "stream") -> dict[str, Any]:
-        """Create a new tmux window and return its output.
+        """
+        Create a new tmux window and return its output.
 
         Args:
             delay: Seconds to wait before capturing output.
@@ -345,7 +349,8 @@ class TmuxTool:
         delay: float = 0.2,
         window_id: int | str | None = None,
     ) -> dict[str, Any]:
-        """Send key presses to a tmux pane and return its output.
+        """
+        Send key presses to a tmux pane and return its output.
 
         Args:
             keys: The key sequence to send.
@@ -404,7 +409,8 @@ class TmuxTool:
         }
 
     def capture_output(self, *, window_id: int | str | None = None) -> dict[str, str]:
-        """Return the current screen contents of a tmux window.
+        """
+        Return the current screen contents of a tmux window.
 
         Args:
             window_id: Optional id of the window to capture. Defaults to the active window.
@@ -463,7 +469,8 @@ class TmuxTool:
         prune_line: str | None = None,
         window_id: int | str | None = None,
     ) -> dict[str, str]:
-        """Read any new output from the tmux pane log file.
+        """
+        Read any new output from the tmux pane log file.
 
         Args:
             max_size: Maximum number of bytes to return.

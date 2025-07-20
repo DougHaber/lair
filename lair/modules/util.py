@@ -18,7 +18,8 @@ from lair.sessions.base_chat_session import BaseChatSession
 
 
 def _module_info() -> dict[str, Any]:
-    """Return metadata describing this module.
+    """
+    Return metadata describing this module.
 
     Returns:
         dict[str, Any]: Information used by the module loader.
@@ -36,7 +37,8 @@ class Util:
     """Expose utility commands for interacting with chat models."""
 
     def __init__(self, parser: argparse.ArgumentParser) -> None:
-        """Initialize argument parser options for the ``util`` command.
+        """
+        Initialize argument parser options for the ``util`` command.
 
         Args:
             parser: The argument parser to register options with.
@@ -90,7 +92,8 @@ class Util:
         user_messages: Iterable[dict[str, Any]],
         enable_tools: bool = True,
     ) -> str:
-        """Send the composed messages to the LLM.
+        """
+        Send the composed messages to the LLM.
 
         Args:
             chat_session: The chat session to send messages through.
@@ -113,7 +116,8 @@ class Util:
         return response
 
     def clean_response(self, response: str) -> str:
-        """Strip formatting markup from the LLM response.
+        """
+        Strip formatting markup from the LLM response.
 
         Args:
             response: The raw response returned by the model.
@@ -127,7 +131,8 @@ class Util:
         return response
 
     def _read_file(self, filename: str) -> str:
-        """Return the contents of ``filename``.
+        """
+        Return the contents of ``filename``.
 
         Args:
             filename: Path to the file to read.
@@ -140,7 +145,8 @@ class Util:
             return fd.read()
 
     def _get_instructions(self, arguments: argparse.Namespace) -> str:
-        """Return instructions text from command line arguments.
+        """
+        Return instructions text from command line arguments.
 
         Args:
             arguments: Parsed command-line arguments.
@@ -158,7 +164,8 @@ class Util:
         sys.exit(1)
 
     def _get_user_messages(self, arguments: argparse.Namespace) -> list[dict[str, Any]]:
-        """Build the list of user messages based on the provided arguments.
+        """
+        Build the list of user messages based on the provided arguments.
 
         Args:
             arguments: Parsed command-line arguments.
@@ -203,7 +210,8 @@ class Util:
     def _init_session_manager(
         self, chat_session: BaseChatSession, arguments: argparse.Namespace
     ) -> lair.sessions.SessionManager | None:
-        """Prepare a session manager based on user options.
+        """
+        Prepare a session manager based on user options.
 
         Args:
             chat_session: The chat session in use.
@@ -242,7 +250,8 @@ class Util:
         return session_manager
 
     def run(self, arguments: argparse.Namespace) -> None:
-        """Execute the util command with the provided arguments.
+        """
+        Execute the util command with the provided arguments.
 
         Args:
             arguments: Parsed command-line arguments.

@@ -30,7 +30,8 @@ class OpenAIChatSession(BaseChatSession):
     """Chat session that uses the OpenAI API."""
 
     def __init__(self, *, history: ChatHistory | None = None, tool_set: ToolSet | None = None) -> None:
-        """Initialize the chat session.
+        """
+        Initialize the chat session.
 
         Args:
             history: Optional history instance. Defaults to a new ``ChatHistory`` instance.
@@ -61,7 +62,8 @@ class OpenAIChatSession(BaseChatSession):
         disable_system_prompt: bool = False,
         **kwargs: object,
     ) -> str:
-        """Call the underlying model without altering the chat history.
+        """
+        Call the underlying model without altering the chat history.
 
         Args:
             messages: Optional list of messages to send. If ``None``, the current
@@ -112,7 +114,8 @@ class OpenAIChatSession(BaseChatSession):
         messages: list[dict[str, Any]],
         tool_messages: list[dict[str, Any]],
     ) -> None:
-        """Handle tool calls returned by the model.
+        """
+        Handle tool calls returned by the model.
 
         Args:
             message: The assistant message containing tool calls.
@@ -150,7 +153,8 @@ class OpenAIChatSession(BaseChatSession):
         disable_system_prompt: bool = False,
         **kwargs: object,
     ) -> tuple[str, list[dict[str, Any]]]:
-        """Call the model and process tool calls without altering the chat history.
+        """
+        Call the model and process tool calls without altering the chat history.
 
         Args:
             messages: Optional list of messages to send. If ``None``, the current
@@ -200,7 +204,8 @@ class OpenAIChatSession(BaseChatSession):
                 return (content.strip() if content is not None else ""), tool_messages
 
     def list_models(self, *, ignore_errors: bool = False) -> list[dict[str, Any]] | None:
-        """Retrieve a list of available models and their metadata.
+        """
+        Retrieve a list of available models and their metadata.
 
         Args:
             ignore_errors: When ``True``, errors are logged and ``None`` is returned

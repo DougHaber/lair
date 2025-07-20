@@ -32,7 +32,8 @@ class ErrorRaisingArgumentParser(argparse.ArgumentParser):
     """ArgumentParser that raises exceptions instead of exiting."""
 
     def error(self, message: str) -> NoReturn:
-        """Raise :class:`argparse.ArgumentError` instead of exiting.
+        """
+        Raise :class:`argparse.ArgumentError` instead of exiting.
 
         Args:
             message: The error message to display.
@@ -44,7 +45,8 @@ class ErrorRaisingArgumentParser(argparse.ArgumentParser):
         raise argparse.ArgumentError(None, message)
 
     def exit(self, status: int = 0, message: str | None = None) -> NoReturn:
-        """Raise :class:`ArgumentParserExitError` instead of exiting.
+        """
+        Raise :class:`ArgumentParserExitError` instead of exiting.
 
         Args:
             status: Exit status code. This value is ignored.
@@ -59,7 +61,8 @@ class ErrorRaisingArgumentParser(argparse.ArgumentParser):
         raise ArgumentParserExitError(None, None)
 
     def print_help(self, file: SupportsWriteStr | None = None) -> NoReturn:
-        """Raise :class:`ArgumentParserHelpError` with formatted help text.
+        """
+        Raise :class:`ArgumentParserHelpError` with formatted help text.
 
         Args:
             file: Unused file handle provided for compatibility with the base

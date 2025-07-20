@@ -114,7 +114,8 @@ MESSAGES_SCHEMA = {
 
 
 def validate_messages(messages: Sequence[Mapping[str, Any]]) -> None:
-    """Validate a list of chat messages against ``MESSAGES_SCHEMA``.
+    """
+    Validate a list of chat messages against ``MESSAGES_SCHEMA``.
 
     Args:
         messages: The list of messages to validate.

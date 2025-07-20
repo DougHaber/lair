@@ -18,7 +18,8 @@ class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
     def __init__(self, *, history: ChatHistory | None = None, tool_set: ToolSet | None = None) -> None:
-        """Initialize the chat session.
+        """
+        Initialize the chat session.
 
         Args:
             history: History instance to use. If ``None``, a new ``ChatHistory`` is created.
@@ -58,7 +59,8 @@ class BaseChatSession(abc.ABC):
         pass
 
     def chat(self, message: str | list[dict[str, Any]] | None = None) -> str:
-        """Add a message and return the model's response.
+        """
+        Add a message and return the model's response.
 
         Args:
             message: The message to process. May be a raw string, a list of
@@ -103,7 +105,8 @@ class BaseChatSession(abc.ABC):
         self.history.commit()
 
     def auto_generate_title(self) -> str | None:
-        """Generate a short title for the current session.
+        """
+        Generate a short title for the current session.
 
         Returns:
             str | None: The generated title, or ``None`` if generation failed or
@@ -175,7 +178,8 @@ class BaseChatSession(abc.ABC):
 
     @abc.abstractmethod
     def list_models(self, *, ignore_errors: bool = False) -> list[dict[str, Any]] | None:
-        """Retrieve a list of available models and their metadata.
+        """
+        Retrieve a list of available models and their metadata.
 
         Args:
             ignore_errors: If ``True``, errors are logged and ``None`` is
@@ -192,7 +196,8 @@ class BaseChatSession(abc.ABC):
         pass
 
     def new_session(self, preserve_alias: bool = False, preserve_id: bool = False) -> None:
-        """Reset the session state.
+        """
+        Reset the session state.
 
         Args:
             preserve_alias: If ``True``, the ``session_alias`` is kept when clearing the session.
@@ -210,7 +215,8 @@ class BaseChatSession(abc.ABC):
         self.history.clear()
 
     def import_state(self, chat_session: "BaseChatSession") -> None:
-        """Import state from another chat session.
+        """
+        Import state from another chat session.
 
         This is used when switching session types when changing implementations.
         """

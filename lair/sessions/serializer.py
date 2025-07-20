@@ -12,7 +12,8 @@ if TYPE_CHECKING:
 
 
 def session_to_dict(chat_session: BaseChatSession) -> dict[str, object]:
-    """Convert a chat session into a dictionary representation.
+    """
+    Convert a chat session into a dictionary representation.
 
     Args:
         chat_session: The session instance to serialize.
@@ -38,7 +39,8 @@ def session_to_dict(chat_session: BaseChatSession) -> dict[str, object]:
 
 
 def save(chat_session: BaseChatSession, filename: str) -> None:
-    """Write a serialized chat session to disk.
+    """
+    Write a serialized chat session to disk.
 
     Args:
         chat_session: The session instance to save.
@@ -63,7 +65,8 @@ def _load__v0_2(chat_session: BaseChatSession, state: dict[str, Any]) -> None:
 
 
 def update_session_from_dict(chat_session: BaseChatSession, state: dict[str, Any]) -> None:
-    """Update an existing session from a serialized dictionary.
+    """
+    Update an existing session from a serialized dictionary.
 
     Args:
         chat_session: The session instance to update.
@@ -84,7 +87,8 @@ def update_session_from_dict(chat_session: BaseChatSession, state: dict[str, Any
 
 
 def load(chat_session: BaseChatSession, filename: str) -> None:
-    """Load a chat session from disk.
+    """
+    Load a chat session from disk.
 
     Args:
         chat_session: The session instance to populate.

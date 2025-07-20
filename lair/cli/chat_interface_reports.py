@@ -24,7 +24,8 @@ class ChatInterfaceReports:
         filter_regex: str | None,
         baseline: str | None,
     ) -> Iterator[list[str]]:
-        """Generate formatted configuration rows.
+        """
+        Generate formatted configuration rows.
 
         Args:
             show_only_differences: If ``True`` only return values that differ from the baseline.
@@ -59,7 +60,8 @@ class ChatInterfaceReports:
         filter_regex: str | None = None,
         baseline: str | None = None,
     ) -> None:
-        """Display the current configuration table.
+        """
+        Display the current configuration table.
 
         Args:
             show_only_differences: When ``True`` hide values that match the baseline.
@@ -109,7 +111,8 @@ class ChatInterfaceReports:
         self.reporting.table_system(rows)
 
     def print_history(self, *, num_messages: int | None = None) -> None:
-        """Print the conversation history.
+        """
+        Print the conversation history.
 
         Args:
             num_messages: Optional number of recent messages to display. If ``None`` all messages are shown.
@@ -126,7 +129,8 @@ class ChatInterfaceReports:
                 self.reporting.message(message)
 
     def print_models_report(self, update_cache: bool = False) -> None:
-        """Show available models.
+        """
+        Show available models.
 
         Args:
             update_cache: If ``True`` refresh the cached model list.

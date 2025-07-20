@@ -14,7 +14,8 @@ console = Console()
 
 
 def init_logging(enable_debugging: bool = False) -> None:
-    """Configure the ``lair`` logger.
+    """
+    Configure the ``lair`` logger.
 
     Args:
         enable_debugging: If ``True``, set the log level to ``DEBUG``. Otherwise ``INFO``.

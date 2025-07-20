@@ -19,7 +19,8 @@ def get_chat_session(
     history: ChatHistory | None = None,
     tool_set: ToolSet | None = None,
 ) -> BaseChatSession:
-    """Instantiate a concrete chat session implementation.
+    """
+    Instantiate a concrete chat session implementation.
 
     Args:
         session_type: The type of session to create. Currently only ``"openai_chat"``

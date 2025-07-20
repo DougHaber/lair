@@ -13,7 +13,8 @@ from lair.logging import logger
 
 
 def init_subcommands(parent_parser: argparse.ArgumentParser) -> dict[str, Any]:
-    """Initialize all CLI subcommands.
+    """
+    Initialize all CLI subcommands.
 
     Args:
         parent_parser: The top level argument parser.
@@ -43,7 +44,8 @@ def init_subcommands(parent_parser: argparse.ArgumentParser) -> dict[str, Any]:
 
 
 def parse_arguments() -> tuple[argparse.Namespace, Any]:
-    """Parse command line arguments.
+    """
+    Parse command line arguments.
 
     Returns:
         A tuple containing the parsed arguments and the subcommand object to run.
@@ -84,7 +86,8 @@ def parse_arguments() -> tuple[argparse.Namespace, Any]:
 
 
 def set_config_from_arguments(overrides: list[str] | None) -> None:
-    """Apply ``--set`` command line overrides to the active configuration.
+    """
+    Apply ``--set`` command line overrides to the active configuration.
 
     Args:
         overrides: A list of ``key=value`` strings to apply, or ``None``.

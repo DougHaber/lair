@@ -42,7 +42,8 @@ class ModuleLoader:
         return module_files
 
     def _get_module_name(self, module: types.ModuleType, module_path: str) -> str:
-        """Return the module's name relative to ``module_path``.
+        """
+        Return the module's name relative to ``module_path``.
 
         Args:
             module: Imported module object.

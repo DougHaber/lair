@@ -51,7 +51,8 @@ class SearchTool:
         self.ddgs = DDGS()
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
-        """Register the search tools with a :class:`ToolSet` instance.
+        """
+        Register the search tools with a :class:`ToolSet` instance.
 
         Args:
             tool_set: The :class:`ToolSet` to register the tools with.
@@ -73,7 +74,8 @@ class SearchTool:
         )
 
     def _get_content(self, url: str) -> str:
-        """Fetch content from a URL and extract readable text.
+        """
+        Fetch content from a URL and extract readable text.
 
         Args:
             url: The URL to download.
@@ -103,7 +105,8 @@ class SearchTool:
             return ""
 
     def search_web(self, query: str) -> dict[str, Any]:
-        """Perform a DuckDuckGo web search.
+        """
+        Perform a DuckDuckGo web search.
 
         Args:
             query: The search query string.
@@ -134,7 +137,8 @@ class SearchTool:
             return {"error": str(error)}
 
     def search_news(self, query: str) -> dict[str, Any]:
-        """Perform a DuckDuckGo news search.
+        """
+        Perform a DuckDuckGo news search.
 
         Args:
             query: The news search query string.

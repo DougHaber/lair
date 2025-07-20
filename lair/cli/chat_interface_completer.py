@@ -17,7 +17,8 @@ class ChatInterfaceCompleter(Completer):
     """Provide tab completion for chat interface commands."""
 
     def __init__(self, chat_interface: ChatInterface, *args: object, **kwargs: object) -> None:
-        """Initialize the completer.
+        """
+        Initialize the completer.
 
         Args:
             chat_interface: The chat interface instance the completer is attached to.
@@ -36,7 +37,8 @@ class ChatInterfaceCompleter(Completer):
         super().__init__(*args, **kwargs)
 
     def get_completions__mode(self, text: str) -> Iterable[Completion]:
-        """Yield completions for the ``/mode`` command.
+        """
+        Yield completions for the ``/mode`` command.
 
         Args:
             text: The text entered so far.
@@ -54,7 +56,8 @@ class ChatInterfaceCompleter(Completer):
                 yield Completion(f"/mode {mode}", display=mode, start_position=-len(text))
 
     def get_completions__model(self, text: str) -> Iterable[Completion]:
-        """Yield completions for the ``/model`` command.
+        """
+        Yield completions for the ``/model`` command.
 
         Args:
             text: The text entered so far.
@@ -76,7 +79,8 @@ class ChatInterfaceCompleter(Completer):
                 yield Completion(f"/model {model_id}", display=model_id, start_position=-len(text))
 
     def get_completions__prompt(self, text: str) -> Iterable[Completion]:
-        """Yield completions for the ``/prompt`` command.
+        """
+        Yield completions for the ``/prompt`` command.
 
         Args:
             text: The text entered so far.
@@ -94,7 +98,8 @@ class ChatInterfaceCompleter(Completer):
             yield Completion(f"/prompt {current_prompt}", display=current_prompt, start_position=-len(text))
 
     def _get_set_value_completion(self, components: list[str], text: str) -> Iterable[Completion]:
-        """Yield value completions for the ``/set`` command.
+        """
+        Yield value completions for the ``/set`` command.
 
         Args:
             components: The parsed command components.
@@ -114,7 +119,8 @@ class ChatInterfaceCompleter(Completer):
             yield Completion(f"/set {key} {value}", display=value, start_position=-len(text))
 
     def _get_set_key_completion(self, prefix: str, text: str) -> Iterable[Completion]:
-        """Yield key completions for the ``/set`` command.
+        """
+        Yield key completions for the ``/set`` command.
 
         Args:
             prefix: The config key prefix typed so far.
@@ -131,7 +137,8 @@ class ChatInterfaceCompleter(Completer):
                 yield Completion(f"/set {key}", display=key, start_position=-len(text))
 
     def get_completions__set(self, text: str) -> Iterable[Completion]:
-        """Yield completions for the ``/set`` command.
+        """
+        Yield completions for the ``/set`` command.
 
         Args:
             text: The text entered so far.
@@ -148,7 +155,8 @@ class ChatInterfaceCompleter(Completer):
             yield from self._get_set_key_completion(components[1], text)
 
     def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
-        """Return completions based on the current document.
+        """
+        Return completions based on the current document.
 
         Args:
             document: The current prompt-toolkit document.

@@ -1,4 +1,5 @@
-"""Run ComfyUI workflows.
+"""
+Run ComfyUI workflows.
 
 This module provides utilities for invoking ComfyUI workflows from Python.  It
 delegates the heavy lifting to a running ComfyUI server and handles the minor
@@ -69,7 +70,8 @@ class ComfyCaller:
     """Interface to a running ComfyUI server."""
 
     def __init__(self, url: str | None = None, output_prefix: str = "ComfyUI") -> None:
-        """Create a new caller.
+        """
+        Create a new caller.
 
         Args:
             url: Base URL of the ComfyUI server.
@@ -89,7 +91,8 @@ class ComfyCaller:
         lair.events.subscribe("config.update", lambda d: self._init_defaults(), instance=self)
 
     def _monkey_patch_comfy_script(self) -> None:
-        """Disable SSL verification in ``comfy_script``.
+        """
+        Disable SSL verification in ``comfy_script``.
 
         ``comfy_script`` does not expose a way to disable SSL verification.  This
         method patches ``aiohttp.TCPConnector`` to use a custom SSL context with
@@ -228,7 +231,8 @@ class ComfyCaller:
         queue._watch_thread = None
 
     def run_workflow(self, workflow: str, *args: object, **kwargs: object) -> object:
-        """Execute a registered workflow.
+        """
+        Execute a registered workflow.
 
         Args:
             workflow: Name of the workflow to run.
