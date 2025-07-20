@@ -1,8 +1,8 @@
+import sys
 import types
 
 import lair
 from lair.sessions.base_chat_session import BaseChatSession
-import sys
 
 
 class DummySession(BaseChatSession):
@@ -44,6 +44,7 @@ def test_openai_list_models(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(OpenAI=DummyOpenAI))
     import importlib
+
     import lair.sessions.openai_chat_session as ocs
 
     importlib.reload(ocs)

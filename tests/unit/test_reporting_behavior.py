@@ -1,8 +1,10 @@
+import traceback
+
 import pytest
 import rich
 import rich.markdown
 import rich.text
-import traceback
+
 import lair
 from lair.reporting.reporting import Reporting, ReportingSingletoneMeta
 
@@ -89,6 +91,7 @@ def test_llm_output_thoughts(monkeypatch):
     rep = make_reporting(monkeypatch)
     calls = []
     monkeypatch.setattr(rep, "print_rich", lambda *a, **k: calls.append(a[0]))
+
     def cfg(key):
         return {
             "style.thoughts.hide_thoughts": True,
@@ -96,10 +99,12 @@ def test_llm_output_thoughts(monkeypatch):
             "style.llm_output_thought": "th",
             "style.llm_output": "out",
         }.get(key, False)
+
     monkeypatch.setattr(lair.config, "get", cfg)
     rep._llm_output__with_thoughts("begin <thought>secret</thought> end")
     assert len(calls) == 2  # thought hidden
     calls.clear()
+
     def cfg2(key):
         return {
             "style.thoughts.hide_thoughts": False,
@@ -107,10 +112,12 @@ def test_llm_output_thoughts(monkeypatch):
             "style.llm_output_thought": "th",
             "style.llm_output": "out",
         }.get(key, False)
+
     monkeypatch.setattr(lair.config, "get", cfg2)
     rep._llm_output__with_thoughts("begin <thought>secret</thought> end")
     assert any(getattr(c, "markup", "") == "secret" for c in calls)
     calls.clear()
+
     def cfg3(key):
         return {
             "style.thoughts.hide_thoughts": False,
@@ -118,6 +125,7 @@ def test_llm_output_thoughts(monkeypatch):
             "style.llm_output_thought": "th",
             "style.llm_output": "out",
         }.get(key, False)
+
     monkeypatch.setattr(lair.config, "get", cfg3)
     rep._llm_output__with_thoughts("begin <thought>secret</thought> end")
     assert any("<thought>" in getattr(c, "markup", "") for c in calls)
@@ -128,6 +136,7 @@ def test_llm_output(monkeypatch):
     msgs = []
     monkeypatch.setattr(rep, "_llm_output__with_thoughts", lambda m: msgs.append("t"))
     monkeypatch.setattr(rep, "print_rich", lambda *a, **k: msgs.append(a[0]))
+
     def cfg(key):
         return {
             "style.render_markdown": False,
@@ -135,16 +144,19 @@ def test_llm_output(monkeypatch):
             "style.thoughts.enabled": False,
             "style.llm_output_heading": "h",
         }.get(key, False)
+
     monkeypatch.setattr(lair.config, "get", cfg)
     rep.llm_output("hi", show_heading=True)
     assert any(isinstance(m, rich.text.Text) for m in msgs)
     msgs.clear()
+
     def cfg2(key):
         return {
             "style.render_markdown": True,
             "style.thoughts.enabled": True,
             "style.llm_output_heading": "h",
         }.get(key, False)
+
     monkeypatch.setattr(lair.config, "get", cfg2)
     rep.llm_output("hi")
     assert "t" in msgs
