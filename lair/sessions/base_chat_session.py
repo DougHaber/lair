@@ -2,7 +2,7 @@
 
 import abc
 import copy
-from typing import Any
+from typing import Any, cast
 
 import lair
 import lair.reporting
@@ -115,11 +115,11 @@ class BaseChatSession(abc.ABC):
 
         user_message = None
         assistant_reply = None
-        for message in self.history.get_messages():
-            if not user_message and message["role"] == "user" and message["content"]:
-                user_message = message["content"]
-            elif not assistant_reply and message["role"] == "assistant" and message["content"]:
-                assistant_reply = message["content"]
+        for history_message in self.history.get_messages():
+            if not user_message and history_message["role"] == "user" and history_message["content"]:
+                user_message = history_message["content"]
+            elif not assistant_reply and history_message["role"] == "assistant" and history_message["content"]:
+                assistant_reply = history_message["content"]
 
             if user_message and assistant_reply:
                 break
@@ -133,12 +133,14 @@ class BaseChatSession(abc.ABC):
 
         message = self.invoke(
             disable_system_prompt=True,
-            model=lair.config.get("session.auto_generate_titles.model"),
-            temperature=lair.config.get("session.auto_generate_titles.temperature"),
+            model=cast(str | None, lair.config.get("session.auto_generate_titles.model")),
+            temperature=cast(float | None, lair.config.get("session.auto_generate_titles.temperature")),
             messages=[
                 {
                     "role": "system",
-                    "content": lair.util.prompt_template.fill(lair.config.get("session.auto_generate_titles.template")),
+                    "content": lair.util.prompt_template.fill(
+                        cast(str, lair.config.get("session.auto_generate_titles.template"))
+                    ),
                 },
                 {
                     "role": "user",
@@ -153,7 +155,7 @@ class BaseChatSession(abc.ABC):
 
     def get_system_prompt(self) -> str:
         """Return the filled system prompt template."""
-        return lair.util.prompt_template.fill(lair.config.get("session.system_prompt_template"))
+        return lair.util.prompt_template.fill(cast(str, lair.config.get("session.system_prompt_template")))
 
     def save_to_file(self, filename: str) -> None:
         """Persist the session state to ``filename``."""

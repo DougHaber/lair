@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
 import lair
 import lair.components.history.schema
@@ -123,12 +123,13 @@ class ChatHistory:
 
     def get_messages(self, *, extra_messages: Iterable[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
         """Return the message history, truncating as necessary."""
-        max_length = lair.config.get("session.max_history_length") or 0
+        max_length_obj = lair.config.get("session.max_history_length") or 0
+        max_length = cast(int, max_length_obj)
 
         if extra_messages is None:
             return self._history[-max_length:]
         else:
-            return self._history[-max_length:] + extra_messages
+            return self._history[-max_length:] + list(extra_messages)
 
     def get_messages_as_jsonl_string(self) -> str:
         """Return the history encoded as a JSON Lines string."""
@@ -153,9 +154,9 @@ class ChatHistory:
         # This should only be called by commit() or set_history()
         # The history normally is not stored truncated otherwise so that
         # it is possible to rollback to the previous state.
-        max_length = lair.config.get("session.max_history_length")
-        if max_length is not None:
-            self._history = self._history[-max_length:]
+        max_length_obj = lair.config.get("session.max_history_length")
+        if max_length_obj is not None:
+            self._history = self._history[-cast(int, max_length_obj) :]
 
     def commit(self) -> None:
         """Mark the current history as being finalized."""

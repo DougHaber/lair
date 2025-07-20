@@ -6,7 +6,7 @@ import importlib
 import json
 import os
 from collections.abc import Iterator, Sequence
-from typing import Any
+from typing import Any, cast
 
 import lair
 import lair.sessions.serializer
@@ -34,8 +34,12 @@ class SessionManager:
 
     def __init__(self) -> None:
         """Initialize the manager and ensure the backing store is ready."""
-        self.database_path = os.path.expanduser(lair.config.get("database.sessions.path"))
-        self.env = lmdb.open(self.database_path, map_size=lair.config.get("database.sessions.size"))
+        path = cast(str, lair.config.get("database.sessions.path"))
+        self.database_path = os.path.expanduser(path)
+        self.env = lmdb.open(
+            self.database_path,
+            map_size=cast(int, lair.config.get("database.sessions.size")),
+        )
         self.ensure_correct_map_size()
         self.prune_empty()
 
