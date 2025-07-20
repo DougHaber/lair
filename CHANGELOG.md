@@ -21,6 +21,7 @@
 - tools: improve docstrings and type hints for ToolSet
 - cleanup: refactor workflow and tool call helpers for readability
 - internal: Enforce strict ruff checks, ruff formatting, and mypy validation
+- modules: Add docstrings and type hints to chat module
 
 # v0.8.1 - Bug fixes
 
