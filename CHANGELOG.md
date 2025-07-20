@@ -6,6 +6,7 @@
 - cli: Reduce complexity of keybindings setup
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
+- comfy: Raise ValueError for invalid image path type
 - tests: Support environments where `openai_local` mode is renamed
 
 ### New Features

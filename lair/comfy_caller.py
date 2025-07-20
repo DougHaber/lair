@@ -193,6 +193,9 @@ class ComfyCaller:
 
     def _image_to_base64(self, image: str) -> str:
         """Return the base64 representation of an image file."""
+        if not isinstance(image, str):
+            raise ValueError("image must be a string path")
+
         with open(image, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode("utf-8")
 
