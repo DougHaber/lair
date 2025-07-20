@@ -1,9 +1,11 @@
-from lair.config import Configuration, ConfigInvalidTypeError, ConfigUnknownKeyError
 import os
 import types
-import lair
+
 import pytest
+
+import lair
 import lair.sessions.openai_chat_session
+from lair.config import ConfigInvalidTypeError, ConfigUnknownKeyError, Configuration
 
 
 def create_config(tmp_path, yaml_text):
@@ -92,7 +94,7 @@ def test_change_mode_unknown(tmp_path, monkeypatch):
     monkeypatch.setattr(lair.events, "fire", lambda *a, **k: None)
     monkeypatch.setattr(lair.sessions.openai_chat_session, "openai", types.SimpleNamespace(OpenAI=lambda **k: None))
     cfg = Configuration()
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="Unknown mode"):
         cfg.change_mode("missing")
 
 

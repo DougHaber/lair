@@ -1,13 +1,13 @@
+import asyncio
 import importlib
-import types
 import ssl
 import sys
-import asyncio
+import types
 
 import pytest
 
-from tests.helpers.comfy_caller import get_ComfyCaller
 import lair
+from tests.helpers.comfy_caller import get_ComfyCaller
 
 
 class DummyNode:
@@ -94,7 +94,7 @@ def test_set_url(monkeypatch):
     assert cc2.url == "http://new"
     assert called2 == [True]
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="not supported"):
         cc.set_url("http://other")
 
 
@@ -120,7 +120,7 @@ def test_view(monkeypatch):
     monkeypatch.setattr(
         importlib.import_module("lair.comfy_caller").requests, "get", lambda *a, **k: Resp(404), raising=False
     )
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="unexpected status code"):
         cc.view("bad")
 
 
@@ -463,7 +463,7 @@ def test_workflow_hunyuan_video_t2v(monkeypatch):
     monkeypatch.setattr(caller_mod, "RandomNoise", lambda s: f"noise{s}")
     monkeypatch.setattr(caller_mod, "UNETLoader", lambda n, d: f"unet:{n}:{d}")
     monkeypatch.setattr(caller_mod, "DualCLIPLoader", lambda *a: "clip")
-    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, l: (m, c))
+    monkeypatch.setattr(cc, "_apply_loras", lambda m, c, loras: (m, c))
     monkeypatch.setattr(caller_mod, "CLIPTextEncode", lambda p, c: f"{p}/{c}")
     monkeypatch.setattr(caller_mod, "FluxGuidance", lambda c, g: f"flux:{c}:{g}")
     monkeypatch.setattr(caller_mod, "ModelSamplingSD3", lambda m, s: f"shift:{m}:{s}")
