@@ -1,18 +1,15 @@
-# This module provides support for running parameterized workflows via ComfyUI and collecting the output. An earlier
-# version used modules like diffusers, torch, and scipy to do similar things on its own. This made the code much more
-# complicated and slower to install and run. By allowing an external ComfyUI Server to do the work, we gain access to
-# all of their hard work on implementing and optimizing the diffusion process and support for all the variants of
-# models. As the server persists between runs, this also removes the need to reload models onto the GPU each new run,
-# and so greatly improves cycle time.
-#
-# The ComfyScript library used here works really well, but it doesn't always behave nicely. It creates threads to do
-# actual work, but it isn't clear how to shut them down properly when complete, so calling this will result in extra
-# threads that keep running. It also uses print() instead of a proper logger for debugging, and so it can be very
-# noisy. Some non-ideal protections are taken to block output, but even those don't work perfectly since the threads may
-# occasionally print things even after workflows are no longer running.
-#
-# Some ComfyScript features require async. To keep things simple, all workflow functions are written with async whether
-# they use it or not.
+"""
+Run ComfyUI workflows.
+
+This module provides utilities for invoking ComfyUI workflows from Python.  It
+delegates the heavy lifting to a running ComfyUI server and handles the minor
+quirks of the ``comfy_script`` library.  Workflows are defined as async
+functions regardless of whether they internally await.
+
+The original implementation bundled diffusion libraries directly which made the
+tool considerably slower to install and run.  Offloading to ComfyUI allows us to
+reuse its optimised implementations and avoids reloading models for every run.
+"""
 
 import asyncio
 import base64
@@ -21,7 +18,8 @@ import ctypes
 import importlib
 import io
 import secrets
-from typing import Any
+import threading
+from typing import Any, Callable, cast
 
 import requests
 
@@ -69,11 +67,21 @@ UpscaleModelLoader: Any = None
 
 
 class ComfyCaller:
-    def __init__(self, url=None, output_prefix="ComfyUI"):
+    """Interface to a running ComfyUI server."""
+
+    def __init__(self, url: str | None = None, output_prefix: str = "ComfyUI") -> None:
+        """
+        Create a new caller.
+
+        Args:
+            url: Base URL of the ComfyUI server.
+            output_prefix: Filename prefix for any saved outputs.
+
+        """
         self.url = url
         self.output_prefix = output_prefix
 
-        self.workflows = {}
+        self.workflows: dict[str, Callable[..., Any]] = {}
         self.is_comfy_script_imported = False
 
         self._init_defaults()
@@ -82,11 +90,13 @@ class ComfyCaller:
         # If the config changes, update all defaults
         lair.events.subscribe("config.update", lambda d: self._init_defaults(), instance=self)
 
-    def _monkey_patch_comfy_script(self):
+    def _monkey_patch_comfy_script(self) -> None:
         """
-        Disable SSL verification in ComfyScript
-        ComfyScript provides no mechanism to accomplish this, so a monkey patch is necessary.
-        A PR against ComfyScript would be a better solution.
+        Disable SSL verification in ``comfy_script``.
+
+        ``comfy_script`` does not expose a way to disable SSL verification.  This
+        method patches ``aiohttp.TCPConnector`` to use a custom SSL context with
+        hostname checks disabled.
         """
         import ssl
 
@@ -96,15 +106,18 @@ class ComfyCaller:
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
 
-        original_init = aiohttp.TCPConnector.__init__
+        original_init = cast(Callable[..., Any], aiohttp.TCPConnector.__init__)
 
-        def patched_init(self, *args, **kwargs):
+        def patched_init(self: aiohttp.TCPConnector, *args: object, **kwargs: object) -> None:
+            """Override connector initialisation to disable SSL verification."""
             kwargs["ssl"] = ssl_context
             return original_init(self, *args, **kwargs)
 
-        aiohttp.TCPConnector.__init__ = patched_init
+        attr_name = "__init__"
+        setattr(aiohttp.TCPConnector, attr_name, cast(Any, patched_init))
 
-    def _import_comfy_script(self):
+    def _import_comfy_script(self) -> None:
+        """Import ``comfy_script`` and load node definitions."""
         # The imports actually connect to the server. If the defaults are being requested, that is problematic
         # since that happens before the server URL is provided. To work around that, importing is deferred
         if self.is_comfy_script_imported is True:
@@ -132,7 +145,8 @@ class ComfyCaller:
 
         self.is_comfy_script_imported = True
 
-    def _init_workflows(self):
+    def _init_workflows(self) -> None:
+        """Register workflow handlers."""
         self.workflows = {
             "hunyuan-video-t2v": self._workflow_hunyuan_video_t2v,
             "image": self._workflow_image,
@@ -142,7 +156,8 @@ class ComfyCaller:
             "upscale": self._workflow_upscale,
         }
 
-    def _init_defaults(self):
+    def _init_defaults(self) -> None:
+        """Load default configuration values for each workflow."""
         self.defaults = {
             "hunyuan-video-t2v": self._get_defaults_hunyuan_video_t2v(),
             "image": self._get_defaults_image(),
@@ -152,7 +167,8 @@ class ComfyCaller:
             "upscale": self._get_defaults_upscale(),
         }
 
-    def _parse_lora_argument(self, lora):
+    def _parse_lora_argument(self, lora: str) -> tuple[str, float, float]:
+        """Split a lora argument into its components."""
         parts = lora.split(":", maxsplit=3)
 
         lora_model = parts.pop(0)
@@ -167,7 +183,7 @@ class ComfyCaller:
 
         return lora_model, weight, clip_weight
 
-    def _apply_loras(self, model, clip, loras):
+    def _apply_loras(self, model: object, clip: object, loras: list[str] | None) -> tuple[object, object]:
         """Apply a list of loras to the model and clip."""
         for lora in loras or []:
             lora_model, weight, clip_weight = self._parse_lora_argument(lora)
@@ -175,19 +191,20 @@ class ComfyCaller:
 
         return model, clip
 
-    def _ensure_seed(self, seed):
+    def _ensure_seed(self, seed: int | None) -> int:
         """Return a random seed when one is not provided."""
         return secrets.randbelow(2**31) if seed is None else seed
 
-    def _image_to_base64(self, image):
-        # Convert an image to base64 based on the type
-        if isinstance(image, str):  # If the image is a str, then it is a filename
-            with open(image, "rb") as image_file:
-                return base64.b64encode(image_file.read()).decode("utf-8")
-        else:
-            raise ValueError(f"Conversion of image to base64 not supported for type: {type(image)}")
+    def _image_to_base64(self, image: str) -> str:
+        """Return the base64 representation of an image file."""
+        if not isinstance(image, str):
+            raise ValueError("image must be a string path")
 
-    def _ensure_watch_thread(self):
+        with open(image, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+
+    def _ensure_watch_thread(self) -> None:
+        """Start the ComfyScript watch thread if it is not running."""
         runtime = importlib.import_module("comfy_script.runtime")
 
         queue = runtime.queue
@@ -195,15 +212,17 @@ class ComfyCaller:
         if watch is None or not watch.is_alive():
             queue.start_watch(False, False, False)
 
-    def _kill_thread(self, thread):
+    def _kill_thread(self, thread: threading.Thread | None) -> None:
+        """Terminate a running thread."""
         if thread is None:
             return
         try:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident), ctypes.py_object(SystemExit))
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident or 0), ctypes.py_object(SystemExit))
         except Exception:
             logger.debug("Failed to terminate ComfyScript thread")
 
-    def _cleanup_watch_thread(self):
+    def _cleanup_watch_thread(self) -> None:
+        """Stop the watch thread created by ``comfy_script``."""
         runtime = importlib.import_module("comfy_script.runtime")
 
         queue = runtime.queue
@@ -212,7 +231,19 @@ class ComfyCaller:
             self._kill_thread(watch)
         queue._watch_thread = None
 
-    def run_workflow(self, workflow, *args, **kwargs):
+    def run_workflow(self, workflow: str, *args: object, **kwargs: object) -> object:
+        """
+        Execute a registered workflow.
+
+        Args:
+            workflow: Name of the workflow to run.
+            *args: Positional arguments passed to the workflow.
+            **kwargs: Keyword arguments passed to the workflow.
+
+        Returns:
+            The value returned by the workflow function.
+
+        """
         logger.debug(f"run_workflow({workflow}, {kwargs})")
         handler = self.workflows[workflow]
         kwargs = {**self.defaults[workflow], **kwargs}
@@ -231,7 +262,8 @@ class ComfyCaller:
 
         return result
 
-    def set_url(self, url):
+    def set_url(self, url: str) -> None:
+        """Configure the ComfyUI server URL."""
         if url == self.url:  # If setting the same value, no change is needed
             return
         elif self.url is not None:
@@ -242,10 +274,10 @@ class ComfyCaller:
             self.url = url
             self._import_comfy_script()
 
-    def _get_defaults_image(self):
-        loras = lair.config.get("comfy.image.loras")
-        if loras is not None:
-            loras = [lora for lora in loras.split("\n") if lora]
+    def _get_defaults_image(self) -> dict[str, Any]:
+        """Return default parameters for the ``image`` workflow."""
+        loras_val = lair.config.get("comfy.image.loras")
+        loras = [lora for lora in str(loras_val).split("\n") if lora] if loras_val is not None else None
 
         return {
             "batch_size": lair.config.get("comfy.image.batch_size"),
@@ -263,12 +295,13 @@ class ComfyCaller:
             "steps": lair.config.get("comfy.image.steps"),
         }
 
-    def view(self, filename, type="temp"):
+    def view(self, filename: str, type: str = "temp") -> bytes:
+        """Retrieve an image or video from the ComfyUI server."""
         response = requests.get(
             f"{self.url}/api/view",
             params={"filename": filename, "type": type},
-            verify=lair.config.get("comfy.verify_ssl", True),
-            timeout=lair.config.get("comfy.timeout"),
+            verify=bool(lair.config.get("comfy.verify_ssl", True)),
+            timeout=cast(float | tuple[float, float] | tuple[float, None] | None, lair.config.get("comfy.timeout")),
         )
         if response.status_code != 200:
             raise Exception(f"/api/view returned unexpected status code: {response.status_code}")
@@ -278,20 +311,21 @@ class ComfyCaller:
     async def _workflow_image(
         self,
         *,
-        model_name,
-        prompt,
-        loras,
-        negative_prompt,
-        output_width,
-        output_height,
-        batch_size,
-        seed,
-        steps,
-        cfg,
-        sampler,
-        scheduler,
-        denoise,
-    ):
+        model_name: str,
+        prompt: str,
+        loras: list[str] | None,
+        negative_prompt: str,
+        output_width: int,
+        output_height: int,
+        batch_size: int,
+        seed: int | None,
+        steps: int,
+        cfg: float,
+        sampler: str,
+        scheduler: str,
+        denoise: float,
+    ) -> list[str]:
+        """Generate images using a text prompt."""
         seed = self._ensure_seed(seed)
 
         async with Workflow():
@@ -322,7 +356,8 @@ class ComfyCaller:
 
         return images
 
-    def _get_defaults_ltxv_i2v(self):
+    def _get_defaults_ltxv_i2v(self) -> dict[str, Any]:
+        """Return default parameters for the ``ltxv-i2v`` workflow."""
         return {
             "auto_prompt_extra": lair.config.get("comfy.ltxv_i2v.auto_prompt_extra"),
             "auto_prompt_suffix": lair.config.get("comfy.ltxv_i2v.auto_prompt_suffix"),
@@ -355,35 +390,36 @@ class ComfyCaller:
 
     async def _workflow_ltxv_i2v(
         self,
-        image,
+        image: str,
         *,
-        model_name,
-        clip_name,
-        image_resize_height,
-        image_resize_width,
-        num_frames,
-        frame_rate_conditioning,
-        frame_rate_save,
-        batch_size,
-        florence_model_name,
-        max_shift,
-        base_shift,
-        stretch,
-        terminal,
-        negative_prompt,
-        auto_prompt_suffix,
-        auto_prompt_extra,
-        prompt,
-        cfg,
-        sampler,
-        scheduler,
-        steps,
-        pingpong,
-        output_format,
-        denoise,
-        seed,
-        florence_seed,
-    ):
+        model_name: str,
+        clip_name: str,
+        image_resize_height: int,
+        image_resize_width: int,
+        num_frames: int,
+        frame_rate_conditioning: int,
+        frame_rate_save: int,
+        batch_size: int,
+        florence_model_name: str,
+        max_shift: float,
+        base_shift: float,
+        stretch: float,
+        terminal: int,
+        negative_prompt: str,
+        auto_prompt_suffix: str,
+        auto_prompt_extra: str,
+        prompt: str | None,
+        cfg: float,
+        sampler: str,
+        scheduler: str,
+        steps: int,
+        pingpong: bool,
+        output_format: str,
+        denoise: float,
+        seed: int | None,
+        florence_seed: int | None,
+    ) -> list[bytes]:
+        """Convert an input image to video using the LTXV workflow."""
         if image is None:
             raise ValueError("ltxv-i2v: Image must not be None")
         seed = self._ensure_seed(seed)
@@ -439,7 +475,8 @@ class ComfyCaller:
 
         return videos
 
-    def _get_defaults_ltxv_prompt(self):
+    def _get_defaults_ltxv_prompt(self) -> dict[str, Any]:
+        """Return default parameters for the ``ltxv-prompt`` workflow."""
         return {
             "auto_prompt_extra": lair.config.get("comfy.ltxv_prompt.auto_prompt_extra"),
             "auto_prompt_suffix": lair.config.get("comfy.ltxv_prompt.auto_prompt_suffix"),
@@ -452,15 +489,16 @@ class ComfyCaller:
 
     async def _workflow_ltxv_prompt(
         self,
-        image,
+        image: str,
         *,
-        florence_model_name,
-        auto_prompt_extra,
-        auto_prompt_suffix,
-        florence_seed,
-        image_resize_height,
-        image_resize_width,
-    ):
+        florence_model_name: str,
+        auto_prompt_extra: str,
+        auto_prompt_suffix: str,
+        florence_seed: int | None,
+        image_resize_height: int,
+        image_resize_width: int,
+    ) -> list[bytes]:
+        """Generate a prompt for a given image."""
         if image is None:
             raise ValueError("ltxv-prompt: Image must not be None")
         if florence_seed is None:
@@ -488,10 +526,10 @@ class ComfyCaller:
 
         return prompts
 
-    def _get_defaults_hunyuan_video_t2v(self):
-        loras = lair.config.get("comfy.hunyuan_video.loras")
-        if loras is not None:
-            loras = [lora for lora in loras.split("\n") if lora]
+    def _get_defaults_hunyuan_video_t2v(self) -> dict[str, Any]:
+        """Return default parameters for the hunyuan-video-t2v workflow."""
+        loras_val = lair.config.get("comfy.hunyuan_video.loras")
+        loras = [lora for lora in str(loras_val).split("\n") if lora] if loras_val is not None else None
 
         return {
             "batch_size": lair.config.get("comfy.hunyuan_video.batch_size"),
@@ -523,31 +561,32 @@ class ComfyCaller:
     async def _workflow_hunyuan_video_t2v(
         self,
         *,
-        batch_size,
-        clip_name_1,
-        clip_name_2,
-        denoise,
-        frame_rate,
-        guidance_scale,
-        height,
-        loras,
-        model_name,
-        num_frames,
-        model_weight_dtype,
-        prompt,
-        sampler,
-        sampling_shift,
-        scheduler,
-        seed,
-        steps,
-        tile_overlap,
-        tile_size,
-        tile_temporal_size,
-        tile_temporal_overlap,
-        tiled_decode_enabled,
-        width,
-        vae_model_name,
-    ):
+        batch_size: int,
+        clip_name_1: str,
+        clip_name_2: str,
+        denoise: float,
+        frame_rate: int,
+        guidance_scale: float,
+        height: int,
+        loras: list[str] | None,
+        model_name: str,
+        num_frames: int,
+        model_weight_dtype: str,
+        prompt: str,
+        sampler: str,
+        sampling_shift: float,
+        scheduler: str,
+        seed: int | None,
+        steps: int,
+        tile_overlap: int,
+        tile_size: int,
+        tile_temporal_size: int,
+        tile_temporal_overlap: int,
+        tiled_decode_enabled: bool,
+        width: int,
+        vae_model_name: str,
+    ) -> list[bytes]:
+        """Generate a hunyuan video from text."""
         seed = self._ensure_seed(seed)
 
         noise = RandomNoise(seed)
@@ -581,10 +620,10 @@ class ComfyCaller:
 
         return videos
 
-    def _get_defaults_outpaint(self):
-        loras = lair.config.get("comfy.outpaint.loras")
-        if loras is not None:
-            loras = [lora for lora in loras.split("\n") if lora]
+    def _get_defaults_outpaint(self) -> dict[str, Any]:
+        """Return default parameters for the ``outpaint`` workflow."""
+        loras_val = lair.config.get("comfy.outpaint.loras")
+        loras = [lora for lora in str(loras_val).split("\n") if lora] if loras_val is not None else None
 
         return {
             "cfg": lair.config.get("comfy.outpaint.cfg"),
@@ -609,24 +648,25 @@ class ComfyCaller:
     async def _workflow_outpaint(
         self,
         *,
-        model_name,
-        prompt,
-        loras,
-        negative_prompt,
-        grow_mask_by,
-        seed,
-        source_image,
-        steps,
-        cfg,
-        sampler,
-        scheduler,
-        denoise,
-        padding_left,
-        padding_top,
-        padding_right,
-        padding_bottom,
-        feathering,
-    ):
+        model_name: str,
+        prompt: str,
+        loras: list[str] | None,
+        negative_prompt: str,
+        grow_mask_by: int,
+        seed: int | None,
+        source_image: str,
+        steps: int,
+        cfg: float,
+        sampler: str,
+        scheduler: str,
+        denoise: float,
+        padding_left: int,
+        padding_top: int,
+        padding_right: int,
+        padding_bottom: int,
+        feathering: int,
+    ) -> list[str]:
+        """Outpaint an image using the given prompt."""
         seed = self._ensure_seed(seed)
 
         async with Workflow():
@@ -664,13 +704,15 @@ class ComfyCaller:
 
         return images
 
-    def _get_defaults_upscale(self):
+    def _get_defaults_upscale(self) -> dict[str, Any]:
+        """Return default parameters for the ``upscale`` workflow."""
         return {
             "source_image": None,
             "model_name": lair.config.get("comfy.upscale.model_name"),
         }
 
-    async def _workflow_upscale(self, *, source_image, model_name):
+    async def _workflow_upscale(self, *, source_image: str, model_name: str) -> list[str]:
+        """Upscale a provided image."""
         upscale_model = UpscaleModelLoader(model_name)
         image, _ = ETNLoadImageBase64(self._image_to_base64(source_image))
         image = ImageUpscaleWithModel(upscale_model, image)

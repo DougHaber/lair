@@ -1,6 +1,9 @@
 import os
-import lair
+
+import libtmux
 import pytest
+
+import lair
 from lair.components.tools.tmux_tool import TmuxTool
 
 
@@ -107,7 +110,7 @@ def test_get_window_by_id_and_errors(tool):
     assert tool._get_window_by_id(w1.get("window_id")) is w1
     assert tool._get_window_by_id(w1.get("window_id").lstrip("@")) is w1
     assert tool._get_window_by_id(None) is None
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool._get_window_by_id("@99")
 
 
@@ -128,7 +131,7 @@ def test_get_output_modes(tool, monkeypatch):
     assert called["mode"] == "stream"
     assert tool._get_output("screen") == {"out": "screen"}
     assert called["mode"] == "screen"
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         tool._get_output("bad")
 
 
@@ -176,7 +179,7 @@ def test_send_keys_valid_and_errors(tool, monkeypatch):
 
 
 def test_capture_output_and_errors(tool):
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.capture_output()
     tool.session.new_window("one")
     tool.active_window = tool.session.windows[0]
@@ -212,7 +215,7 @@ def test_read_new_output_flow(tool, tmp_path):
 
     # connection lost
     del tool.log_files[pane.get("pane_id")]
-    with pytest.raises(Exception):
+    with pytest.raises(RuntimeError):
         tool.read_new_output()
 
 
@@ -237,3 +240,141 @@ def test_kill_attach_and_list(tool):
     assert "No active tmux windows" in err["error"]
     err2 = tool.attach_window(window_id="@1")
     assert "No tmux windows" in err2["error"]
+
+
+def test_ensure_connection_and_failure(tmp_path, monkeypatch):
+    new_tool = TmuxTool()
+    old = setup_config(tmp_path)
+    calls = []
+
+    class DummyServer:
+        def __init__(self, fail=False):
+            self.fail = fail
+            self.sessions = []
+
+        def list_sessions(self):
+            if self.fail:
+                raise RuntimeError("nope")
+
+    def connect_first():
+        calls.append("c")
+        new_tool.server = DummyServer(fail=len(calls) == 1)
+        new_tool.session = DummySession()
+
+    monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_first)
+    new_tool.server = None
+    new_tool._ensure_connection()
+    assert len(calls) == 2  # called twice due to retry
+
+    def connect_fail():
+        raise RuntimeError("boom")
+
+    new_tool.server = DummyServer(fail=True)
+    monkeypatch.setattr(new_tool, "_connect_to_tmux", connect_fail)
+    with pytest.raises(RuntimeError):
+        new_tool._ensure_connection()
+    restore_config(old)
+
+
+def test_read_new_output_no_windows(tool):
+    with pytest.raises(RuntimeError):
+        tool.read_new_output()
+
+
+def test_get_log_file_name_creates_dirs(tool, tmp_path, monkeypatch):
+    cfg_value = os.path.join(str(tmp_path), "logs/cap-{window_id}.log")
+    lair.config.set("tools.tmux.capture_file_name", cfg_value, no_event=True)
+    window = DummyWindow(5)
+    path = tool.get_log_file_name_and_create_directories(window)
+    assert os.path.isdir(os.path.dirname(path))
+    assert path.endswith("cap-@5.log")
+
+
+def test_definition_generators(tool):
+    assert tool._generate_run_definition()["function"]["name"] == "run"
+    assert tool._generate_send_keys_definition()["function"]["name"] == "send_keys"
+    assert tool._generate_capture_output_definition()["function"]["name"] == "capture_output"
+    assert tool._generate_read_new_output_definition()["function"]["name"] == "read_new_output"
+    assert tool._generate_kill_definition()["function"]["name"] == "kill"
+    assert tool._generate_list_windows_definition()["function"]["name"] == "list_windows"
+    assert tool._generate_attach_window_definition()["function"]["name"] == "attach_window"
+
+
+def test_clean_new_data_options(tool, monkeypatch):
+    lair.config.set("tools.tmux.read_new_output.strip_escape_codes", True, no_event=True)
+    sample = b"line1\nline2\nremain\n"
+    assert tool._clean_new_data(sample, 0, None) == "remain"
+
+    called = {}
+
+    def fake_strip(text):
+        called["hit"] = True
+        return text.replace("ESC", "")
+
+    monkeypatch.setattr(lair.util, "strip_escape_codes", fake_strip)
+    second = tool._clean_new_data(b"cmd\nres1\n", 1, "cmd")
+    assert second == "res1\n"
+    third = tool._clean_new_data(b"ESC\r", 1, None)
+    assert called["hit"] and third == ""
+
+
+def test_run_send_keys_and_window_errors(tool, monkeypatch):
+    tool.session.new_window = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("oops"))
+    err = tool.run()
+    assert err["error"] == "oops"
+
+    tool.session = DummySession()
+    tool.active_window = tool.session.new_window("one")
+    monkeypatch.setattr(tool, "_get_window_by_id", lambda wid: (_ for _ in ()).throw(RuntimeError("bad")))
+    res = tool.send_keys("k", window_id=1)
+    assert res["error"] == "bad"
+
+    monkeypatch.setattr(tool, "_get_window_by_id", lambda wid: (_ for _ in ()).throw(RuntimeError("boom")))
+    out = tool.kill(window_id="@1")
+    assert out["error"] == "boom"
+
+    monkeypatch.setattr(tool, "_ensure_connection", lambda: (_ for _ in ()).throw(RuntimeError("fail")))
+    lst = tool.list_windows()
+    assert lst["error"] == "fail"
+    monkeypatch.setattr(tool, "_ensure_connection", lambda: None)
+    monkeypatch.setattr(tool, "_get_window_by_id", lambda wid: (_ for _ in ()).throw(RuntimeError("attach")))
+    att = tool.attach_window(window_id="@1")
+    assert att["error"] == "attach"
+
+
+class SimpleServer:
+    def __init__(self):
+        self.sessions = []
+        self.new_session_called = False
+
+    def new_session(self, session_name, attach=False):
+        self.new_session_called = True
+        sess = DummySession()
+        sess.name = session_name
+        self.sessions.append(sess)
+        return sess
+
+
+def test_connect_to_tmux_creates_and_reuses(tmp_path, monkeypatch):
+    old = setup_config(tmp_path)
+    server = SimpleServer()
+    monkeypatch.setattr(libtmux, "Server", lambda: server)
+    tool = TmuxTool()
+    tool._connect_to_tmux()
+    assert tool.server is server
+    assert tool.session in server.sessions
+    assert server.new_session_called
+    assert tool.log_files == {}
+    assert tool.log_offsets == {}
+
+    # existing session reused
+    server2 = SimpleServer()
+    exist = DummySession()
+    exist.name = lair.config.get("tools.tmux.session_name")
+    server2.sessions.append(exist)
+    monkeypatch.setattr(libtmux, "Server", lambda: server2)
+    tool2 = TmuxTool()
+    tool2._connect_to_tmux()
+    assert tool2.session is exist
+    assert not server2.new_session_called
+    restore_config(old)

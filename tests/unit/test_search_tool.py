@@ -1,5 +1,4 @@
 import lair
-
 from lair.components.tools.search_tool import SearchTool
 
 
@@ -52,7 +51,7 @@ def make_tool(monkeypatch):
             self.params.append(("news", query, max_results))
             return []
 
-    monkeypatch.setattr(lair.components.tools.search_tool.duckduckgo_search, "DDGS", DummyDDGS)
+    monkeypatch.setattr(lair.components.tools.search_tool, "DDGS", DummyDDGS)
     return SearchTool()
 
 
@@ -151,3 +150,34 @@ def test_search_news_exception(monkeypatch):
     tool.ddgs.news = raise_exc
     out = tool.search_news("q")
     assert "error" in out and "nope" in out["error"]
+
+
+def test_search_web_exception(monkeypatch):
+    lair.config.set("tools.search.max_results", 1, no_event=True)
+    tool = make_tool(monkeypatch)
+
+    def boom(q, max_results):
+        raise RuntimeError("fail")
+
+    tool.ddgs.text = boom
+    result = tool.search_web("bad")
+    assert "fail" in result["error"]
+
+
+def test_search_news_failure_and_limit(monkeypatch):
+    lair.config.set("tools.search.max_results", 1, no_event=True)
+    tool = make_tool(monkeypatch)
+    calls = []
+
+    def news_stub(q, max_results):
+        return [
+            {"date": "d1", "title": "t1", "url": "u1"},
+            {"date": "d2", "title": "t2", "url": "u2"},
+        ]
+
+    monkeypatch.setattr(tool, "_get_content", lambda url: calls.append(url) or "")
+    tool.ddgs.news = news_stub
+    result = tool.search_news("q")
+    assert result == {"error": "Search failed"}
+    # When _get_content returns empty, it should still try at most two entries due to limit
+    assert len(calls) == 2

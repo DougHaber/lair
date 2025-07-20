@@ -1,9 +1,11 @@
 import base64
+
 from prompt_toolkit.document import Document
+
 import lair
+import lair.util.core as core
 from lair.cli.chat_interface_completer import ChatInterfaceCompleter
 from tests.helpers.chat_interface import make_interface
-import lair.util.core as core
 
 
 def test_get_embedded_response(monkeypatch):
@@ -57,3 +59,27 @@ def test_get_attachments_content(monkeypatch, tmp_path):
     assert any(p["type"] == "image_url" for p in parts)
     joined = " ".join(m["content"] for m in messages)
     assert "pdfdata" in joined and "hello" in joined
+
+
+def test_completer_edge_cases(monkeypatch):
+    ci = make_interface(monkeypatch)
+    completer = ChatInterfaceCompleter(ci)
+
+    # no models cached
+    ci._models = None
+    assert list(completer.get_completions__model("/model x")) == []
+
+    # too many args for /mode
+    assert list(completer.get_completions__mode("/mode a b")) == []
+
+    # improper /prompt usage
+    assert list(completer.get_completions__prompt("/prompt")) == []
+
+    # value completion when key is unknown
+    doc = Document("/set newkey ", cursor_position=len("/set newkey "))
+    texts = [c.text for c in completer.get_completions(doc, None)]
+    assert "/set newkey" in texts
+
+    # keys starting with underscore are ignored
+    doc = Document("/set _", cursor_position=len("/set _"))
+    assert list(completer.get_completions(doc, None)) == []

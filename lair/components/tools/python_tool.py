@@ -1,21 +1,35 @@
+"""Tool for executing Python scripts inside Docker containers."""
+
 import os
 import shlex
 import shutil
 import subprocess
 import tempfile
 import traceback
+from typing import Any, Optional, cast
 
 import lair
+from lair.components.tools.tool_set import ToolSet
 from lair.logging import logger
 
 
 class PythonTool:
+    """Tool that exposes Python execution as a single callable function."""
+
     name = "python"
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the tool by resolving the docker binary path."""
         self._docker = shutil.which("docker") or "docker"
 
-    def add_to_tool_set(self, tool_set):
+    def add_to_tool_set(self, tool_set: ToolSet) -> None:
+        """
+        Register this tool with a :class:`ToolSet` instance.
+
+        Args:
+            tool_set: The :class:`ToolSet` to register the tool with.
+
+        """
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name="run_python",
@@ -24,7 +38,8 @@ class PythonTool:
             handler=lambda *args, **kwargs: self.run_python(*args, **kwargs),
         )
 
-    def _generate_definition(self):
+    def _generate_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``run_python``."""
         settings = {
             "timeout": lair.config.get("tools.python.timeout"),
             "extra_modules": lair.config.get("tools.python.extra_modules"),
@@ -53,8 +68,14 @@ class PythonTool:
             },
         }
 
-    def _cleanup_container(self, container_id):
-        """Force remove a container by id."""
+    def _cleanup_container(self, container_id: str) -> None:
+        """
+        Force remove a container by ID.
+
+        Args:
+            container_id: The ID of the Docker container to remove.
+
+        """
         run = subprocess.run
         run(
             [
@@ -67,8 +88,28 @@ class PythonTool:
             text=True,
         )
 
-    def _format_output(self, *, error=None, stdout=None, stderr=None, exit_status=None):
-        output = {}
+    def _format_output(
+        self,
+        *,
+        error: Optional[str] = None,
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
+        exit_status: Optional[int] = None,
+    ) -> dict[str, Any]:
+        """
+        Normalize subprocess output for return to the caller.
+
+        Args:
+            error: Error message to include.
+            stdout: Standard output from the command.
+            stderr: Standard error from the command.
+            exit_status: Exit status of the command if known.
+
+        Returns:
+            A dictionary containing any provided values with empty items removed.
+
+        """
+        output: dict[str, Any] = {}
 
         if error:
             output["error"] = f"{error}"
@@ -81,9 +122,20 @@ class PythonTool:
 
         return output
 
-    def run_python(self, script):
-        container_id = None
-        temp_file_path = None
+    def run_python(self, script: str) -> dict[str, Any]:
+        """
+        Execute the provided Python script inside a temporary Docker container.
+
+        Args:
+            script: The Python source code to run.
+
+        Returns:
+            A dictionary containing ``stdout``, ``stderr`` and ``exit_status`` or
+            an ``error`` message if execution failed.
+
+        """
+        container_id: Optional[str] = None
+        temp_file_path: Optional[str] = None
 
         try:
             with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as temp_file:
@@ -99,7 +151,7 @@ class PythonTool:
                     "-d",
                     "-v",
                     f"{shlex.quote(temp_file_path)}:{shlex.quote(container_script_path)}:ro",
-                    shlex.quote(lair.config.get("tools.python.docker_image")),
+                    shlex.quote(cast(str, lair.config.get("tools.python.docker_image"))),
                     "python",
                     shlex.quote(container_script_path),
                 ],
@@ -116,7 +168,7 @@ class PythonTool:
                     [shlex.quote(self._docker), "wait", shlex.quote(container_id)],
                     capture_output=True,
                     text=True,
-                    timeout=lair.config.get("tools.python.timeout"),
+                    timeout=cast(float, lair.config.get("tools.python.timeout")),
                 )
             except subprocess.TimeoutExpired:
                 self._cleanup_container(container_id)

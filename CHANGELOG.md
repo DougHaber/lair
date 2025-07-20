@@ -1,13 +1,15 @@
 # WIP - v0.8.2+dev
 
 ### Bug Fixes
+- cli: Resolve circular import preventing `lair chat --help`
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
 - cli: Reduce complexity of keybindings setup
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
+- comfy: Raise ValueError for invalid image path type
+- tests: Stub prompt_toolkit run_in_terminal to remove warnings
 - tests: Support environments where `openai_local` mode is renamed
-- tests: Add coverage for comfy_caller workflows
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
@@ -15,33 +17,16 @@
 
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
-- tests: Add pytest suite and extended chat interface coverage
-- tests: Add stub for `pdfplumber.open` to avoid AttributeError in CI
-- tests: Enable coverage and add new utility tests
+- internal: update code for new ruff version
+- tests: Enforce 90% minimum test coverage and add many new tests.
 - docker: Add lair into youtube image
-- tests: Increase ChatHistory coverage
-- tests: Fix Python tool cleanup path assertions
-- tests: Increase ToolSet coverage
-- deps: Replace pyflakes with ruff for linting
+- internal: resolve mypy type errors across multiple modules
+- internal: add docstrings and type annotations for history utilities
 - documentation: Expand README outpainting example
-- tests: Fix ruff lint issues in test suite
-- tests: Add coverage for all chat sub-commands
-- tests: Add search tool coverage
-- tests: Add extra coverage for chat interface commands
-- tests: Add completer, attachment, and argument parsing coverage
-- tests: Increase coverage for cli.run module
-- tests: Add validation and tool parsing coverage
-- tests: Increase util.core coverage
-- tests: Add ComfyCaller helper and workflow coverage
-- tests: Increase chat interface toolbar and alias handling coverage
-- documentation: Update AGENTS instructions to use Poetry
+- tools: improve docstrings and type hints for ToolSet
 - cleanup: refactor workflow and tool call helpers for readability
-- tests: Add FileTool unit tests
-- tests: Add ComfyCaller SSL and URL handling coverage
-- tests: Add PythonTool unit tests
-- tests: Increase tmux tool coverage
-- internal: Fix import order to satisfy new ruff checks
-- internal: Add type annotations to fix mypy errors
+- internal: Enforce strict ruff checks, ruff formatting, and mypy validation
+- util: Add documentation and type hints to prompt template
 
 # v0.8.1 - Bug fixes
 
@@ -225,4 +210,4 @@
 ### New Features
 - add `chat` module, w/ auto-complete, file based sessions, & markdown rendering
 - add `util` module for CLI scripting with image support
-- tests: Add additional coverage for chat interface
+

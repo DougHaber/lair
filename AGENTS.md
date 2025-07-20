@@ -27,6 +27,7 @@ Lair is a command line tool for working with generative AI.
 
 ### Style
 
+- Python 3.10+ is used, and code does not need to support older versions.
 - Prefer explicit imports and avoid wild-card imports when possible.
 - Python files should wrap at 120 characters.  Markdown files should not have any forced wrapping.
 - Variable names should be clear and unabbreviated.  For example, `filters` is preferred over `filt`, `subscriptions` over `sub`, and `index` over `idx`.
@@ -37,6 +38,7 @@ Lair is a command line tool for working with generative AI.
 - Configuration files use YAML.
 - Do not exceed a McCabe `max_complexity` of 7.
 - Code readability is extremely important.
+- All Python docstrings must follow a structured format with sections like Args, Returns, and Raises, using a consistent style (e.g., Google or NumPy).
 
 ### General
 
@@ -58,6 +60,8 @@ Install the project's dependencies using Poetry:
 eval $(poetry env activate)
 poetry install --with dev
 ```
+
+You have network permissions to install all dependencies. If installation fails try again and make sure you are doing it properly. If you are unable to install all dependencies, abort the task.
 
 ### Completing a Request
 

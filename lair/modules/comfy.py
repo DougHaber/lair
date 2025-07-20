@@ -1,14 +1,19 @@
+"""Command line interface for running ComfyUI workflows."""
+
 import argparse
 import os
 import pathlib
 import shlex
 import sys
+from collections.abc import Iterable, Sequence
+from typing import Any, cast
 
 import PIL
 
 import lair
 import lair.cli
 import lair.comfy_caller
+from lair.cli.chat_interface import ChatInterface
 from lair.logging import logger  # noqa
 from lair.util.argparse import (
     ArgumentParserExitException,
@@ -17,12 +22,21 @@ from lair.util.argparse import (
 )
 
 
-def _module_info():
-    return {"description": "Run ComfyUI workflows", "class": Comfy, "tags": [], "aliases": []}
+def _module_info() -> dict[str, Any]:
+    """Return metadata describing this module."""
+    return {
+        "description": "Run ComfyUI workflows",
+        "class": Comfy,
+        "tags": [],
+        "aliases": [],
+    }
 
 
 class Comfy:
-    def __init__(self, parser):
+    """Entry point for the ``comfy`` command."""
+
+    def __init__(self, parser: argparse.ArgumentParser) -> None:
+        """Initialize the argument parser for all ComfyUI workflows."""
         sub_parser = parser.add_subparsers(dest="comfy_command", required=True)
 
         self.comfy = lair.comfy_caller.ComfyCaller()
@@ -35,9 +49,9 @@ class Comfy:
         self._add_argparse_outpaint(sub_parser)
         self._add_argparse_upscale(sub_parser)
 
-        lair.events.subscribe("chat.init", lambda d: self._on_chat_init(d), instance=self)
+        lair.events.subscribe("chat.init", lambda d: self._on_chat_init(cast(ChatInterface, d)), instance=self)
 
-    def _add_argparse_image(self, sub_parser):
+    def _add_argparse_image(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("image", help="Basic image creation workflow")
         defaults = self.comfy.defaults["image"]
         output_file = lair.config.get("comfy.image.output_file")
@@ -120,7 +134,7 @@ class Comfy:
             ),
         )
 
-    def _add_argparse_hunyuan_video_t2v(self, sub_parser):
+    def _add_argparse_hunyuan_video_t2v(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("hunyuan-video-t2v", help="Hunyuan Video - Text to Video")
         defaults = self.comfy.defaults["hunyuan-video-t2v"]
         output_file = lair.config.get("comfy.hunyuan_video.output_file")
@@ -225,7 +239,7 @@ class Comfy:
             ),
         )
 
-    def _add_argparse_ltxv_i2v(self, sub_parser):
+    def _add_argparse_ltxv_i2v(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("ltxv-i2v", help="LTX Video - Image to Video")
         defaults = self.comfy.defaults["ltxv-i2v"]
         output_file = lair.config.get("comfy.ltxv_i2v.output_file")
@@ -342,7 +356,7 @@ class Comfy:
             ),
         )
 
-    def _add_argparse_ltxv_prompt(self, sub_parser):
+    def _add_argparse_ltxv_prompt(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("ltxv-prompt", help="LTX Video - Generate prompts from an image")
         defaults = self.comfy.defaults["ltxv-prompt"]
         output_file = lair.config.get("comfy.ltxv_prompt.output_file")
@@ -382,7 +396,7 @@ class Comfy:
             ),
         )
 
-    def _add_argparse_outpaint(self, sub_parser):
+    def _add_argparse_outpaint(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("outpaint", help="Outpaint images")
         defaults = self.comfy.defaults["outpaint"]
         comfy_url = lair.config.get("comfy.url")
@@ -469,7 +483,7 @@ class Comfy:
         )
         command_parser.add_argument("outpaint_files", type=str, nargs="+", help="File(s) to outpaint")
 
-    def _add_argparse_upscale(self, sub_parser):
+    def _add_argparse_upscale(self, sub_parser: argparse._SubParsersAction) -> None:
         command_parser = sub_parser.add_parser("upscale", help="Upscale images")
         defaults = self.comfy.defaults["upscale"]
         comfy_url = lair.config.get("comfy.url")
@@ -490,8 +504,8 @@ class Comfy:
         )
         command_parser.add_argument("scale_files", type=str, nargs="+", help="File(s) to scale")
 
-    def _get_chat_command_parser(self):
-        """Create a parser that can be used for parsing for chat commands without exiting on errors"""
+    def _get_chat_command_parser(self) -> argparse.ArgumentParser:
+        """Return an ``ArgumentParser`` for the ``/comfy`` chat command."""
         new_parser = ErrorRaisingArgumentParser(prog="/comfy")
         sub_parser = new_parser.add_subparsers(dest="comfy_command", required=True)
 
@@ -503,8 +517,11 @@ class Comfy:
 
         return new_parser
 
-    def _on_chat_init(self, chat_interface):
-        def comfy_command(command, arguments, arguments_str):
+    def _on_chat_init(self, chat_interface: "ChatInterface") -> None:
+        """Register the ``/comfy`` command with the chat interface."""
+
+        def comfy_command(command: str, arguments: Iterable[str], arguments_str: str) -> None:
+            """Execute a ComfyUI workflow from the chat interface."""
             try:
                 chat_command_parser = self._get_chat_command_parser()
                 new_arguments = shlex.split(" ".join(arguments))
@@ -529,12 +546,17 @@ class Comfy:
 
         chat_interface.register_command("/comfy", comfy_command, "Call ComfyUI workflows")
 
-    def _save_output__save_to_disk(self, item, filename):
+    def _save_output__save_to_disk(self, item: object, filename: str) -> None:
         """
-        Save the given item to disk. Supports PIL.Image and HTTP response.raw objects.
+        Save a workflow output to disk.
 
-        :param item: The item to save (PIL.Image.Image or HTTP response.raw).
-        :param filename: The file path to save the item to.
+        Args:
+            item: The object to save. ``PIL.Image.Image`` and file-like objects are supported.
+            filename: Path on disk where the item should be saved.
+
+        Raises:
+            TypeError: If ``item`` is not a supported type.
+
         """
         if isinstance(item, PIL.Image.Image):
             item.save(filename)
@@ -548,20 +570,28 @@ class Comfy:
         else:
             raise TypeError("Unsupported output type. Unable to save output file.")
 
-    def _save_output(self, results, filename, start_index=0, single_output=False):
+    def _save_output(
+        self,
+        results: Sequence[object],
+        filename: str,
+        start_index: int = 0,
+        single_output: bool = False,
+    ) -> None:
         """
-        Saves a list of outputs to disk.
+        Save workflow outputs to disk.
 
         Args:
-            results (list): List of outputs to be saved.
-            filename (str): Base filename to save the outputs. If multiple outputs, filenames
-                            will increment as {basename}{x}.{extension}.
+            results: Items returned from the workflow.
+            filename: Base filename for saving outputs.
+            start_index: Index offset when naming multiple outputs.
+            single_output: Whether ``results`` contains exactly one item.
+
         """
         output_files = []
 
         if single_output:  # Save single output with provided filename
             if filename == "-":
-                sys.stdout.buffer.write(results[0] + b"\n")
+                sys.stdout.buffer.write(cast(bytes, results[0]) + b"\n")
                 return
 
             self._save_output__save_to_disk(results[0], filename)
@@ -583,10 +613,20 @@ class Comfy:
 
         logger.debug(f"saved: {', '.join(output_files)}")
 
-    def get_output_file_name(self, file_name):
+    def get_output_file_name(self, file_name: str) -> str:
+        """Return the filename that should be used for an upscaled image."""
         return f"{os.path.splitext(file_name)[0]}-upscaled{os.path.splitext(file_name)[1]}"
 
-    def _run_workflow_queue(self, arguments, defaults, function_arguments, *, queue, output_filename_template):
+    def _run_workflow_queue(
+        self,
+        arguments: argparse.Namespace,
+        defaults: dict[str, Any],
+        function_arguments: dict[str, Any],
+        *,
+        queue: list[str],
+        output_filename_template: str,
+    ) -> None:
+        """Process each file in ``queue`` using the provided workflow."""
         while queue:
             source_filename = queue.pop(0)
             if os.path.isdir(source_filename):
@@ -597,13 +637,21 @@ class Comfy:
             else:
                 self._process_file(source_filename, arguments, function_arguments, output_filename_template)
 
-    def _extend_queue_from_dir(self, directory, queue):
+    def _extend_queue_from_dir(self, directory: str, queue: list[str]) -> None:
+        """Add image files from ``directory`` to ``queue``."""
         for filename in os.listdir(directory):
             path = pathlib.Path(directory) / filename
             if path.is_dir() or path.suffix.lower() in self._image_file_extensions:
                 queue.append(str(path.absolute()))
 
-    def _process_file(self, filename, arguments, function_arguments, template):
+    def _process_file(
+        self,
+        filename: str,
+        arguments: argparse.Namespace,
+        function_arguments: dict[str, Any],
+        template: str,
+    ) -> None:
+        """Run a workflow for a single file and save the result."""
         function_arguments["source_image"] = filename
         output_filename = template.format(basename=os.path.splitext(filename)[0])
 
@@ -611,12 +659,21 @@ class Comfy:
             logger.warning(f"Skipping existing file: {output_filename}")
             return
 
-        output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+        output = cast(
+            Sequence[object],
+            self.comfy.run_workflow(arguments.comfy_command, **function_arguments),
+        )
         if not output:
             raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
         self._save_output(output, output_filename, single_output=True)
 
-    def run_workflow_outpaint(self, arguments, defaults, function_arguments):
+    def run_workflow_outpaint(
+        self,
+        arguments: argparse.Namespace,
+        defaults: dict[str, Any],
+        function_arguments: dict[str, Any],
+    ) -> None:
+        """Run the outpaint workflow for each file in ``arguments.outpaint_files``."""
         if arguments.padding:
             components = arguments.padding.split("x")
             if len(components) != 4:
@@ -637,37 +694,53 @@ class Comfy:
             defaults,
             function_arguments,
             queue=[*arguments.outpaint_files],
-            output_filename_template=lair.config.get("comfy.outpaint.output_filename"),
+            output_filename_template=cast(str, lair.config.get("comfy.outpaint.output_filename")),
         )
 
-    def run_workflow_upscale(self, arguments, defaults, function_arguments):
+    def run_workflow_upscale(
+        self,
+        arguments: argparse.Namespace,
+        defaults: dict[str, Any],
+        function_arguments: dict[str, Any],
+    ) -> None:
+        """Run the upscale workflow for each file in ``arguments.scale_files``."""
         self._run_workflow_queue(
             arguments,
             defaults,
             function_arguments,
             queue=[*arguments.scale_files],
-            output_filename_template=lair.config.get("comfy.upscale.output_filename"),
+            output_filename_template=cast(str, lair.config.get("comfy.upscale.output_filename")),
         )
 
-    def run_workflow_default(self, arguments, defaults, function_arguments):
+    def run_workflow_default(
+        self,
+        arguments: argparse.Namespace,
+        defaults: dict[str, Any],
+        function_arguments: dict[str, Any],
+    ) -> None:
+        """Run a workflow and save outputs, respecting ``arguments.repeat``."""
         # True when there is only a single file output
         batch_size = function_arguments.get("batch_size", defaults.get("batch_size", 1))
         single_output = arguments.repeat == 1 and batch_size == 1
 
         for i in range(0, arguments.repeat):
-            output = self.comfy.run_workflow(arguments.comfy_command, **function_arguments)
+            output = cast(
+                Sequence[object],
+                self.comfy.run_workflow(arguments.comfy_command, **function_arguments),
+            )
 
             if output is None or len(output) == 0:
                 raise ValueError("Workflow returned no output. This could indicate an invalid parameter was provided.")
             self._save_output(output, arguments.output_file, i * len(output), single_output=single_output)
 
-    def run(self, arguments):
+    def run(self, arguments: argparse.Namespace) -> None:
+        """Execute a workflow based on parsed command-line ``arguments``."""
         self.comfy.set_url(arguments.comfy_url)
 
         arguments_dict = vars(arguments)
         # If a prompt-file is provided, set the prompt attribute from that
         if arguments_dict.get("prompt_file") is not None:
-            arguments_dict["prompt"] = lair.util.slurp_file(arguments_dict.get("prompt_file"))
+            arguments_dict["prompt"] = lair.util.slurp_file(cast(str, arguments_dict.get("prompt_file")))
             del arguments_dict["prompt_file"]
         defaults = self.comfy.defaults[arguments.comfy_command]
         function_arguments = {

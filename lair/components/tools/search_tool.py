@@ -1,12 +1,19 @@
-import duckduckgo_search
+"""Tools for performing DuckDuckGo web and news searches."""
+
+from typing import Any, cast
+
 import requests
 import trafilatura
+from ddgs import DDGS  # Duck Duck Go Search
 
 import lair
+from lair.components.tools.tool_set import ToolSet
 from lair.logging import logger
 
 
 class SearchTool:
+    """Tool for performing web and news searches using DuckDuckGo."""
+
     name = "search"
     SEARCH_WEB_DEFINITION = {
         "type": "function",
@@ -39,10 +46,18 @@ class SearchTool:
         },
     }
 
-    def __init__(self):
-        self.ddgs = duckduckgo_search.DDGS()
+    def __init__(self) -> None:
+        """Instantiate the underlying DuckDuckGo search client."""
+        self.ddgs = DDGS()
 
-    def add_to_tool_set(self, tool_set):
+    def add_to_tool_set(self, tool_set: ToolSet) -> None:
+        """
+        Register the search tools with a :class:`ToolSet` instance.
+
+        Args:
+            tool_set: The :class:`ToolSet` to register the tools with.
+
+        """
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name="search_web",
@@ -58,11 +73,23 @@ class SearchTool:
             handler=self.search_news,
         )
 
-    def _get_content(self, url):
-        max_length = lair.config.get("tools.search.max_length")
+    def _get_content(self, url: str) -> str:
+        """
+        Fetch content from a URL and extract readable text.
+
+        Args:
+            url: The URL to download.
+
+        Returns:
+            The extracted text truncated to ``tools.search.max_length`` characters
+            or an empty string if extraction fails.
+
+        """
+        max_length = cast(int, lair.config.get("tools.search.max_length"))
 
         try:
-            response = requests.get(url, timeout=lair.config.get("tools.search.timeout"))
+            timeout = cast(float, lair.config.get("tools.search.timeout"))
+            response = requests.get(url, timeout=timeout)
             response.raise_for_status()
 
             text_content = trafilatura.extract(response.text, include_comments=False, include_tables=False)
@@ -77,8 +104,19 @@ class SearchTool:
             logger.debug(f"Failed to get content from {url}: {e}")
             return ""
 
-    def search_web(self, query):
-        max_results = lair.config.get("tools.search.max_results")
+    def search_web(self, query: str) -> dict[str, Any]:
+        """
+        Perform a DuckDuckGo web search.
+
+        Args:
+            query: The search query string.
+
+        Returns:
+            A dictionary containing the search results or an ``error`` key on
+            failure.
+
+        """
+        max_results = cast(int, lair.config.get("tools.search.max_results"))
 
         try:
             results = self.ddgs.text(query, max_results=max_results * 4)
@@ -98,8 +136,19 @@ class SearchTool:
             logger.warning(f"search_web(): Encountered error: {error}")
             return {"error": str(error)}
 
-    def search_news(self, query):
-        max_results = lair.config.get("tools.search.max_results")
+    def search_news(self, query: str) -> dict[str, Any]:
+        """
+        Perform a DuckDuckGo news search.
+
+        Args:
+            query: The news search query string.
+
+        Returns:
+            A dictionary containing the search results or an ``error`` key on
+            failure.
+
+        """
+        max_results = cast(int, lair.config.get("tools.search.max_results"))
 
         try:
             results = self.ddgs.news(query, max_results=max_results * 4)

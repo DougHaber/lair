@@ -14,17 +14,18 @@ prompt-toolkit = "^3.0.40"
 jsonschema = "^4.19.2"
 comfy-script = {extras = ["client"], version = "^0.5.1"}
 pdfplumber = "^0.11.5"
-duckduckgo-search = "^7.3.0"
 trafilatura = "^2.0.0"
 jinja2 = "^3.1.5"
 lmdb = "^1.6.2"
 libtmux = "^0.46.0"
+ddgs = "^9.3.1"
+pyyaml = "^6.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.1.1"
-ruff = "^0.5.1"
-coverage = "^7.4.0"
-pytest-cov = "^4.1.0"
+pytest = "^8.4.1"
+ruff = "^0.12.4"
+coverage = "^7.9.2"
+pytest-cov = "^6.2.1"
 mypy = "^1.17.0"
 types-pyyaml = "^6.0.12.20250516"
 types-requests = "^2.32.4.20250611"
@@ -53,17 +54,18 @@ select = [
   "SIM", # simplify
   "Q",   # quotes
   "C",   # complexity
-  # "ANN", # annotations
-  # "D",   # docstrings
+  "ANN", # annotations
+  "D",   # docstrings
   "N",   # naming
   "T",   # debugger/print
 ]
+ignore = ["D203", "D212"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
+"tests/**/*.py" = ["S101", "D", "ANN"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=65"
+addopts = "--cov=lair --cov-report=term-missing --cov-fail-under=90"
 markers = [
     "unit: unit tests",
     "integration: integration tests using sqlite",

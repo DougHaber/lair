@@ -1,10 +1,15 @@
+"""OpenAI chat session implementation."""
+
+from __future__ import annotations
+
 import datetime
 import json
 import os
-from typing import Any, Dict, List, Optional, cast
+import zoneinfo
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, cast
 
 import openai
-import zoneinfo
 
 import lair
 import lair.reporting
@@ -14,34 +19,62 @@ from lair.logging import logger
 
 from .base_chat_session import BaseChatSession
 
+if TYPE_CHECKING:
+    from openai.types.chat import ChatCompletionMessage, ChatCompletionToolParam
+else:
+    ChatCompletionMessage = Any  # type: ignore
+    ChatCompletionToolParam = Any  # type: ignore
+
 
 class OpenAIChatSession(BaseChatSession):
-    def __init__(self, *, history: Optional[ChatHistory] = None, tool_set: Optional[ToolSet] = None):
+    """Chat session that uses the OpenAI API."""
+
+    def __init__(self, *, history: ChatHistory | None = None, tool_set: ToolSet | None = None) -> None:
+        """
+        Initialize the chat session.
+
+        Args:
+            history: Optional history instance. Defaults to a new ``ChatHistory`` instance.
+            tool_set: Optional tool set. Defaults to a new ``ToolSet`` instance.
+
+        """
         super().__init__(history=history, tool_set=tool_set)
-        self.openai: Optional[openai.OpenAI] = None
+        self.openai: openai.OpenAI | None = None
         self.recreate_openai_client()
 
         lair.events.subscribe("config.update", lambda d: self.recreate_openai_client(), instance=self)
 
-    def _get_openai_client(self):
-        logger.debug(f"Create OpenAI() client: base_url={lair.config.get('openai.api_base')}")
-        self.openai = openai.OpenAI(
-            api_key=os.environ.get(lair.config.get("openai.api_key_environment_variable")) or "none",
-            base_url=lair.config.get("openai.api_base"),
-        )
+    def _get_openai_client(self) -> None:
+        """Instantiate the underlying OpenAI client using current configuration."""
+        base_url = cast(str | None, lair.config.get("openai.api_base"))
+        logger.debug(f"Create OpenAI() client: base_url={base_url}")
+        api_key_env = cast(str, lair.config.get("openai.api_key_environment_variable"))
+        api_key = os.environ.get(api_key_env) or "none"
+        self.openai = openai.OpenAI(api_key=api_key, base_url=base_url)
 
-    def recreate_openai_client(self):
+    def recreate_openai_client(self) -> None:
+        """Recreate the OpenAI client when configuration changes."""
         self._get_openai_client()
 
     def invoke(
         self,
-        messages: Optional[List[Dict[str, Any]]] = None,
+        messages: list[dict[str, Any]] | None = None,
         disable_system_prompt: bool = False,
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-    ):
+        **kwargs: object,
+    ) -> str:
         """
-        Call the underlying model without altering state (no history)
+        Call the underlying model without altering the chat history.
+
+        Args:
+            messages: Optional list of messages to send. If ``None``, the current
+                chat history is used.
+            disable_system_prompt: If ``True``, the system prompt is omitted.
+            **kwargs: Additional options passed to the API client. Supported keys:
+                ``model`` and ``temperature``.
+
+        Returns:
+            str: The model response with surrounding whitespace stripped.
+
         """
         if messages is None:
             messages = []
@@ -54,21 +87,42 @@ class OpenAIChatSession(BaseChatSession):
         messages_str = self.reporting.messages_to_str(messages)
         self.last_prompt = messages_str
 
-        model_name = lair.config.get("model.name")
+        model_name = cast(str, lair.config.get("model.name"))
+        model_override = cast(str | None, kwargs.get("model"))
+        if model_override is not None:
+            model_name = model_override
+        temperature_override = cast(float | None, kwargs.get("temperature"))
         logger.debug(f"OpenAIChatSession(): completions.create(model={model_name}, len(messages)={len(messages)})")
         if self.openai is None:
             raise RuntimeError("OpenAI client is not initialized")
         answer = self.openai.chat.completions.create(
             messages=cast(Any, messages),
             model=model_name,
-            temperature=temperature if temperature is not None else lair.config.get("model.temperature"),
-            max_completion_tokens=lair.config.get("model.max_tokens"),
+            temperature=(
+                temperature_override
+                if temperature_override is not None
+                else cast(float | None, lair.config.get("model.temperature"))
+            ),
+            max_completion_tokens=cast(int | None, lair.config.get("model.max_tokens")),
         )
         content = answer.choices[0].message.content
         return content.strip() if content is not None else ""
 
-    def _process_tool_calls(self, message, messages, tool_messages):
-        """Handle tool calls returned by the model."""
+    def _process_tool_calls(
+        self,
+        message: ChatCompletionMessage,
+        messages: list[dict[str, Any]],
+        tool_messages: list[dict[str, Any]],
+    ) -> None:
+        """
+        Handle tool calls returned by the model.
+
+        Args:
+            message: The assistant message containing tool calls.
+            messages: The running list of messages sent to the model.
+            tool_messages: A collection of tool messages to append to the session.
+
+        """
         message_dict = message.dict()
         if lair.config.get("chat.verbose"):
             self.reporting.assistant_tool_calls(message_dict, show_heading=True)
@@ -76,7 +130,7 @@ class OpenAIChatSession(BaseChatSession):
         messages.append(message_dict)
         tool_messages.append(message_dict)
 
-        for tool_call in message.tool_calls:
+        for tool_call in message.tool_calls or []:
             name = tool_call.function.name
             arguments = json.loads(tool_call.function.arguments)
 
@@ -93,14 +147,25 @@ class OpenAIChatSession(BaseChatSession):
             tool_messages.append(tool_response_messsage)
             logger.debug(f"Tool result: {tool_response_messsage}")
 
-    def invoke_with_tools(self, messages: Optional[List[Dict[str, Any]]] = None, disable_system_prompt: bool = False):
+    def invoke_with_tools(
+        self,
+        messages: list[dict[str, Any]] | None = None,
+        disable_system_prompt: bool = False,
+        **kwargs: object,
+    ) -> tuple[str, list[dict[str, Any]]]:
         """
-        Call the underlying model without altering state (no history)
+        Call the model and process tool calls without altering the chat history.
+
+        Args:
+            messages: Optional list of messages to send. If ``None``, the current
+                chat history is used.
+            disable_system_prompt: If ``True``, the system prompt is omitted.
+            **kwargs: Additional options passed to the API client.
 
         Returns:
-            tuple[str, list[dict]]: A tuple containing:
-              - str: The response for the model
-              - list[dict]: New messages from assistant & tool responses
+            tuple[str, list[dict[str, Any]]]: The response from the model and the
+            list of generated tool messages.
+
         """
         if messages is None:
             messages = []
@@ -110,22 +175,23 @@ class OpenAIChatSession(BaseChatSession):
 
             messages.extend(self.history.get_messages())
 
-        tool_messages: List[Dict[str, Any]] = []
+        tool_messages: list[dict[str, Any]] = []
 
         cycle = 0
         while True:
             logger.debug(
-                "OpenAIChatSession(): completions.create(model=%s, len(messages)=%d), cycle=%d"
-                % (lair.config.get("model.name"), len(messages), cycle)
+                "OpenAIChatSession(): completions.create("
+                f"model={lair.config.get('model.name')}, len(messages)={len(messages)}), "
+                f"cycle={cycle}"
             )
             if self.openai is None:
                 raise RuntimeError("OpenAI client is not initialized")
             answer = self.openai.chat.completions.create(
                 messages=cast(Any, messages),
-                model=lair.config.get("model.name"),
-                temperature=lair.config.get("model.temperature"),
-                max_completion_tokens=lair.config.get("model.max_tokens"),
-                tools=self.tool_set.get_definitions(),
+                model=cast(str, lair.config.get("model.name")),
+                temperature=cast(float | None, lair.config.get("model.temperature")),
+                max_completion_tokens=cast(int | None, lair.config.get("model.max_tokens")),
+                tools=cast(Iterable[ChatCompletionToolParam], self.tool_set.get_definitions()),
             )
 
             message = answer.choices[0].message
@@ -137,36 +203,24 @@ class OpenAIChatSession(BaseChatSession):
                 content = message.content
                 return (content.strip() if content is not None else ""), tool_messages
 
-    def list_models(self, *, ignore_errors: bool = False) -> Optional[List[Dict[str, Any]]]:
+    def list_models(self, *, ignore_errors: bool = False) -> list[dict[str, Any]] | None:
         """
         Retrieve a list of available models and their metadata.
 
-        This method fetches a list of models using the OpenAI API and returns a
-        formatted list of dictionaries containing metadata about each model, such as
-        its ID, creation date, object type, and ownership.
-
-        Parameters:
-            ignore_errors (bool, optional):
-                If True, any exceptions encountered during the retrieval of models
-                will be logged at the debug level, and the method will return `None`
-                instead of raising the exception. If False, exceptions will be propagated.
+        Args:
+            ignore_errors: When ``True``, errors are logged and ``None`` is returned
+                instead of raising an exception.
 
         Returns:
-            list[dict] | None:
-                A list of dictionaries, each representing a model with the following keys:
-                - 'id' (str): The model's unique identifier.
-                - 'created' (datetime.datetime): The model's creation timestamp in UTC.
-                - 'object' (str): The type of object (e.g., "model").
-                - 'owned_by' (str): The identifier of the entity that owns the model.
-
-                Returns `None` if an exception occurs and `ignore_errors` is True.
+            list[dict[str, Any]] | None: A list of model metadata dictionaries or
+            ``None`` if an error occurs and ``ignore_errors`` is ``True``.
 
         Raises:
-            Exception:
-                If an error occurs during model retrieval and `ignore_errors` is False.
+            Exception: If an error occurs and ``ignore_errors`` is ``False``.
+
         """
         try:
-            models: List[Dict[str, Any]] = []
+            models: list[dict[str, Any]] = []
             if self.openai is None:
                 raise RuntimeError("OpenAI client is not initialized")
             for model in self.openai.models.list():

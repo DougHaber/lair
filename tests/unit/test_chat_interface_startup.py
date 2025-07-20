@@ -1,13 +1,16 @@
-import pytest
 import types
-import lair
+
 import prompt_toolkit
+import pytest
+
+import lair
 from tests.helpers.chat_interface import make_interface
 
 
 def setup_interface(monkeypatch):
     ci = make_interface(monkeypatch)
     monkeypatch.setattr(prompt_toolkit.application, "run_in_terminal", lambda f: f())
+    ci.reporting.error = lambda msg: ci.reporting.messages.append(("error", msg))
     return ci
 
 
@@ -82,3 +85,72 @@ def test_prompt_invokes_handle_request(monkeypatch):
     ci._prompt()
     assert called[0] == "hi"
     assert "refresh" in called
+
+
+def test_init_starting_session_alias_conflict(monkeypatch, caplog):
+    ci = setup_interface(monkeypatch)
+    monkeypatch.setattr(
+        ci,
+        "_switch_to_session",
+        lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("u")),
+    )
+    monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: False)
+    monkeypatch.setattr(lair.util, "safe_int", lambda v: None)
+    with caplog.at_level("ERROR"), pytest.raises(SystemExit):
+        ci._init_starting_session("dup", create_session_if_missing=True)
+    assert "Alias is already used" in caplog.text
+
+
+def test_init_starting_session_unknown_exit(monkeypatch, caplog):
+    ci = setup_interface(monkeypatch)
+    monkeypatch.setattr(
+        ci,
+        "_switch_to_session",
+        lambda *a, **k: (_ for _ in ()).throw(lair.sessions.UnknownSessionException("u")),
+    )
+    with caplog.at_level("ERROR"), pytest.raises(SystemExit):
+        ci._init_starting_session("missing", create_session_if_missing=False)
+    assert "Unknown session: missing" in caplog.text
+
+
+def test_get_embedded_response_empty_section(monkeypatch):
+    ci = setup_interface(monkeypatch)
+    msg = "<answer>()</answer>"
+    assert ci._get_embedded_response(msg, 0) is None
+
+
+def test_handle_request_command_error(monkeypatch):
+    ci = setup_interface(monkeypatch)
+
+    def bad(c, a, s):
+        raise ValueError("boom")
+
+    ci.commands = {"/bad": {"callback": bad}}
+    captured = []
+    monkeypatch.setattr(ci.reporting, "error", lambda m: captured.append(m))
+    assert ci._handle_request_command("/bad arg") is False
+    assert any("Command failed" in m for m in captured)
+
+
+def test_handle_request_empty_and_error(monkeypatch):
+    ci = setup_interface(monkeypatch)
+    assert ci._handle_request("") is False
+    monkeypatch.setattr(ci, "_handle_request_chat", lambda r: (_ for _ in ()).throw(RuntimeError("fail")))
+    captured = []
+    monkeypatch.setattr(ci.reporting, "error", lambda m: captured.append(m))
+    assert ci._handle_request("hi") is False
+    assert any("Chat failed" in m for m in captured)
+
+
+def test_handle_request_chat_attachment_only(monkeypatch):
+    ci = setup_interface(monkeypatch)
+    lair.config.set("chat.attachments_enabled", True)
+    lair.config.set("chat.attachment_syntax_regex", r"<<(.*?)>>")
+    monkeypatch.setattr(
+        lair.util,
+        "get_attachments_content",
+        lambda files: ([{"type": "text", "text": "file"}], [{"role": "user", "content": "c"}]),
+    )
+    before = ci.chat_session.history.num_messages()
+    assert ci._handle_request_chat("<<f.txt>>") is True
+    assert ci.chat_session.history.num_messages() > before

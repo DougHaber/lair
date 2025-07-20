@@ -1,27 +1,41 @@
-from contextlib import contextmanager
+"""Simple event subscription and dispatch utilities."""
+
 import itertools
 import weakref
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Optional
 
 from lair.logging import logger
 
-_event_handlers: dict[str, set[Callable[[Any], Any]]] = {}  # event_name -> {handler, ...}
-_subscriptions: dict[int, tuple[str, Callable[[Any], Any]]] = {}  # subscription_id -> (event_name, handler)
+_event_handlers: dict[str, set[Callable[[object], object]]] = {}
+_subscriptions: dict[int, tuple[str, Callable[[object], object]]] = {}
 _next_subscription_id = itertools.count(1)  # Thread-safe ID generator
 _instance_subscriptions: weakref.WeakKeyDictionary[object, set[int]] = weakref.WeakKeyDictionary()
 # Tracks subscriptions by object
 
 _deferring = False
-_deferred_events: list[tuple[str, Any]] = []
+_deferred_events: list[tuple[str, object]] = []
 _squash_duplicates = True
 
 
-def subscribe(event_name, handler, instance=None):
+def subscribe(event_name: str, handler: Callable[[object], object], instance: Optional[object] = None) -> int:
     """
-    Subscribe a handler to an event, optionally associating it with an instance.
+    Subscribe a handler to an event.
 
-    If an instance is provided, all its subscriptions will be auto-cleaned up when it is deleted.
+    Args:
+        event_name: Name of the event to subscribe to.
+        handler: Callable executed when the event is fired.
+        instance: Optional object to associate with the subscription. All
+            subscriptions tied to this instance are cleaned up when the object
+            is garbage collected.
+
+    Returns:
+        The subscription ID assigned to this handler.
+
+    Raises:
+        ValueError: If ``handler`` is not callable.
+
     """
     if not callable(handler):
         raise ValueError(f"Handler for event '{event_name}' must be callable")
@@ -42,15 +56,30 @@ def subscribe(event_name, handler, instance=None):
     return subscription_id
 
 
-def _cleanup_instance_subscriptions(instance):
-    """Automatically removes all event subscriptions tied to an instance when it is deleted."""
+def _cleanup_instance_subscriptions(instance: object) -> None:
+    """
+    Remove all event subscriptions tied to ``instance``.
+
+    Args:
+        instance: Object whose event subscriptions should be removed.
+
+    """
     if instance in _instance_subscriptions:
         for subscription_id in _instance_subscriptions.pop(instance, set()):
             unsubscribe(subscription_id)
 
 
-def unsubscribe(subscription_id):
-    """Unsubscribes a handler using its subscription ID."""
+def unsubscribe(subscription_id: int) -> bool:
+    """
+    Remove a subscription by ID.
+
+    Args:
+        subscription_id: Identifier returned by :func:`subscribe`.
+
+    Returns:
+        ``True`` if a subscription was removed, ``False`` otherwise.
+
+    """
     if subscription_id in _subscriptions:
         event_name, handler = _subscriptions.pop(subscription_id)
         _event_handlers[event_name].discard(handler)
@@ -60,31 +89,47 @@ def unsubscribe(subscription_id):
     return False
 
 
-def fire(event_name, data=None):
-    """Triggers an event, calling all subscribed handlers."""
-    if data is None:
-        data = {}
-    global _deferring
-    if _deferring:
-        if _squash_duplicates and any(event[0] == event_name and event[1] == data for event in _deferred_events):
-            return  # Skip duplicate events
-        _deferred_events.append((event_name, data))
-        return
+def fire(event_name: str, data: object | None = None) -> bool:
+    """
+    Trigger an event and call all subscribed handlers.
 
+    Args:
+        event_name: Name of the event to fire.
+        data: Optional payload to pass to each handler.
+
+    Returns:
+        ``True`` once all handlers have been invoked or queued.
+
+    """
     if data is None:
         data = {}
+
+    if _deferring:
+        if not (_squash_duplicates and (event_name, data) in _deferred_events):
+            _deferred_events.append((event_name, data))
+        return True
 
     logger.debug(f"events: fire(): {event_name}, data: {data}")
-    if event_name in _event_handlers:
-        for handler in list(_event_handlers[event_name]):  # Iterate over a copy to avoid modification issues
-            if callable(handler):
-                handler(data)
+    handlers = _event_handlers.get(event_name, set())
+    for handler in list(handlers):  # Iterate over a copy to avoid modification issues
+        if callable(handler):
+            handler(data)
     return True
 
 
 @contextmanager
-def defer_events(squash_duplicates=True):
-    """Context manager to defer and optionally deduplicate events until the context exits."""
+def defer_events(squash_duplicates: bool = True) -> Iterator[None]:
+    """
+    Temporarily defer firing of events.
+
+    Args:
+        squash_duplicates: If ``True``, repeated events with the same payload are
+            deduplicated while deferred.
+
+    Yields:
+        None
+
+    """
     global _deferring, _squash_duplicates, _deferred_events
     _deferring = True
     _squash_duplicates = squash_duplicates

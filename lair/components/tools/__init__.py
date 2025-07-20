@@ -1,3 +1,7 @@
+"""Utility functions and defaults for the built-in tooling system."""
+
+from typing import Optional
+
 from .file_tool import FileTool
 from .python_tool import PythonTool
 from .search_tool import SearchTool
@@ -12,7 +16,7 @@ DEFAULT_TOOLS = [
 ]
 
 # Lookup for tool classes by their friendly names
-TOOLS = {
+TOOLS: dict[str, type] = {
     FileTool.name: FileTool,
     PythonTool.name: PythonTool,
     SearchTool.name: SearchTool,
@@ -20,15 +24,35 @@ TOOLS = {
 }
 
 
-def get_tool_class_by_name(name):
+def get_tool_class_by_name(name: str) -> Optional[type]:
+    """
+    Return the registered tool class for ``name`` if it exists.
+
+    Args:
+        name: The friendly name of the tool.
+
+    Returns:
+        The tool class or ``None`` if ``name`` is unknown.
+
+    """
     return TOOLS.get(name)
 
 
-def get_tool_classes_from_str(tool_names_str):
+def get_tool_classes_from_str(tool_names_str: str) -> None:
     """
-    Take a comma delimited list of tool names and return a list of classes
+    Build a list of classes from a comma-separated string of tool names.
+
+    Args:
+        tool_names_str: Comma-separated friendly tool names.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If any tool name is not registered.
+
     """
-    classes = []
+    classes: list[type] = []
     for name in tool_names_str.split(","):
         name = name.strip()
 

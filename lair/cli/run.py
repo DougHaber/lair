@@ -1,13 +1,28 @@
+"""Entry point for the ``lair`` command line interface."""
+
 import argparse
 import sys
 import traceback
+from typing import Any
 
 import lair.logging
+import lair.module_loader
+import lair.reporting
 import lair.util
 from lair.logging import logger
 
 
-def init_subcommands(parent_parser):
+def init_subcommands(parent_parser: argparse.ArgumentParser) -> dict[str, Any]:
+    """
+    Initialize all CLI subcommands.
+
+    Args:
+        parent_parser: The top level argument parser.
+
+    Returns:
+        Mapping of command names and aliases to instantiated command objects.
+
+    """
     sub_parsers = parent_parser.add_subparsers(dest="subcommand")
 
     module_loader = lair.module_loader.ModuleLoader()
@@ -28,13 +43,21 @@ def init_subcommands(parent_parser):
     return commands
 
 
-def parse_arguments():
+def parse_arguments() -> tuple[argparse.Namespace, Any]:
+    """
+    Parse command line arguments.
+
+    Returns:
+        A tuple containing the parsed arguments and the subcommand object to run.
+
+    """
+
     class HelpFormatter(argparse.HelpFormatter):
-        def _format_action(self, action):
+        def _format_action(self, action: argparse.Action) -> str:
+            """Format help output for subcommands."""
             if type(action) is argparse._SubParsersAction._ChoicesPseudoAction:
-                return "  %-40.40s - %s\n" % (self._format_action_invocation(action), self._expand_help(action))
-            else:
-                return super()._format_action(action)
+                return f"  {self._format_action_invocation(action):40.40} - {self._expand_help(action)}\n"
+            return super()._format_action(action)
 
     parser = argparse.ArgumentParser(formatter_class=HelpFormatter)
     parser.add_argument("--debug", "-d", action="store_true", default=False, help="Enable debugging output")
@@ -62,7 +85,14 @@ def parse_arguments():
     return arguments, subcommands[arguments.subcommand]
 
 
-def set_config_from_arguments(overrides):
+def set_config_from_arguments(overrides: list[str] | None) -> None:
+    """
+    Apply ``--set`` command line overrides to the active configuration.
+
+    Args:
+        overrides: A list of ``key=value`` strings to apply, or ``None``.
+
+    """
     if not overrides:
         return
 
@@ -77,7 +107,8 @@ def set_config_from_arguments(overrides):
     lair.events.fire("config.update")
 
 
-def start():
+def start() -> None:
+    """Initialize logging, parse arguments, and run the chosen subcommand."""
     try:
         lair.logging.init_logging()
         arguments, subcommand = parse_arguments()

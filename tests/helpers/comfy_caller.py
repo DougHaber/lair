@@ -2,7 +2,7 @@ import importlib
 import sys
 
 
-def get_ComfyCaller():
+def get_comfy_caller():
     if "lair.comfy_caller" in sys.modules:
         mod = importlib.reload(sys.modules["lair.comfy_caller"])
     else:

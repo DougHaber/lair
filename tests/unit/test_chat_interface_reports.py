@@ -1,12 +1,14 @@
 # ruff: noqa: E402
 import sys
-
-sys.modules.pop("pdfplumber", None)
-import pdfplumber  # noqa: F401,E402
 import types
+
+import pdfplumber  # noqa: F401,E402
+
 import lair
 from lair.cli.chat_interface_reports import ChatInterfaceReports
 from lair.logging import logger
+
+sys.modules.pop("pdfplumber", None)
 
 
 class DummyReporting:
@@ -125,3 +127,28 @@ def test_print_help_and_current_model():
     ci.print_current_model_report()
     # expect two tables from help and one from current model
     assert len(ci.reporting.tables) == 3
+
+
+def test_iter_config_rows_unmodified():
+    ci = make_ci()
+    rows = list(ci._iter_config_rows(False, r"^model\.name$", None))
+    expected = ["model.name", f"{lair.config.get('chat.set_command.modified_style')}:" + lair.config.get("model.name")]
+    assert rows[0] == expected
+
+
+def test_print_config_report_baseline_no_keys():
+    ci = make_ci()
+    ci.print_config_report(filter_regex=r"^nomatch$", baseline="openai")
+    assert ("system", f"Current mode: {lair.config.active_mode}, Baseline mode: openai") in ci.reporting.messages
+    assert ci.reporting.messages[-1] == ("system", "No matching keys")
+
+
+def test_iter_config_rows_unmodified_style():
+    ci = make_ci()
+    key = "chat.enable_toolbar"
+    rows = list(ci._iter_config_rows(False, rf"^{key}$", None))
+    expected = [key, f"{lair.config.get('chat.set_command.unmodified_style')}:" + str(lair.config.get(key))]
+    assert rows == [expected]
+
+    # When show_only_differences is True the row is omitted
+    assert list(ci._iter_config_rows(True, rf"^{key}$", None)) == []
