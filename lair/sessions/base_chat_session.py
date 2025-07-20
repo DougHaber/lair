@@ -26,6 +26,7 @@ class BaseChatSession(abc.ABC):
 
         """
         self.reporting: lair.reporting.Reporting = lair.reporting.Reporting()
+
         self.last_prompt: str | None = None
         self.last_response: str | None = None
 

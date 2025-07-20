@@ -18,8 +18,10 @@
 - tests: Enforce 90% minimum test coverage and add many new tests.
 - docker: Add lair into youtube image
 - documentation: Expand README outpainting example
+- tools: improve docstrings and type hints for ToolSet
 - cleanup: refactor workflow and tool call helpers for readability
 - internal: Enforce strict ruff checks, ruff formatting, and mypy validation
+- util: Add documentation and type hints to prompt template
 
 # v0.8.1 - Bug fixes
 

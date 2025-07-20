@@ -1,26 +1,42 @@
+"""Utilities for interacting with tmux from within Lair."""
+
+from __future__ import annotations
+
 import os
 import re
 import time
+from typing import Any
 
 import libtmux
+from libtmux.window import Window
 
 import lair
+from lair.components.tools.tool_set import ToolSet
 from lair.logging import logger
 
 
 class TmuxTool:
+    """Tool for interacting with tmux windows."""
+
     name = "tmux"
 
-    def __init__(self):
-        self.server = None
-        self.session = None
+    def __init__(self) -> None:
+        """Initialize default state for server and session."""
+        self.server: libtmux.Server | None = None
+        self.session: Any | None = None
 
-        self.log_files = {}  # Mapping from pane_id to log file path
-        self.log_offsets = {}  # Mapping from pane_id to current file read offset
+        self.log_files: dict[str, str] = {}
+        self.log_offsets: dict[str, int] = {}
 
-        self.active_window = None
+        self.active_window: Any | None = None
 
-    def add_to_tool_set(self, tool_set):
+    def add_to_tool_set(self, tool_set: ToolSet) -> None:
+        """Register tmux related tools with the provided tool set.
+
+        Args:
+            tool_set: The :class:`ToolSet` instance to register tools with.
+
+        """
         tool_set.add_tool(
             class_name=self.__class__.__name__,
             name="run",
@@ -71,7 +87,8 @@ class TmuxTool:
             handler=lambda *args, **kwargs: self.list_windows(),
         )
 
-    def _connect_to_tmux(self):
+    def _connect_to_tmux(self) -> None:
+        """Create or attach to a tmux session."""
         self.server = libtmux.Server()
         self.session = None
         self.active_window = None
@@ -88,7 +105,21 @@ class TmuxTool:
             self.log_files = {}
             self.log_offsets = {}
 
-    def _get_window_by_id(self, window_id):
+    def _get_window_by_id(self, window_id: int | str | None) -> Window | None:
+        """Retrieve a tmux window by id.
+
+        Args:
+            window_id: The numeric or string id of the window. ``None`` returns
+                ``None``.
+
+        Returns:
+            The matching window object or ``None`` when ``window_id`` is
+            ``None``.
+
+        Raises:
+            ValueError: If the id does not exist.
+
+        """
         if window_id is None:
             return None
 
@@ -103,7 +134,8 @@ class TmuxTool:
 
         raise ValueError(f"Requested window id not found: {window_id}")
 
-    def _ensure_connection(self):
+    def _ensure_connection(self) -> None:
+        """Ensure a tmux server connection exists."""
         try:
             if self.server is None:  # First time connecting in
                 self._connect_to_tmux()
@@ -115,8 +147,27 @@ class TmuxTool:
             except Exception as connect_error:
                 raise RuntimeError(f"Tmux server unavailable: {connect_error}") from connect_error
 
-    def _get_output(self, return_mode, *, prune_line=None, window_id=None):
-        """Return the output dict based on the return_mode"""
+    def _get_output(
+        self,
+        return_mode: str,
+        *,
+        prune_line: str | None = None,
+        window_id: int | str | None = None,
+    ) -> dict[str, Any]:
+        """Return output based on the requested mode.
+
+        Args:
+            return_mode: Either ``"stream"`` or ``"screen"``.
+            prune_line: Line to remove when reading new output.
+            window_id: Optional window id to target.
+
+        Returns:
+            A dictionary containing output data from tmux.
+
+        Raises:
+            ValueError: If ``return_mode`` is invalid.
+
+        """
         if return_mode == "stream":
             return self.read_new_output(prune_line=prune_line, window_id=window_id)
         elif return_mode == "screen":
@@ -124,7 +175,8 @@ class TmuxTool:
         else:
             raise ValueError("Invalid return_mode. Accepted values are stream or screen (screen capture)")
 
-    def _generate_run_definition(self):
+    def _generate_run_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``run``."""
         return {
             "type": "function",
             "function": {
@@ -152,7 +204,8 @@ class TmuxTool:
             },
         }
 
-    def get_log_file_name_and_create_directories(self, window):
+    def get_log_file_name_and_create_directories(self, window: Window) -> str:
+        """Return a log file path for the provided window and ensure directories exist."""
         template = lair.config.get("tools.tmux.capture_file_name").format(
             pid=os.getpid(),
             window_id=window.get("window_id"),
@@ -167,7 +220,17 @@ class TmuxTool:
 
         return file_name
 
-    def run(self, *, delay=2.0, return_mode="stream"):
+    def run(self, *, delay: float = 2.0, return_mode: str = "stream") -> dict[str, Any]:
+        """Create a new tmux window and return its output.
+
+        Args:
+            delay: Seconds to wait before capturing output.
+            return_mode: ``"stream"`` to read new output or ``"screen"`` for the entire pane.
+
+        Returns:
+            A dictionary containing the created window id and any captured output.
+
+        """
         try:
             self._ensure_connection()
 
@@ -210,7 +273,8 @@ class TmuxTool:
         except Exception as error:
             return {"error": str(error)}
 
-    def _generate_send_keys_definition(self):
+    def _generate_send_keys_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``send_keys``."""
         return {
             "type": "function",
             "function": {
@@ -259,7 +323,29 @@ class TmuxTool:
             },
         }
 
-    def send_keys(self, keys, enter=True, literal=True, return_mode="stream", delay=0.2, window_id=None):
+    def send_keys(
+        self,
+        keys: str,
+        enter: bool = True,
+        literal: bool = True,
+        return_mode: str = "stream",
+        delay: float = 0.2,
+        window_id: int | str | None = None,
+    ) -> dict[str, Any]:
+        """Send key presses to a tmux pane and return its output.
+
+        Args:
+            keys: The key sequence to send.
+            enter: Whether to send a newline after ``keys``.
+            literal: Send keys literally when ``True``.
+            return_mode: ``"stream"`` for new output or ``"screen"`` for a full capture.
+            delay: Seconds to wait before reading output.
+            window_id: Optional id of the window to target.
+
+        Returns:
+            A dictionary containing any captured output.
+
+        """
         try:
             self._ensure_connection()
 
@@ -278,7 +364,8 @@ class TmuxTool:
         except Exception as e:
             return {"error": str(e)}
 
-    def _generate_capture_output_definition(self):
+    def _generate_capture_output_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``capture_output``."""
         return {
             "type": "function",
             "function": {
@@ -296,7 +383,19 @@ class TmuxTool:
             },
         }
 
-    def capture_output(self, *, window_id=None):
+    def capture_output(self, *, window_id: int | str | None = None) -> dict[str, str]:
+        """Return the current screen contents of a tmux window.
+
+        Args:
+            window_id: Optional id of the window to capture. Defaults to the active window.
+
+        Returns:
+            A dictionary with a ``current_screen`` key containing the capture.
+
+        Raises:
+            RuntimeError: If no tmux windows are available.
+
+        """
         self._ensure_connection()
         if not self.session.windows:
             raise RuntimeError("No active tmux windows available.")
@@ -306,7 +405,8 @@ class TmuxTool:
 
         return {"current_screen": "\n".join(pane.capture_pane())}
 
-    def _generate_read_new_output_definition(self):
+    def _generate_read_new_output_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``read_new_output``."""
         return {
             "type": "function",
             "function": {
@@ -330,15 +430,25 @@ class TmuxTool:
             },
         }
 
-    def read_new_output(self, max_size=1024, prune_line=None, window_id=None):
-        """Read all new output from the piped file.
+    def read_new_output(
+        self,
+        max_size: int = 1024,
+        prune_line: str | None = None,
+        window_id: int | str | None = None,
+    ) -> dict[str, str]:
+        """Read any new output from the tmux pane log file.
 
-        Arguments:
-          max_size (int): The maximum size to return. Only the last 'max_size' bytes of new data are
-              returned.
-          prune_line (str): When provided and tools.tmux.read_new_output.remove_echoed_commands is
-              enabled, this will remove the first first line if it matches, so that echoed
-              characters are sent back
+        Args:
+            max_size: Maximum number of bytes to return.
+            prune_line: When provided, remove the echoed command from the output when enabled in
+                configuration.
+            window_id: Optional id of the window to read from.
+
+        Returns:
+            A dictionary containing the newly read output.
+
+        Raises:
+            RuntimeError: If no tmux windows are available.
 
         """
         self._ensure_connection()
@@ -361,7 +471,8 @@ class TmuxTool:
 
         return {"output": new_data}
 
-    def _get_pane_info(self, window_id):
+    def _get_pane_info(self, window_id: int | str | None) -> tuple[str, str, int]:
+        """Return pane information for the given window id."""
         window = self.active_window if window_id is None else self._get_window_by_id(window_id)
         pane = window.attached_pane or window.active_pane
         pane_id = pane.get("pane_id")
@@ -371,14 +482,16 @@ class TmuxTool:
         offset = self.log_offsets.get(pane_id, 0)
         return pane_id, log_file, offset
 
-    def _read_pane_file(self, log_file, offset):
+    def _read_pane_file(self, log_file: str, offset: int) -> tuple[bytes, int]:
+        """Read data from the pane log file starting at ``offset``."""
         with open(log_file, "rb") as f:
             f.seek(offset)
             new_data = f.read()
             new_offset = f.tell()
         return new_data, new_offset
 
-    def _clean_new_data(self, new_data, offset, prune_line):
+    def _clean_new_data(self, new_data: bytes, offset: int, prune_line: str | None) -> str:
+        """Process newly read bytes into cleaned text."""
         text = new_data.decode("utf-8", errors="replace").replace("\r\n", "\n")
 
         if offset == 0:
@@ -392,7 +505,8 @@ class TmuxTool:
             text = text[1:]
         return text
 
-    def _generate_kill_definition(self):
+    def _generate_kill_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``kill``."""
         return {
             "type": "function",
             "function": {
@@ -405,7 +519,8 @@ class TmuxTool:
             },
         }
 
-    def kill(self, *, window_id):
+    def kill(self, *, window_id: int | str) -> dict[str, Any]:
+        """Close the specified tmux window."""
         try:
             self._ensure_connection()
             if not self.session.windows:
@@ -418,7 +533,8 @@ class TmuxTool:
         except Exception as error:
             return {"error": str(error)}
 
-    def _generate_list_windows_definition(self):
+    def _generate_list_windows_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``list_windows``."""
         return {
             "type": "function",
             "function": {
@@ -428,7 +544,8 @@ class TmuxTool:
             },
         }
 
-    def list_windows(self):
+    def list_windows(self) -> dict[str, Any]:
+        """Return a list of existing tmux windows."""
         try:
             self._ensure_connection()
 
@@ -441,7 +558,8 @@ class TmuxTool:
         except Exception as error:
             return {"error": str(error)}
 
-    def _generate_attach_window_definition(self):
+    def _generate_attach_window_definition(self) -> dict[str, Any]:
+        """Return the OpenAI function definition for ``attach_window``."""
         return {
             "type": "function",
             "function": {
@@ -457,7 +575,8 @@ class TmuxTool:
             },
         }
 
-    def attach_window(self, *, window_id):
+    def attach_window(self, *, window_id: int | str) -> dict[str, Any]:
+        """Attach to an existing tmux window and make it active."""
         try:
             self._ensure_connection()
 
