@@ -6,7 +6,7 @@ import argparse
 import re
 import sys
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
 import lair
 import lair.cli
@@ -179,7 +179,7 @@ class Util:
         if message:  # These extra instructions helps a lot in some models
             message = "CONTENT is found below. Everything above is instructions and rules:\n" + message
 
-        messages = []
+        messages: list[dict[str, Any]] = []
         if arguments.attachments:
             attachment_content_parts, attachment_messages = lair.util.get_attachments_content(arguments.attachments)
             messages.extend(attachment_messages)
@@ -249,7 +249,7 @@ class Util:
 
         """
         chat_session = lair.sessions.get_chat_session(
-            session_type=lair.config.get("session.type"),
+            session_type=cast(str, lair.config.get("session.type")),
         )
         session_manager = self._init_session_manager(chat_session, arguments)
         config_backup = lair.config.active.copy()

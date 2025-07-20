@@ -40,7 +40,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             create_session_if_missing: Create the session if it does not exist.
 
         """
-        self.chat_session = lair.sessions.get_chat_session(lair.config.get("session.type"))
+        session_type = cast(str, lair.config.get("session.type"))
+        self.chat_session = lair.sessions.get_chat_session(session_type)
         self.session_manager = lair.sessions.SessionManager()
         self._init_starting_session(starting_session_id_or_alias, create_session_if_missing)
 
@@ -48,7 +49,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         self.commands = self._get_commands()
         self.reporting = lair.reporting.Reporting()
-        self._models: list[str] | None = None  # Cached list of models
+        self._models: list[dict[str, Any]] | None = None  # Cached list of models
 
         self.flash_message: str | None = None
         self.flash_message_expiration: float = 0.0
@@ -78,7 +79,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         """Initialize the history backend."""
         history_file = lair.config.get("chat.history_file")
         if history_file:
-            self.history = prompt_toolkit.history.FileHistory(os.path.expanduser(history_file))
+            self.history = prompt_toolkit.history.FileHistory(os.path.expanduser(str(history_file)))
         else:
             self.history = None
 
@@ -124,7 +125,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         """Return a mapping of shortcuts to descriptions."""
 
         def format_key(name: str) -> str:
-            return lair.config.get(f"chat.keys.{name}").replace("escape ", "ESC-").replace("c-", "C-")
+            return str(lair.config.get(f"chat.keys.{name}")).replace("escape ", "ESC-").replace("c-", "C-")
 
         return {  # shortcut ->  description
             "F1 - F12": "Switch to session 1-12",
@@ -155,7 +156,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         key_bindings = prompt_toolkit.key_binding.KeyBindings()
 
         def get_key(name: str) -> list[str]:
-            return lair.config.get(f"chat.keys.{name}").split(" ")
+            return str(lair.config.get(f"chat.keys.{name}")).split(" ")
 
         key_bindings.add(
             "enter",
@@ -337,7 +338,8 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         """Regenerate the current chat session."""
         # Changes to ``session.type`` may alter the chat session class used.
         old_chat_session = self.chat_session
-        self.chat_session = lair.sessions.get_chat_session(lair.config.get("session.type"))
+        session_type = cast(str, lair.config.get("session.type"))
+        self.chat_session = lair.sessions.get_chat_session(session_type)
         self.chat_session.import_state(old_chat_session)
 
     def _switch_to_session(self, id_or_alias: str | int, raise_exceptions: bool = True) -> None:
@@ -460,12 +462,12 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         """Handle chat with the current chain."""
         user_request: str | list[dict[str, Any]] | None = request
         if lair.config.get("chat.attachments_enabled"):
-            attachment_regex = lair.config.get("chat.attachment_syntax_regex")
+            attachment_regex = cast(str, lair.config.get("chat.attachment_syntax_regex"))
             attachments = re.findall(attachment_regex, request)
             content_parts, messages = lair.util.get_attachments_content(attachments)
 
             # Remove the attachments from the user's message
-            user_request = re.sub(attachment_regex, "", request)
+            user_request = cast(str, re.sub(attachment_regex, "", request))
             if user_request.strip() == "":
                 user_request = None
 
@@ -527,7 +529,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
     def _get_embedded_response(self, message: str, position: int) -> str | None:
         """Extract an embedded response from the message."""
-        regex = lair.config.get("chat.embedded_syntax_regex")
+        regex = cast(str, lair.config.get("chat.embedded_syntax_regex"))
         matches = re.findall(regex, message, re.DOTALL)
 
         if abs(position) > len(matches) - 1:
@@ -547,7 +549,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         return {
             "flags": self._generate_toolbar_template_flags(),
             "mode": lair.config.active_mode,
-            "model": lair.config.get("model.name"),
+            "model": cast(str, lair.config.get("model.name")),
             "session_id": self.chat_session.session_id,
             "session_alias": self.chat_session.session_alias or "",
         }
@@ -555,7 +557,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
     def _generate_prompt(self) -> prompt_toolkit.formatted_text.HTML:
         """Generate the formatted prompt string."""
         return prompt_toolkit.formatted_text.HTML(
-            lair.config.active["chat.prompt_template"].format(
+            cast(str, lair.config.active["chat.prompt_template"]).format(
                 **self._template_keys(),
             )
         )
@@ -589,7 +591,7 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
             )
 
         try:
-            template = lair.config.active["chat.toolbar_template"].format(
+            template = cast(str, lair.config.active["chat.toolbar_template"]).format(
                 **self._template_keys(),
             )
 
@@ -608,15 +610,15 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
 
         request = self.prompt_session.prompt(
             self._generate_prompt,
-            multiline=prompt_toolkit.filters.Condition(lambda: lair.config.active["chat.multiline_input"]),
+            multiline=prompt_toolkit.filters.Condition(lambda: bool(lair.config.active["chat.multiline_input"])),
             style=prompt_toolkit.styles.Style.from_dict(
                 {
-                    "bottom-toolbar": lair.config.active["chat.toolbar_style"],
-                    "bottom-toolbar.text": lair.config.active["chat.toolbar_text_style"],
-                    "bottom-toolbar.flash": lair.config.active["chat.toolbar_flash_style"],
+                    "bottom-toolbar": str(lair.config.active["chat.toolbar_style"]),
+                    "bottom-toolbar.text": str(lair.config.active["chat.toolbar_text_style"]),
+                    "bottom-toolbar.flash": str(lair.config.active["chat.toolbar_flash_style"]),
                     "bottom-toolbar.off": "fg:black bg:white",
-                    "flag.off": lair.config.active["chat.flag_off_style"],
-                    "flag.on": lair.config.active["chat.flag_on_style"],
+                    "flag.off": str(lair.config.active["chat.flag_off_style"]),
+                    "flag.on": str(lair.config.active["chat.flag_on_style"]),
                 }
             ),
         ).strip()
