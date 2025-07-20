@@ -1,3 +1,8 @@
+"""Schema definitions and validation helpers for chat history messages."""
+
+from collections.abc import Mapping, Sequence
+from typing import Any
+
 import jsonschema
 
 MESSAGES_SCHEMA = {
@@ -108,9 +113,16 @@ MESSAGES_SCHEMA = {
 }
 
 
-def validate_messages(messages):
-    """Validate a list of messages
-    Raise an exception if it is invalid
+def validate_messages(messages: Sequence[Mapping[str, Any]]) -> None:
+    """Validate a list of chat messages against ``MESSAGES_SCHEMA``.
+
+    Args:
+        messages: The list of messages to validate.
+
+    Raises:
+        jsonschema.exceptions.ValidationError: If the messages do not conform
+            to the schema.
+
     """
     try:
         jsonschema.validate(instance=messages, schema=MESSAGES_SCHEMA)
