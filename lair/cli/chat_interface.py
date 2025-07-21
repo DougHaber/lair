@@ -420,26 +420,43 @@ class ChatInterface(ChatInterfaceCommands, ChatInterfaceReports):
         except lair.sessions.UnknownSessionException:
             self.reporting.user_error(f"ERROR: Unknown session: {id_or_alias}")
 
-    def _handle_session_set_alias(self) -> None:
-        """Prompt the user to assign an alias to the current session."""
-        session_id = self.chat_session.session_id
-
+    def _prompt_session_alias(self, session_id: int, current_alias: str) -> str | None:
+        """Return user entered alias or ``None`` if cancelled."""
         try:
-            new_alias = prompt_toolkit.prompt(
+            return prompt_toolkit.prompt(
                 f"Alias for session {session_id}: ",
                 history=self.sub_prompt_history["session_set_alias"],
                 in_thread=True,
+                default=current_alias,
             ).strip()
         except (KeyboardInterrupt, EOFError):
+            return None
+
+    def _handle_session_set_alias(self) -> None:
+        """Prompt the user to assign an alias to the current session."""
+        session_id = self.chat_session.session_id
+        current_alias = self.chat_session.session_alias or ""
+
+        new_alias = self._prompt_session_alias(session_id, current_alias)
+        if new_alias in (None, current_alias):
             return
 
-        if self.session_manager.is_alias_available(new_alias):
-            self.chat_session.session_alias = new_alias
-            self.session_manager.set_alias(session_id, new_alias)
-        elif isinstance(lair.util.safe_int(new_alias), int):
+        if new_alias == "":
+            self.chat_session.session_alias = None
+            self.session_manager.set_alias(session_id, None)
+            return
+
+        new_alias_str = cast(str, new_alias)
+        if isinstance(lair.util.safe_int(new_alias_str), int):
             self.reporting.user_error("ERROR: Aliases may not be integers")
-        else:
+            return
+
+        if not self.session_manager.is_alias_available(new_alias_str):
             self.reporting.user_error("ERROR: That alias is unavailable")
+            return
+
+        self.chat_session.session_alias = new_alias_str
+        self.session_manager.set_alias(session_id, new_alias_str)
 
     def _handle_session_set_title(self) -> None:
         """Prompt the user to set a title for the current session."""

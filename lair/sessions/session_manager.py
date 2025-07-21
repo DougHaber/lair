@@ -242,8 +242,10 @@ class SessionManager:
             session = json.loads(session_data.decode())
             lair.sessions.serializer.update_session_from_dict(chat_session, session)
 
-    def is_alias_available(self, alias: str) -> bool:
+    def is_alias_available(self, alias: str | None) -> bool:
         """Return ``True`` if ``alias`` is not already in use."""
+        if alias is None:
+            return True
         if isinstance(lair.util.safe_int(alias), int):
             return False
 
@@ -255,9 +257,13 @@ class SessionManager:
 
         return False
 
-    def set_alias(self, id_or_alias: str | int, new_alias: str) -> None:
-        """Assign ``new_alias`` to the specified session."""
-        if not self.is_alias_available(new_alias):
+    def set_alias(self, id_or_alias: str | int, new_alias: str | None) -> None:
+        """
+        Assign ``new_alias`` to the specified session.
+
+        Passing ``None`` removes the alias.
+        """
+        if new_alias and not self.is_alias_available(new_alias):
             raise ValueError("SessionManager(): set_alias(): Alias conflict: Unable to set alias")
 
         session_id = self.get_session_id(id_or_alias)
@@ -272,7 +278,8 @@ class SessionManager:
 
             session["alias"] = new_alias
             txn.put(f"session:{session_id:08d}".encode(), json.dumps(session).encode())
-            txn.put(f"alias:{new_alias}".encode(), str(session_id).encode())
+            if new_alias:
+                txn.put(f"alias:{new_alias}".encode(), str(session_id).encode())
 
     def set_title(self, id_or_alias: str | int, new_title: str) -> None:
         """Update the title of a session."""
