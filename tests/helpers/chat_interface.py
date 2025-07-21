@@ -140,7 +140,7 @@ class SimpleSessionManager:
         return alias not in self.aliases
 
     def set_alias(self, id_or_alias, new_alias) -> None:
-        if not self.is_alias_available(new_alias):
+        if new_alias and not self.is_alias_available(new_alias):
             raise ValueError
         sid = self.get_session_id(id_or_alias)
         for alias in list(self.aliases):
@@ -148,7 +148,7 @@ class SimpleSessionManager:
                 del self.aliases[alias]
         if new_alias:
             self.aliases[new_alias] = sid
-        self.sessions[sid]["alias"] = new_alias
+        self.sessions.setdefault(sid, {})["alias"] = new_alias
 
     def set_title(self, id_or_alias, title) -> None:
         sid = self.get_session_id(id_or_alias)

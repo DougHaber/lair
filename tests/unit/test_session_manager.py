@@ -270,6 +270,19 @@ def test_add_with_alias_and_alias_update(monkeypatch, tmp_path):
     assert manager.env.db[b"alias:new"] == str(session_id).encode()
 
 
+def test_remove_alias(monkeypatch, tmp_path):
+    manager = setup_manager(monkeypatch, tmp_path)
+    sess = DummySession()
+    sess.session_alias = "old"
+    manager.add_from_chat_session(sess)
+    session_id = sess.session_id
+    assert manager.env.db[b"alias:old"] == str(session_id).encode()
+
+    manager.set_alias(session_id, None)
+    assert b"alias:old" not in manager.env.db
+    assert manager.get_session_dict(session_id)["alias"] is None
+
+
 def test_all_sessions_stop_on_prefix(monkeypatch, tmp_path):
     manager = setup_manager(monkeypatch, tmp_path)
     manager.env.db[b"session:00000001"] = json.dumps({"id": 1, "history": []}).encode()

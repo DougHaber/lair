@@ -83,9 +83,13 @@ def test_handle_session_set_alias_and_title(monkeypatch):
     monkeypatch.setattr(prompt_toolkit, "prompt", lambda *a, **k: "alias")
     ci._handle_session_set_alias()
     assert ci.chat_session.session_alias == "alias"
+    ci.reporting.messages.clear()
     monkeypatch.setattr(prompt_toolkit, "prompt", lambda *a, **k: "alias")
     ci._handle_session_set_alias()
-    assert ("error", "ERROR: That alias is unavailable") in ci.reporting.messages
+    assert ci.reporting.messages == []
+    monkeypatch.setattr(prompt_toolkit, "prompt", lambda *a, **k: "")
+    ci._handle_session_set_alias()
+    assert ci.chat_session.session_alias is None
     monkeypatch.setattr(prompt_toolkit, "prompt", lambda *a, **k: "123")
     ci._handle_session_set_alias()
     assert ("error", "ERROR: Aliases may not be integers") in ci.reporting.messages

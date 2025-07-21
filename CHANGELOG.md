@@ -11,6 +11,7 @@
 - comfy: Raise ValueError for invalid image path type
 - tests: Stub prompt_toolkit run_in_terminal to remove warnings
 - tests: Support environments where `openai_local` mode is renamed
+- cli: Fix session alias prompt so pressing enter keeps or removes the alias
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
