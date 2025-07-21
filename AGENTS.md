@@ -36,7 +36,7 @@ Lair is a command line tool for working with generative AI.
 - Follow clean code and DRY (don't repeat yourself) best practices strictly.
 - All code should be clean, modern, and maintainable.
 - Configuration files use YAML.
-- Do not exceed a McCabe `max_complexity` of 7.
+- Do not exceed a McCabe `max_complexity` of 5.
 - Code readability is extremely important.
 - All Python docstrings must follow a structured format with sections like Args, Returns, and Raises, using a consistent style (e.g., Google or NumPy).
 
