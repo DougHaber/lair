@@ -90,7 +90,7 @@ class MCPTool:
             self._parse_body(response)
             requests.post(
                 base_url,
-                json={"jsonrpc": JSONRPC_VERSION, "method": "notifications/initialized", "params": {}},
+                json={"jsonrpc": JSONRPC_VERSION, "method": "initialized", "params": {}},
                 headers=ACCEPT_HEADER,
                 timeout=timeout,
             ).raise_for_status()
