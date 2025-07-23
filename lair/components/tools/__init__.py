@@ -3,6 +3,7 @@
 from typing import Optional
 
 from .file_tool import FileTool
+from .mcp_tool import MCPTool
 from .python_tool import PythonTool
 from .search_tool import SearchTool
 from .tmux_tool import TmuxTool
@@ -10,6 +11,7 @@ from .tool_set import ToolSet
 
 DEFAULT_TOOLS = [
     FileTool,
+    MCPTool,
     PythonTool,
     SearchTool,
     TmuxTool,
@@ -18,6 +20,7 @@ DEFAULT_TOOLS = [
 # Lookup for tool classes by their friendly names
 TOOLS: dict[str, type] = {
     FileTool.name: FileTool,
+    MCPTool.name: MCPTool,
     PythonTool.name: PythonTool,
     SearchTool.name: SearchTool,
     TmuxTool.name: TmuxTool,
@@ -66,6 +69,7 @@ def get_tool_classes_from_str(tool_names_str: str) -> None:
 
 __all__ = [
     "FileTool",
+    "MCPTool",
     "PythonTool",
     "SearchTool",
     "TmuxTool",

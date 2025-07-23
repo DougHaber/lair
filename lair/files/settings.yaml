@@ -398,6 +398,14 @@ tools.search.max_results: 5
 # Currently, URLs are requested serially, so the total timeout can be several times this.
 tools.search.timeout: 5.0
 
+# MCP tools allow calling remote tools provided by an MCP server.
+# When disabled, tools from the MCP server are not available.
+tools.mcp.enabled: false
+# List of MCP provider URLs. One URL per line.
+tools.mcp.providers: ''
+# Request timeout in seconds when contacting MCP providers.
+tools.mcp.timeout: 10.0
+
 # Tmux tools provide a terminal that can run any command line application, methods for sending
 # input, and reading output. The output can be read as a stream for line based applications, or as a
 # text-based screenshot for screen based applications.

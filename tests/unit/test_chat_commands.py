@@ -1,4 +1,5 @@
 import argparse
+import types
 
 import pytest
 
@@ -22,6 +23,7 @@ def setup_ci(monkeypatch):
     monkeypatch.setattr(ci, "print_history", lambda *a, **k: None)
     monkeypatch.setattr(ci, "print_help", lambda *a, **k: None)
     monkeypatch.setattr(ci, "_rebuild_chat_session", lambda *a, **k: None)
+    ci.chat_session.tool_set.mcp_tool = types.SimpleNamespace(refresh=lambda: None)
     orig_get = ci.session_manager.get_session_id
 
     def patched_get(id_or_alias, raise_exception=True):
@@ -55,6 +57,7 @@ COMMANDS = [
     ("model", ["m"], ["a", "b"]),
     ("prompt", [], None),
     ("reload_settings", [], ["a"]),
+    ("mcp_refresh", [], ["a"]),
     ("save", [], None),
     ("session", [], ["a", "b"]),
     ("session_alias", ["1", "alias"], ["1", "alias", "x"]),

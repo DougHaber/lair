@@ -42,6 +42,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Search Tool](#search-tool)
       - [File Tool](#file-tool)
       - [Tmux Tool](#tmux-tool)
+      - [MCP Tool](#mcp-tool)
     - [One-off Chat](#one-off-chat)
     - [Extracting Embedded Responses](#extracting-embedded-responses)
     - [Modifying Chat History](#modifying-chat-history)
@@ -103,6 +104,7 @@ The open-source version of Lair is a partial rewrite of the original closed-sour
   * Python Tool: Run python code inside of a container
   * Search Tool: Search the web or news with DuckDuckGo
   * Tmux Tool: Interact with terminals in a Tmux sesion (**Experimental**)
+  * MCP Tool: Load remote tools from MCP providers
 
 ## Future
 
@@ -607,6 +609,23 @@ The stream includes all window output (stdout, stderr, and echoed input). By def
 **Log Management:**
 
 All terminal output is saved to files in `~/.lair/tmux-logs/` by default. This path and filename can be configured using `tools.tmux.capture_file_name`. These log files are not automatically deleted and can be used for monitoring or as a record of terminal activity.
+
+
+##### MCP Tool
+
+The MCP tool allows Lair to dynamically load tools from remote providers following the
+[MCP specification](https://github.com/openai/openai-cookbook/tree/main/examples/multi-tool-agent#mcp-specification).
+When enabled, the MCP tool retrieves a manifest from one or more provider URLs.
+Each provider is contacted via ``GET {base_url}/manifest``. The available tools are
+registered from the manifest and become accessible just like built-in tools.
+
+MCP tools are disabled by default. To enable them, set ``tools.enabled`` and
+``tools.mcp.enabled`` to ``true``. Provider URLs are specified one per line in
+``tools.mcp.providers``. If changes are made on the provider side, run the
+``/mcp-refresh`` command in the chat interface to reload the manifest.
+
+The timeout for both manifest requests and tool calls is controlled by
+``tools.mcp.timeout`` and defaults to ``10`` seconds.
 
 
 #### One-off Chat
