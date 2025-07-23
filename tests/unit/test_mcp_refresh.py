@@ -53,3 +53,4 @@ def test_mcp_refresh_loads_manifest(monkeypatch):
     ci.command_mcp_refresh("/mcp-refresh", [], "")
     assert "echo" in ci.chat_session.tool_set.tools
     assert call_count["post"] == 3
+    assert ("system", "Loaded 1 tool from http://server") in ci.reporting.messages

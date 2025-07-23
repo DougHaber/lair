@@ -149,3 +149,30 @@ def test_get_all_tools_loads_manifest(monkeypatch):
     tools = ts.get_all_tools(load_manifest=True)
     assert {t["name"] for t in tools} == {"echo"}
     assert tools[0]["source"] == "http://server"
+
+
+def test_manifest_simple_format(monkeypatch):
+    tool, ts = make_tool(monkeypatch)
+
+    manifest = {
+        "tools": [
+            {
+                "name": "echo",
+                "description": "",
+                "inputSchema": {"type": "object", "properties": {}, "required": []},
+            }
+        ]
+    }
+    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
+
+    def fake_post(url, json, timeout, headers=None):
+        if json["method"] == "tools/list":
+            return _json_response(manifest)
+        return _json_response({"called": json["params"]["name"], **json["params"]["arguments"]})
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
+
+    tool.ensure_manifest()
+    assert "echo" in ts.tools
+    result = ts.call_tool("echo", {"a": 1}, "id")
+    assert result["called"] == "echo" and result["a"] == 1

@@ -29,6 +29,7 @@ class MCPTool:
         self.manifest_loaded = False
         self.last_providers: list[str] | None = None
         self.initialized: set[str] = set()
+        self.last_manifest_counts: dict[str, int] = {}
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
         """Register dynamic tools from the MCP manifest when needed."""
@@ -40,6 +41,7 @@ class MCPTool:
             return
         self.manifest_loaded = False
         self.last_providers = None
+        self.last_manifest_counts = {}
         for name, meta in list(self.tool_set.tools.items()):
             if meta["class_name"] == self.__class__.__name__:
                 del self.tool_set.tools[name]
@@ -50,19 +52,37 @@ class MCPTool:
             providers = str(lair.config.get("tools.mcp.provider", allow_not_found=True, default="")).splitlines()
         return [p.strip() for p in providers if p.strip()]
 
-    def _register_manifest(self, base_url: str, manifest: dict[str, Any]) -> None:
+    def _register_manifest(self, base_url: str, manifest: dict[str, Any]) -> int:
+        count = 0
         for tool_def in manifest.get("tools", []):
-            name = tool_def.get("function", {}).get("name")
+            if "function" in tool_def:
+                name = tool_def.get("function", {}).get("name")
+                definition = tool_def
+            else:
+                name = tool_def.get("name")
+                definition = {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": tool_def.get("description", ""),
+                        "parameters": tool_def.get(
+                            "inputSchema",
+                            {"type": "object", "properties": {}, "required": []},
+                        ),
+                    },
+                }
             if not name or self.tool_set is None:
                 continue
             self.tool_set.add_tool(
                 class_name=self.__class__.__name__,
                 name=name,
                 flags=["tools.mcp.enabled"],
-                definition=tool_def,
+                definition=definition,
                 handler=self._make_handler(base_url, name),
                 metadata={"source": base_url},
             )
+            count += 1
+        return count
 
     def _make_handler(self, base_url: str, name: str) -> Callable[..., dict[str, Any]]:
         def handler(**arguments: object) -> dict[str, Any]:
@@ -111,10 +131,11 @@ class MCPTool:
             return json.loads(data) if data else {}
         return cast(dict[str, Any], response.json())
 
-    def _fetch_manifest(self, base_url: str, timeout: float) -> None:
+    def _fetch_manifest(self, base_url: str, timeout: float) -> int:
         """Retrieve and register tools from ``base_url``."""
         self._ensure_initialized(base_url, timeout)
         cursor: str | None = None
+        count = 0
         while True:
             params: dict[str, Any] = {}
             if cursor:
@@ -128,35 +149,40 @@ class MCPTool:
             response.raise_for_status()
             body = self._parse_body(response)
             manifest = cast(dict[str, Any], body.get("result", {}))
-            self._register_manifest(base_url, manifest)
+            count += self._register_manifest(base_url, manifest)
             cursor = cast(str | None, manifest.get("nextCursor"))
             if not cursor:
                 break
+        return count
 
-    def _load_manifest(self) -> None:
+    def _load_manifest(self) -> dict[str, int]:
         if self.tool_set is None:
-            return
+            return {}
         timeout = cast(float, lair.config.get("tools.mcp.timeout"))
         providers = self._get_providers()
         self.last_providers = providers
+        counts: dict[str, int] = {}
         for base_url in providers:
             try:
-                self._fetch_manifest(base_url, timeout)
+                counts[base_url] = self._fetch_manifest(base_url, timeout)
             except Exception as error:  # noqa: BLE001 - log exception
                 logger.warning(f"MCPTool: failed to load manifest from {base_url}: {error}")
+                counts[base_url] = 0
         self.manifest_loaded = True
+        self.last_manifest_counts = counts
+        return counts
 
-    def ensure_manifest(self) -> None:
+    def ensure_manifest(self) -> dict[str, int]:
         """Load the manifest if it has not been loaded."""
         if not (lair.config.get("tools.enabled") and lair.config.get("tools.mcp.enabled")):
-            return
+            return {}
 
         providers = self._get_providers()
         if providers != self.last_providers:
             self.refresh()
             self.last_providers = providers
-        if not self.manifest_loaded:
-            self._load_manifest()
+        counts: dict[str, int] = self._load_manifest() if not self.manifest_loaded else self.last_manifest_counts
+        return counts
 
     def _call_tool(self, base_url: str, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         timeout = cast(float, lair.config.get("tools.mcp.timeout"))

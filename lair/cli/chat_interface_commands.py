@@ -676,7 +676,9 @@ class ChatInterfaceCommands:
             self.reporting.user_error("ERROR: MCP tool is not available")
             return
         mcp_tool.refresh()
-        mcp_tool.ensure_manifest()
+        counts = mcp_tool.ensure_manifest() or {}
+        for url, count in counts.items():
+            self.reporting.system_message(f"Loaded {count} tool{'s' if count != 1 else ''} from {url}")
         self.reporting.system_message("MCP manifest refreshed")
 
     def command_save(
