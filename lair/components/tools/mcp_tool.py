@@ -51,6 +51,7 @@ class MCPTool:
                 flags=["tools.mcp.enabled"],
                 definition=tool_def,
                 handler=self._make_handler(base_url, name),
+                metadata={"source": base_url},
             )
 
     def _make_handler(self, base_url: str, name: str) -> Callable[..., dict[str, Any]]:

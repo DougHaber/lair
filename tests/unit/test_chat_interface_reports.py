@@ -107,6 +107,16 @@ def test_models_and_modes_and_tools_reports():
     assert len(ci.reporting.tables) == 3
 
 
+def test_print_mcp_tools_report():
+    tools = [
+        {"class_name": "MCPTool", "name": "a", "enabled": True, "source": "s"},
+        {"class_name": "FileTool", "name": "b", "enabled": False},
+    ]
+    ci = make_ci(tools=tools)
+    ci.print_mcp_tools_report()
+    assert ci.reporting.tables and ci.reporting.tables[0][1][0]["name"] == "a"
+
+
 def test_print_sessions_report():
     sessions = [
         {"id": 1, "alias": "a", "title": "t1", "session": {"mode": "m1", "model_name": "m"}, "history": [1]},

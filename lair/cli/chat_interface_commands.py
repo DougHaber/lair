@@ -40,6 +40,7 @@ class ChatInterfaceCommands:
     print_models_report: Callable[..., None]
     print_config_report: Callable[..., None]
     print_tools_report: Callable[..., None]
+    print_mcp_tools_report: Callable[..., None]
     _rebuild_chat_session: Callable[..., None]
     print_modes_report: Callable[..., None]
     print_current_model_report: Callable[..., None]
@@ -131,6 +132,12 @@ class ChatInterfaceCommands:
                     command, arguments, arguments_str
                 ),
                 "description": "Show tools and their status",
+            },
+            "/list-mcp-tools": {
+                "callback": lambda command, arguments, arguments_str: self.command_list_mcp_tools(
+                    command, arguments, arguments_str
+                ),
+                "description": "Show tools discovered via MCP manifests",
             },
             "/load": {
                 "callback": lambda command, arguments, arguments_str: self.command_load(
@@ -539,6 +546,18 @@ class ChatInterfaceCommands:
             self.reporting.user_error("ERROR: /list-tools takes no arguments")
         else:
             self.print_tools_report()
+
+    def command_list_mcp_tools(
+        self,
+        command: str,
+        arguments: list[str],
+        arguments_str: str,
+    ) -> None:
+        """Display tools discovered via MCP manifests."""
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: /list-mcp-tools takes no arguments")
+        else:
+            self.print_mcp_tools_report()
 
     def command_load(
         self,

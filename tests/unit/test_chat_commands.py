@@ -18,6 +18,7 @@ def setup_ci(monkeypatch):
     monkeypatch.setattr(ci.chat_session, "save_to_file", lambda *a, **k: None)
     monkeypatch.setattr(ci.chat_session.tool_set, "get_all_tools", lambda: [])
     monkeypatch.setattr(ci, "print_tools_report", lambda *a, **k: None)
+    monkeypatch.setattr(ci, "print_mcp_tools_report", lambda *a, **k: None)
     monkeypatch.setattr(ci, "print_models_report", lambda *a, **k: None)
     monkeypatch.setattr(ci, "print_config_report", lambda *a, **k: None)
     monkeypatch.setattr(ci, "print_history", lambda *a, **k: None)
@@ -51,6 +52,7 @@ COMMANDS = [
     ("list_models", [], ["a"]),
     ("list_settings", [], ["--bad"]),
     ("list_tools", [], ["a"]),
+    ("list_mcp_tools", [], ["a"]),
     ("load", [], None),
     ("messages", [], ["file1", "file2"]),
     ("mode", ["openai"], ["a", "b"]),
