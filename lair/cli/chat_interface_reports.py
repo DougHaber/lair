@@ -196,3 +196,18 @@ class ChatInterfaceReports:
         self.reporting.table_from_dicts_system(
             tools, column_names=["class_name", "name", "enabled"], column_formatters=column_formatters
         )
+
+    def print_mcp_tools_report(self) -> None:
+        """Display tools loaded from MCP manifests."""
+        tools = [tool for tool in self.chat_session.tool_set.get_all_tools() if tool["class_name"] == "MCPTool"]
+        if not tools:
+            self.reporting.system_message("No MCP tools found.")
+            return
+        column_formatters = {
+            "enabled": lambda v: self.reporting.color_bool(v, true_str="yes", false_str="-", false_style="dim"),
+        }
+        self.reporting.table_from_dicts_system(
+            sorted(tools, key=lambda m: m["name"]),
+            column_names=["name", "enabled", "source"],
+            column_formatters=column_formatters,
+        )

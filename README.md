@@ -226,6 +226,7 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /list-models     | Display a list of available models for the current session                                                              |
 | /list-settings   | Show and search settings  (for usage, run `/list-settings --help`)                                                      |
 | /list-tools      | Show tools and their status                                                                                             |
+| /list-mcp-tools  | Show tools discovered via MCP manifests                                                             |
 | /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                       |
 | /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                      |
 | /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                         |
@@ -491,6 +492,7 @@ Each tool has its own configuration namespace and an individual `enabled` flag, 
 Tools are only compatible with models that support them. Attempting to use tools with unsupported models may result in errors or unpredictable behavior.
 
 The chat CLI provides the `/list-tools` command to display all available tools and their current status.
+Use `/list-mcp-tools` to see only tools loaded from MCP provider manifests.
 
 Tools can be quickly toggled on or off using the `ESC-T` shortcut.
 

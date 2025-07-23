@@ -66,6 +66,7 @@ class ToolSet:
         definition_handler: Callable[[], dict[str, Any]] | None = None,
         handler: Callable[..., dict[str, Any]],
         class_name: str,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Register a new tool in the collection.
@@ -78,6 +79,7 @@ class ToolSet:
                 Takes precedence over ``definition`` when provided.
             handler: Callable executed when the tool is invoked.
             class_name: Name of the implementing class.
+            metadata: Optional metadata to associate with the tool.
 
         Raises:
             ValueError: If a tool with the same name already exists or if both
@@ -97,6 +99,8 @@ class ToolSet:
             "handler": handler,
             "name": name,
         }
+        if metadata:
+            self.tools[name].update(metadata)
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Return tools that are currently enabled."""
@@ -120,6 +124,8 @@ class ToolSet:
 
     def get_all_tools(self) -> list[dict[str, Any]] | None:
         """Return metadata for all tools with an ``enabled`` field."""
+        if self.mcp_tool:
+            self.mcp_tool.ensure_manifest()
         all_tools = []
         for tool in self.tools.values():
             tool["enabled"] = lair.config.get("tools.enabled") and self.all_flags_enabled(tool["flags"]) is True
