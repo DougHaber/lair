@@ -189,7 +189,17 @@ class ChatInterfaceReports:
 
     def print_tools_report(self) -> None:
         """Display all available tools and their status."""
-        tools = sorted(self.chat_session.tool_set.get_all_tools(), key=lambda m: (m["class_name"], m["name"]))
+        tools = sorted(
+            self.chat_session.tool_set.get_all_tools(),
+            key=lambda m: (m["class_name"], m["name"]),
+        )
+        tools.append(
+            {
+                "class_name": "MCP",
+                "name": self.reporting.style("-", style="dim"),
+                "enabled": lair.config.get("tools.mcp.enabled"),
+            }
+        )
         column_formatters = {
             "enabled": lambda v: self.reporting.color_bool(v, true_str="yes", false_str="-", false_style="dim"),
         }

@@ -22,6 +22,7 @@ class MCPTool:
         """Initialize the tool without loading the manifest."""
         self.tool_set: ToolSet | None = None
         self.manifest_loaded = False
+        self.last_providers: list[str] | None = None
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
         """Register dynamic tools from the MCP manifest when needed."""
@@ -32,12 +33,15 @@ class MCPTool:
         if self.tool_set is None:
             return
         self.manifest_loaded = False
+        self.last_providers = None
         for name, meta in list(self.tool_set.tools.items()):
             if meta["class_name"] == self.__class__.__name__:
                 del self.tool_set.tools[name]
 
     def _get_providers(self) -> list[str]:
-        providers = str(lair.config.get("tools.mcp.providers")).splitlines()
+        providers = str(lair.config.get("tools.mcp.providers", allow_not_found=True, default="")).splitlines()
+        if not providers:
+            providers = str(lair.config.get("tools.mcp.provider", allow_not_found=True, default="")).splitlines()
         return [p.strip() for p in providers if p.strip()]
 
     def _register_manifest(self, base_url: str, manifest: dict[str, Any]) -> None:
@@ -64,7 +68,9 @@ class MCPTool:
         if self.tool_set is None:
             return
         timeout = cast(float, lair.config.get("tools.mcp.timeout"))
-        for base_url in self._get_providers():
+        providers = self._get_providers()
+        self.last_providers = providers
+        for base_url in providers:
             try:
                 response = requests.get(f"{base_url}/manifest", timeout=timeout)
                 response.raise_for_status()
@@ -75,6 +81,10 @@ class MCPTool:
 
     def ensure_manifest(self) -> None:
         """Load the manifest if it has not been loaded."""
+        providers = self._get_providers()
+        if providers != self.last_providers:
+            self.refresh()
+            self.last_providers = providers
         if not self.manifest_loaded and lair.config.get("tools.mcp.enabled"):
             self._load_manifest()
 
