@@ -103,7 +103,7 @@ def test_manifest_sse_and_handshake(monkeypatch):
 
     def fake_post(url, json=None, headers=None, timeout=None):
         calls.append((json["method"], headers))
-        if json["method"] in {"initialize", "notifications/initialized"}:
+        if json["method"] in {"initialize", "initialized"}:
             return _json_response({})
         if json["method"] == "tools/list":
             data = page2 if json.get("params", {}).get("cursor") else page1
@@ -140,7 +140,7 @@ def test_get_all_tools_loads_manifest(monkeypatch):
     def fake_post(url, json, timeout, headers=None):
         if json["method"] == "tools/list":
             return _json_response(manifest)
-        if json["method"] in {"initialize", "notifications/initialized"}:
+        if json["method"] in {"initialize", "initialized"}:
             return _json_response({})
         return _json_response({})
 
