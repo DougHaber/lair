@@ -32,14 +32,24 @@ def test_mcp_refresh_loads_manifest(monkeypatch):
 
     monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
 
-    def fake_post(url, json, timeout):
+    def fake_post(url, json, timeout, headers=None):
         call_count["post"] += 1
         if json["method"] == "tools/list":
-            return SimpleNamespace(status_code=200, json=lambda: {"result": manifest}, raise_for_status=lambda: None)
-        return SimpleNamespace(status_code=200, json=lambda: {"result": {}}, raise_for_status=lambda: None)
+            return SimpleNamespace(
+                status_code=200,
+                headers={"Content-Type": "application/json"},
+                json=lambda: {"result": manifest},
+                raise_for_status=lambda: None,
+            )
+        return SimpleNamespace(
+            status_code=200,
+            headers={"Content-Type": "application/json"},
+            json=lambda: {"result": {}},
+            raise_for_status=lambda: None,
+        )
 
     monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
 
     ci.command_mcp_refresh("/mcp-refresh", [], "")
     assert "echo" in ci.chat_session.tool_set.tools
-    assert call_count["post"] == 1
+    assert call_count["post"] == 3

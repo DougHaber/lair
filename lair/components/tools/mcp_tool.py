@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any, Callable, cast
 
 import requests
@@ -10,6 +11,8 @@ import lair
 from lair.logging import logger
 
 JSONRPC_VERSION = "2.0"
+PROTOCOL_VERSION = "2025-06-18"
+ACCEPT_HEADER = {"Accept": "application/json, text/event-stream"}
 
 if TYPE_CHECKING:  # pragma: no cover - used only for type checking
     from .tool_set import ToolSet
@@ -25,6 +28,7 @@ class MCPTool:
         self.tool_set: ToolSet | None = None
         self.manifest_loaded = False
         self.last_providers: list[str] | None = None
+        self.initialized: set[str] = set()
 
     def add_to_tool_set(self, tool_set: ToolSet) -> None:
         """Register dynamic tools from the MCP manifest when needed."""
@@ -66,6 +70,69 @@ class MCPTool:
 
         return handler
 
+    def _ensure_initialized(self, base_url: str, timeout: float) -> None:
+        """Perform the MCP initialization handshake once per provider."""
+        if base_url in self.initialized:
+            return
+        try:
+            init_payload = {
+                "jsonrpc": JSONRPC_VERSION,
+                "id": 0,
+                "method": "initialize",
+                "params": {
+                    "clientInfo": {"name": "lair", "version": lair.version()},
+                    "protocolVersion": PROTOCOL_VERSION,
+                    "capabilities": {},
+                },
+            }
+            response = requests.post(base_url, json=init_payload, headers=ACCEPT_HEADER, timeout=timeout)
+            response.raise_for_status()
+            self._parse_body(response)
+            requests.post(
+                base_url,
+                json={"jsonrpc": JSONRPC_VERSION, "method": "notifications/initialized", "params": {}},
+                headers=ACCEPT_HEADER,
+                timeout=timeout,
+            ).raise_for_status()
+            self.initialized.add(base_url)
+        except Exception as error:  # noqa: BLE001 - log exception
+            logger.warning(f"MCPTool: initialization with {base_url} failed: {error}")
+
+    def _parse_body(self, response: requests.Response) -> dict[str, Any]:
+        """Return the JSON-RPC payload from ``response`` supporting SSE."""
+        content_type = response.headers.get("Content-Type", "")
+        if content_type.startswith("text/event-stream"):
+            data = ""
+            for line in response.iter_lines(decode_unicode=True):
+                if line.startswith("data:"):
+                    data += line[5:].strip()
+                elif not line and data:
+                    break
+            return json.loads(data) if data else {}
+        return cast(dict[str, Any], response.json())
+
+    def _fetch_manifest(self, base_url: str, timeout: float) -> None:
+        """Retrieve and register tools from ``base_url``."""
+        self._ensure_initialized(base_url, timeout)
+        cursor: str | None = None
+        while True:
+            params: dict[str, Any] = {}
+            if cursor:
+                params["cursor"] = cursor
+            response = requests.post(
+                base_url,
+                json={"jsonrpc": JSONRPC_VERSION, "id": 0, "method": "tools/list", "params": params},
+                headers=ACCEPT_HEADER,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            body = self._parse_body(response)
+            manifest = cast(dict[str, Any], body.get("result", {}))
+            self._register_manifest(base_url, manifest)
+            cursor = cast(str | None, manifest.get("nextCursor"))
+            if not cursor:
+                break
+
     def _load_manifest(self) -> None:
         if self.tool_set is None:
             return
@@ -74,14 +141,7 @@ class MCPTool:
         self.last_providers = providers
         for base_url in providers:
             try:
-                response = requests.post(
-                    base_url,
-                    json={"jsonrpc": JSONRPC_VERSION, "id": 0, "method": "tools/list", "params": {}},
-                    timeout=timeout,
-                )
-                response.raise_for_status()
-                manifest = cast(dict[str, Any], response.json().get("result", {}))
-                self._register_manifest(base_url, manifest)
+                self._fetch_manifest(base_url, timeout)
             except Exception as error:  # noqa: BLE001 - log exception
                 logger.warning(f"MCPTool: failed to load manifest from {base_url}: {error}")
         self.manifest_loaded = True
@@ -101,6 +161,7 @@ class MCPTool:
     def _call_tool(self, base_url: str, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         timeout = cast(float, lair.config.get("tools.mcp.timeout"))
         try:
+            self._ensure_initialized(base_url, timeout)
             response = requests.post(
                 base_url,
                 json={
@@ -109,10 +170,12 @@ class MCPTool:
                     "method": "tools/call",
                     "params": {"name": name, "arguments": arguments},
                 },
+                headers=ACCEPT_HEADER,
                 timeout=timeout,
             )
             response.raise_for_status()
-            return cast(dict[str, Any], response.json().get("result", {}))
+            body = self._parse_body(response)
+            return cast(dict[str, Any], body.get("result", {}))
         except Exception as error:  # noqa: BLE001 - log exception
             logger.warning(f"MCPTool: call to {name} failed: {error}")
             return {"error": str(error)}
