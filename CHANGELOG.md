@@ -9,6 +9,7 @@
 - cli: Ensure `/mcp-refresh` reloads manifests and `/list-mcp-tools` fetches missing manifests
 - cli: Show MCP status in `/list-tools`
 - mcp: Load manifests via JSON-RPC and avoid refreshing when tools are disabled
+- mcp: Support initialization handshake, SSE responses, and pagination
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
 - comfy: Raise ValueError for invalid image path type
