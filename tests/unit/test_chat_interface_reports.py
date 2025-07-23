@@ -40,7 +40,7 @@ class DummyChatSession:
         self.session_id = session_id
         self.history = types.SimpleNamespace(get_messages=lambda: list(messages or []))
         self._models = list(models or [])
-        self.tool_set = types.SimpleNamespace(get_all_tools=lambda: list(tools or []))
+        self.tool_set = types.SimpleNamespace(get_all_tools=lambda *args, **kwargs: list(tools or []))
 
     def list_models(self):
         return list(self._models)

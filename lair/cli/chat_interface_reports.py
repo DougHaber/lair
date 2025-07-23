@@ -190,14 +190,14 @@ class ChatInterfaceReports:
     def print_tools_report(self) -> None:
         """Display all available tools and their status."""
         tools = sorted(
-            self.chat_session.tool_set.get_all_tools(),
+            self.chat_session.tool_set.get_all_tools(load_manifest=False),
             key=lambda m: (m["class_name"], m["name"]),
         )
         tools.append(
             {
                 "class_name": "MCP",
                 "name": self.reporting.style("-", style="dim"),
-                "enabled": lair.config.get("tools.mcp.enabled"),
+                "enabled": lair.config.get("tools.enabled") and lair.config.get("tools.mcp.enabled"),
             }
         )
         column_formatters = {
@@ -209,7 +209,11 @@ class ChatInterfaceReports:
 
     def print_mcp_tools_report(self) -> None:
         """Display tools loaded from MCP manifests."""
-        tools = [tool for tool in self.chat_session.tool_set.get_all_tools() if tool["class_name"] == "MCPTool"]
+        tools = [
+            tool
+            for tool in self.chat_session.tool_set.get_all_tools(load_manifest=True)
+            if tool["class_name"] == "MCPTool"
+        ]
         if not tools:
             self.reporting.system_message("No MCP tools found.")
             return

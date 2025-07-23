@@ -9,6 +9,8 @@ import requests
 import lair
 from lair.logging import logger
 
+JSONRPC_VERSION = "2.0"
+
 if TYPE_CHECKING:  # pragma: no cover - used only for type checking
     from .tool_set import ToolSet
 
@@ -72,32 +74,45 @@ class MCPTool:
         self.last_providers = providers
         for base_url in providers:
             try:
-                response = requests.get(f"{base_url}/manifest", timeout=timeout)
+                response = requests.post(
+                    base_url,
+                    json={"jsonrpc": JSONRPC_VERSION, "id": 0, "method": "tools/list", "params": {}},
+                    timeout=timeout,
+                )
                 response.raise_for_status()
-                self._register_manifest(base_url, response.json())
+                manifest = cast(dict[str, Any], response.json().get("result", {}))
+                self._register_manifest(base_url, manifest)
             except Exception as error:  # noqa: BLE001 - log exception
                 logger.warning(f"MCPTool: failed to load manifest from {base_url}: {error}")
         self.manifest_loaded = True
 
     def ensure_manifest(self) -> None:
         """Load the manifest if it has not been loaded."""
+        if not (lair.config.get("tools.enabled") and lair.config.get("tools.mcp.enabled")):
+            return
+
         providers = self._get_providers()
         if providers != self.last_providers:
             self.refresh()
             self.last_providers = providers
-        if not self.manifest_loaded and lair.config.get("tools.mcp.enabled"):
+        if not self.manifest_loaded:
             self._load_manifest()
 
     def _call_tool(self, base_url: str, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         timeout = cast(float, lair.config.get("tools.mcp.timeout"))
         try:
             response = requests.post(
-                f"{base_url}/call",
-                json={"name": name, "arguments": arguments},
+                base_url,
+                json={
+                    "jsonrpc": JSONRPC_VERSION,
+                    "id": 0,
+                    "method": "tools/call",
+                    "params": {"name": name, "arguments": arguments},
+                },
                 timeout=timeout,
             )
             response.raise_for_status()
-            return cast(dict[str, Any], response.json())
+            return cast(dict[str, Any], response.json().get("result", {}))
         except Exception as error:  # noqa: BLE001 - log exception
             logger.warning(f"MCPTool: call to {name} failed: {error}")
             return {"error": str(error)}
