@@ -117,6 +117,12 @@ def test_print_mcp_tools_report():
     assert ci.reporting.tables and ci.reporting.tables[0][1][0]["name"] == "a"
 
 
+def test_print_tools_report_includes_mcp():
+    ci = make_ci()
+    ci.print_tools_report()
+    assert any(row["class_name"] == "MCP" for row in ci.reporting.tables[0][1])
+
+
 def test_print_sessions_report():
     sessions = [
         {"id": 1, "alias": "a", "title": "t1", "session": {"mode": "m1", "model_name": "m"}, "history": [1]},

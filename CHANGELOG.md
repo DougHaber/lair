@@ -6,6 +6,8 @@
 - util: Fix issue where image attachments stopped working
 - util: Avoid adding empty user messages when using util sessions
 - cli: Reduce complexity of keybindings setup
+- cli: Ensure `/mcp-refresh` reloads manifests and `/list-mcp-tools` fetches missing manifests
+- cli: Show MCP status in `/list-tools`
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
 - comfy: Raise ValueError for invalid image path type

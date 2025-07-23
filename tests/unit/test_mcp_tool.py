@@ -78,7 +78,7 @@ def test_get_all_tools_loads_manifest(monkeypatch):
         "requests",
         SimpleNamespace(
             get=lambda *a, **k: SimpleNamespace(status_code=200, json=lambda: manifest, raise_for_status=lambda: None),
-            post=lambda *a, **k: SimpleNamespace(status_code=200, json=lambda: {} , raise_for_status=lambda: None),
+            post=lambda *a, **k: SimpleNamespace(status_code=200, json=lambda: {}, raise_for_status=lambda: None),
         ),
     )
 

@@ -676,6 +676,7 @@ class ChatInterfaceCommands:
             self.reporting.user_error("ERROR: MCP tool is not available")
             return
         mcp_tool.refresh()
+        mcp_tool.ensure_manifest()
         self.reporting.system_message("MCP manifest refreshed")
 
     def command_save(
