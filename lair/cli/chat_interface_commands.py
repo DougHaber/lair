@@ -170,6 +170,12 @@ class ChatInterfaceCommands:
                 ),
                 "description": "Reload settings from disk  (resets everything, except current mode)",
             },
+            "/mcp-refresh": {
+                "callback": lambda command, arguments, arguments_str: self.command_mcp_refresh(
+                    command, arguments, arguments_str
+                ),
+                "description": "Refresh MCP tool manifest",
+            },
             "/save": {
                 "callback": lambda command, arguments, arguments_str: self.command_save(
                     command, arguments, arguments_str
@@ -635,6 +641,23 @@ class ChatInterfaceCommands:
         else:
             lair.config.reload()
             self.reporting.system_message("Settings reloaded from disk")
+
+    def command_mcp_refresh(
+        self,
+        command: str,
+        arguments: list[str],
+        arguments_str: str,
+    ) -> None:
+        """Refresh the MCP tool manifest."""
+        if len(arguments) != 0:
+            self.reporting.user_error("ERROR: USAGE: /mcp-refresh")
+            return
+        mcp_tool = self.chat_session.tool_set.mcp_tool
+        if mcp_tool is None:
+            self.reporting.user_error("ERROR: MCP tool is not available")
+            return
+        mcp_tool.refresh()
+        self.reporting.system_message("MCP manifest refreshed")
 
     def command_save(
         self,

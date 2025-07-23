@@ -16,6 +16,8 @@
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
 - comfy: Add `--denoise` option for outpainting
+- tools: Add MCP remote tool support and `/mcp-refresh` command
+- docs: Document MCP tool usage in README
 
 ### Internal
 - documentation: Add AGENTS.md and introduction video link

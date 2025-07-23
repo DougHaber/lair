@@ -6,6 +6,8 @@ from typing import Any, cast
 import lair.components.tools
 from lair.logging import logger
 
+from .mcp_tool import MCPTool
+
 
 class ToolSet:
     """Container for managing and invoking individual tools."""
@@ -21,6 +23,9 @@ class ToolSet:
         """
         self.requested_tools: list[type] | None = None
         self.tools: dict[str, dict[str, Any]] = {}
+        self.mcp_tool: MCPTool | None = None
+        self.tools.clear()
+        self.mcp_tool = None
         self._init_tools(tools)
 
     def _init_tools(self, tools: list[type] | None) -> None:
@@ -36,7 +41,10 @@ class ToolSet:
         self.requested_tools = requested_tools
 
         for tool in requested_tools:
-            tool().add_to_tool_set(self)
+            instance = tool()
+            if isinstance(instance, MCPTool):
+                self.mcp_tool = instance
+            instance.add_to_tool_set(self)
 
     def update_tools(self, tools: list[type] | None = None) -> None:
         """
@@ -92,6 +100,8 @@ class ToolSet:
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Return tools that are currently enabled."""
+        if self.mcp_tool:
+            self.mcp_tool.ensure_manifest()
         if not lair.config.get("tools.enabled"):
             return []
 
@@ -141,6 +151,8 @@ class ToolSet:
 
         """
         logger.debug(f"Tool call: {name}({arguments})  [{tool_call_id}]")
+        if self.mcp_tool:
+            self.mcp_tool.ensure_manifest()
         if name not in self.tools:
             return {"error": f"Unknown tool: {name}"}
 
