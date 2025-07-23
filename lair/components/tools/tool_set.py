@@ -104,7 +104,7 @@ class ToolSet:
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Return tools that are currently enabled."""
-        if self.mcp_tool:
+        if self.mcp_tool and lair.config.get("tools.enabled"):
             self.mcp_tool.ensure_manifest()
         if not lair.config.get("tools.enabled"):
             return []
@@ -122,9 +122,9 @@ class ToolSet:
         """Return ``True`` if all configuration flags evaluate to truthy."""
         return all(lair.config.get(flag) for flag in flags)
 
-    def get_all_tools(self) -> list[dict[str, Any]] | None:
+    def get_all_tools(self, *, load_manifest: bool = False) -> list[dict[str, Any]] | None:
         """Return metadata for all tools with an ``enabled`` field."""
-        if self.mcp_tool:
+        if load_manifest and self.mcp_tool and lair.config.get("tools.enabled"):
             self.mcp_tool.ensure_manifest()
         all_tools = []
         for tool in self.tools.values():
@@ -157,7 +157,7 @@ class ToolSet:
 
         """
         logger.debug(f"Tool call: {name}({arguments})  [{tool_call_id}]")
-        if self.mcp_tool:
+        if self.mcp_tool and lair.config.get("tools.enabled"):
             self.mcp_tool.ensure_manifest()
         if name not in self.tools:
             return {"error": f"Unknown tool: {name}"}

@@ -1,4 +1,4 @@
-import types
+from types import SimpleNamespace
 
 import lair
 from lair.components.tools.mcp_tool import MCPTool
@@ -28,21 +28,18 @@ def test_mcp_refresh_loads_manifest(monkeypatch):
         ]
     }
 
-    call_count = {"get": 0}
+    call_count = {"post": 0}
 
     monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
-    monkeypatch.setattr(
-        lair.components.tools.mcp_tool,
-        "requests",
-        types.SimpleNamespace(
-            get=lambda *a, **k: (
-                call_count.__setitem__("get", call_count["get"] + 1)
-                or types.SimpleNamespace(status_code=200, json=lambda: manifest, raise_for_status=lambda: None)
-            ),
-            post=lambda *a, **k: types.SimpleNamespace(status_code=200, json=lambda: {}, raise_for_status=lambda: None),
-        ),
-    )
+
+    def fake_post(url, json, timeout):
+        call_count["post"] += 1
+        if json["method"] == "tools/list":
+            return SimpleNamespace(status_code=200, json=lambda: {"result": manifest}, raise_for_status=lambda: None)
+        return SimpleNamespace(status_code=200, json=lambda: {"result": {}}, raise_for_status=lambda: None)
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
 
     ci.command_mcp_refresh("/mcp-refresh", [], "")
     assert "echo" in ci.chat_session.tool_set.tools
-    assert call_count["get"] == 1
+    assert call_count["post"] == 1

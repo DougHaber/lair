@@ -32,25 +32,18 @@ def test_manifest_loads_and_call(monkeypatch):
             }
         ]
     }
-    monkeypatch.setattr(
-        MCPTool,
-        "_get_providers",
-        lambda self: ["http://server"],
-    )
-    monkeypatch.setattr(
-        lair.components.tools.mcp_tool,
-        "requests",
-        SimpleNamespace(
-            get=lambda url, timeout: SimpleNamespace(
-                status_code=200, json=lambda: manifest, raise_for_status=lambda: None
-            ),
-            post=lambda url, json, timeout: SimpleNamespace(
-                status_code=200,
-                raise_for_status=lambda: None,
-                json=lambda: {"called": json["name"], **json["arguments"]},
-            ),
-        ),
-    )
+    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
+
+    def fake_post(url, json, timeout):
+        if json["method"] == "tools/list":
+            return SimpleNamespace(status_code=200, json=lambda: {"result": manifest}, raise_for_status=lambda: None)
+        return SimpleNamespace(
+            status_code=200,
+            raise_for_status=lambda: None,
+            json=lambda: {"result": {"called": json["params"]["name"], **json["params"]["arguments"]}},
+        )
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
 
     tool.ensure_manifest()
     assert "echo" in ts.tools
@@ -73,15 +66,14 @@ def test_get_all_tools_loads_manifest(monkeypatch):
         ]
     }
     monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
-    monkeypatch.setattr(
-        lair.components.tools.mcp_tool,
-        "requests",
-        SimpleNamespace(
-            get=lambda *a, **k: SimpleNamespace(status_code=200, json=lambda: manifest, raise_for_status=lambda: None),
-            post=lambda *a, **k: SimpleNamespace(status_code=200, json=lambda: {}, raise_for_status=lambda: None),
-        ),
-    )
 
-    tools = ts.get_all_tools()
+    def fake_post(url, json, timeout):
+        if json["method"] == "tools/list":
+            return SimpleNamespace(status_code=200, json=lambda: {"result": manifest}, raise_for_status=lambda: None)
+        return SimpleNamespace(status_code=200, json=lambda: {"result": {}}, raise_for_status=lambda: None)
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
+
+    tools = ts.get_all_tools(load_manifest=True)
     assert {t["name"] for t in tools} == {"echo"}
     assert tools[0]["source"] == "http://server"

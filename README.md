@@ -618,8 +618,9 @@ All terminal output is saved to files in `~/.lair/tmux-logs/` by default. This p
 The MCP tool allows Lair to dynamically load tools from remote providers following the
 [MCP specification](https://github.com/openai/openai-cookbook/tree/main/examples/multi-tool-agent#mcp-specification).
 When enabled, the MCP tool retrieves a manifest from one or more provider URLs.
-Each provider is contacted via ``GET {base_url}/manifest``. The available tools are
-registered from the manifest and become accessible just like built-in tools.
+Each provider is contacted via a JSON-RPC request with method ``tools/list``.
+The available tools are registered from the manifest and become accessible just
+like built-in tools.
 
 MCP tools are disabled by default. To enable them, set ``tools.enabled`` and
 ``tools.mcp.enabled`` to ``true``. Provider URLs are specified one per line in
