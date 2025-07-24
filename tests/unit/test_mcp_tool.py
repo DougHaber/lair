@@ -68,6 +68,33 @@ def test_manifest_loads_and_call(monkeypatch):
     assert result["called"] == "echo" and result["a"] == 1
 
 
+def test_manifest_plain_format(monkeypatch):
+    tool, ts = make_tool(monkeypatch)
+
+    manifest = {
+        "tools": [
+            {
+                "name": "plain_echo",
+                "description": "desc",
+                "input_schema": {"type": "object", "properties": {}},
+            }
+        ]
+    }
+    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
+
+    def fake_post(url, json, timeout, headers=None):
+        if json["method"] == "tools/list":
+            return _json_response(manifest)
+        return _json_response({"called": json["params"]["name"]})
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
+
+    tool.ensure_manifest()
+    assert "plain_echo" in ts.tools
+    result = ts.call_tool("plain_echo", {}, "id")
+    assert result["called"] == "plain_echo"
+
+
 def test_manifest_sse_and_handshake(monkeypatch):
     tool, ts = make_tool(monkeypatch)
 

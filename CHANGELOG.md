@@ -17,6 +17,7 @@
 - tests: Support environments where `openai_local` mode is renamed
 - cli: Fix session alias prompt so pressing enter keeps or removes the alias
 - mcp: Send `initialized` notification for spec compliance
+- mcp: Support tool manifests with `name` and `input_schema` fields
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
