@@ -178,7 +178,7 @@ def test_get_all_tools_loads_manifest(monkeypatch):
     assert tools[0]["source"] == "http://server"
 
 
-def test_invalid_tool_name_ignored(monkeypatch):
+def test_invalid_tool_name_sanitized(monkeypatch):
     tool, ts = make_tool(monkeypatch)
 
     manifest = {
@@ -193,14 +193,88 @@ def test_invalid_tool_name_ignored(monkeypatch):
             }
         ]
     }
-    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
+    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"]) 
+
+    called = []
 
     def fake_post(url, json, timeout, headers=None):
         if json["method"] == "tools/list":
             return _json_response(manifest)
+        if json["method"] == "tools/call":
+            called.append(json["params"]["name"])
         return _json_response({})
 
     monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
 
     tool.ensure_manifest()
-    assert "bad!name" not in ts.tools
+    assert "bad_name" in ts.tools
+    ts.call_tool("bad_name", {}, "id")
+    assert called == ["bad!name"]
+
+
+def test_tool_name_special_chars(monkeypatch):
+    tool, ts = make_tool(monkeypatch)
+
+    manifest = {
+        "tools": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "recon/web-fuzz",
+                    "description": "",
+                    "parameters": {"type": "object", "properties": {}, "required": []},
+                },
+            }
+        ]
+    }
+    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
+
+    called = []
+
+    def fake_post(url, json, timeout, headers=None):
+        if json["method"] == "tools/list":
+            return _json_response(manifest)
+        if json["method"] == "tools/call":
+            called.append(json["params"]["name"])
+        return _json_response({})
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
+
+    tool.ensure_manifest()
+    assert "recon_web_fuzz" in ts.tools
+    ts.call_tool("recon_web_fuzz", {}, "id")
+    assert called == ["recon/web-fuzz"]
+
+
+def test_tool_name_dot_removed(monkeypatch):
+    tool, ts = make_tool(monkeypatch)
+
+    manifest = {
+        "tools": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "crt.sh",
+                    "description": "",
+                    "parameters": {"type": "object", "properties": {}, "required": []},
+                },
+            }
+        ]
+    }
+    monkeypatch.setattr(MCPTool, "_get_providers", lambda self: ["http://server"])
+
+    called = []
+
+    def fake_post(url, json, timeout, headers=None):
+        if json["method"] == "tools/list":
+            return _json_response(manifest)
+        if json["method"] == "tools/call":
+            called.append(json["params"]["name"])
+        return _json_response({})
+
+    monkeypatch.setattr(lair.components.tools.mcp_tool, "requests", SimpleNamespace(post=fake_post))
+
+    tool.ensure_manifest()
+    assert "crtsh" in ts.tools
+    ts.call_tool("crtsh", {}, "id")
+    assert called == ["crt.sh"]
