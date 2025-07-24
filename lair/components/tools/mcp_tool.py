@@ -52,16 +52,30 @@ class MCPTool:
 
     def _register_manifest(self, base_url: str, manifest: dict[str, Any]) -> None:
         for tool_def in manifest.get("tools", []):
-            name = tool_def.get("function", {}).get("name")
+            if "function" in tool_def:
+                name = tool_def.get("function", {}).get("name")
+                definition = tool_def
+            else:
+                name = tool_def.get("name")
+                definition = {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": tool_def.get("description", ""),
+                        "parameters": tool_def.get("input_schema", {"type": "object", "properties": {}}),
+                    },
+                }
             if not name or self.tool_set is None:
                 continue
+            metadata = {"source": base_url}
+            metadata.update(tool_def.get("annotations", {}))
             self.tool_set.add_tool(
                 class_name=self.__class__.__name__,
-                name=name,
+                name=cast(str, name),
                 flags=["tools.mcp.enabled"],
-                definition=tool_def,
-                handler=self._make_handler(base_url, name),
-                metadata={"source": base_url},
+                definition=definition,
+                handler=self._make_handler(base_url, cast(str, name)),
+                metadata=metadata,
             )
 
     def _make_handler(self, base_url: str, name: str) -> Callable[..., dict[str, Any]]:
