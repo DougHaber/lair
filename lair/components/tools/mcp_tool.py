@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import TYPE_CHECKING, Any, Callable, cast
 
 import requests
@@ -66,6 +67,9 @@ class MCPTool:
                     },
                 }
             if not name or self.tool_set is None:
+                continue
+            if re.fullmatch(r"[A-Za-z0-9_-]+", cast(str, name)) is None:
+                logger.warning(f"MCPTool: ignoring invalid tool name '{name}' from {base_url}")
                 continue
             metadata = {"source": base_url}
             metadata.update(tool_def.get("annotations", {}))
