@@ -19,7 +19,6 @@
 - mcp: Send `initialized` notification for spec compliance
 - mcp: Support tool manifests with `name` and `input_schema` fields
 - mcp: Skip loading tools with invalid names
-- mcp: Sanitize tool names and rename `crt.sh` alias to `crtsh`
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
