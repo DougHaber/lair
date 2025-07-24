@@ -51,6 +51,16 @@ class MCPTool:
             providers = str(lair.config.get("tools.mcp.provider", allow_not_found=True, default="")).splitlines()
         return [p.strip() for p in providers if p.strip()]
 
+    def _sanitize_name(self, name: str) -> str | None:
+        """Return a valid tool name or ``None`` if ``name`` cannot be sanitized."""
+        sanitized = name.lower().replace(".", "")
+        sanitized = re.sub(r"[^a-z0-9_]", "_", sanitized)
+        if sanitized and not sanitized[0].isalpha():
+            sanitized = f"tool_{sanitized}"
+        if re.fullmatch(r"[a-z][a-z0-9_]*", sanitized):
+            return sanitized
+        return None
+
     def _register_manifest(self, base_url: str, manifest: dict[str, Any]) -> None:
         for tool_def in manifest.get("tools", []):
             if "function" in tool_def:
@@ -68,14 +78,15 @@ class MCPTool:
                 }
             if not name or self.tool_set is None:
                 continue
-            if re.fullmatch(r"[A-Za-z0-9_-]+", cast(str, name)) is None:
+            sanitized_name = self._sanitize_name(cast(str, name))
+            if sanitized_name is None:
                 logger.warning(f"MCPTool: ignoring invalid tool name '{name}' from {base_url}")
                 continue
             metadata = {"source": base_url}
             metadata.update(tool_def.get("annotations", {}))
             self.tool_set.add_tool(
                 class_name=self.__class__.__name__,
-                name=cast(str, name),
+                name=sanitized_name,
                 flags=["tools.mcp.enabled"],
                 definition=definition,
                 handler=self._make_handler(base_url, cast(str, name)),
