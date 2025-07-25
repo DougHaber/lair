@@ -343,6 +343,7 @@ style.tool_message.response_syntax_highlighting: true
 style.tool_message.background: '#021f00'
 
 style.user_error: 'dim red'
+style.user_warning: 'yellow'
 # Whether or not output should word-wrap, or be written as-is
 style.word_wrap: true
 

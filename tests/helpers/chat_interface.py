@@ -53,6 +53,9 @@ class DummyReporting:
     def user_error(self, message) -> None:
         self.messages.append(("error", message))
 
+    def user_warning(self, message) -> None:
+        self.messages.append(("warning", message))
+
     def print_rich(self, *args, **kwargs) -> None:  # pragma: no cover - stub
         pass
 

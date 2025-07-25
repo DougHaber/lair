@@ -380,6 +380,10 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         """Display a user-facing error message."""
         self.print_rich(self.style(message), style=str(lair.config.get("style.user_error")))
 
+    def user_warning(self, message: str) -> None:
+        """Display a user-facing warning message."""
+        self.print_rich(self.style(message), style=str(lair.config.get("style.user_warning")))
+
     def system_message(
         self,
         message: str,
