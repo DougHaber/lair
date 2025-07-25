@@ -690,7 +690,6 @@ class ChatInterfaceCommands:
             self.reporting.user_warning("No MCP providers enabled")
             return
 
-        any_tools = any(count > 0 for count in summary.values())
         for url, count in summary.items():
             message = f"{url} - {count} tool{'s' if count != 1 else ''}"
             if count > 0:
@@ -698,7 +697,7 @@ class ChatInterfaceCommands:
             else:
                 self.reporting.user_warning(message, disable_markdown=True)
 
-        if not any_tools:
+        if not any(count > 0 for count in summary.values()):
             self.reporting.user_warning("No tools found")
 
     def command_save(
