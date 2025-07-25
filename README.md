@@ -625,7 +625,9 @@ like built-in tools.
 MCP tools are disabled by default. To enable them, set ``tools.enabled`` and
 ``tools.mcp.enabled`` to ``true``. Provider URLs are specified one per line in
 ``tools.mcp.providers``. If changes are made on the provider side, run the
-``/mcp-refresh`` command in the chat interface to reload the manifest.
+``/mcp-refresh`` command in the chat interface to reload the manifest. The
+refresh output lists each provider URL with the number of tools found or
+displays a warning when none are available.
 
 The timeout for both manifest requests and tool calls is controlled by
 ``tools.mcp.timeout`` and defaults to ``10`` seconds.

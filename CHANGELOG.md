@@ -26,6 +26,7 @@
 - tools: Add MCP remote tool support and `/mcp-refresh` command
 - chat: Add `/list-mcp-tools` command and show MCP tools in `/list-tools`
 - docs: Document MCP tool usage in README
+- cli: Show per-provider summary after `/mcp-refresh`
 
 ### Internal
 - documentation: Add AGENTS.md and introduction video link

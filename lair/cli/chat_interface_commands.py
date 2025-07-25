@@ -678,6 +678,23 @@ class ChatInterfaceCommands:
         mcp_tool.refresh()
         mcp_tool.ensure_manifest()
         self.reporting.system_message("MCP manifest refreshed")
+        self._report_mcp_summary(mcp_tool.get_manifest_summary())
+
+    def _report_mcp_summary(self, summary: dict[str, int] | None) -> None:
+        """Display MCP refresh summary lines."""
+        summary = summary or {}
+        if not summary:
+            self.reporting.user_warning("No MCP providers configured")
+            return
+        any_tools = any(count > 0 for count in summary.values())
+        for url, count in summary.items():
+            message = f"{url} - {count} tool{'s' if count != 1 else ''}"
+            if count > 0:
+                self.reporting.system_message(message)
+            else:
+                self.reporting.user_warning(message)
+        if not any_tools:
+            self.reporting.user_warning("No tools found")
 
     def command_save(
         self,
