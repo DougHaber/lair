@@ -1,13 +1,9 @@
 # WIP - v0.8.2+dev
 
 ### Bug Fixes
-- cli: Resolve circular import preventing `lair chat --help`
 - comfy: Fix `ltxv-i2v` default model version
 - util: Fix issue where image attachments stopped working
 - util: Avoid adding empty user messages when using util sessions
-- cli: Reduce complexity of keybindings setup
-- cli: Ensure `/mcp-refresh` reloads manifests and `/list-mcp-tools` fetches missing manifests
-- cli: Show MCP status in `/list-tools`
 - mcp: Load manifests via JSON-RPC and avoid refreshing when tools are disabled
 - mcp: Support initialization handshake, SSE responses, and pagination
 - tests: Increase coverage for chat interface reports
@@ -16,17 +12,11 @@
 - tests: Stub prompt_toolkit run_in_terminal to remove warnings
 - tests: Support environments where `openai_local` mode is renamed
 - cli: Fix session alias prompt so pressing enter keeps or removes the alias
-- mcp: Send `initialized` notification for spec compliance
-- mcp: Support tool manifests with `name` and `input_schema` fields
-- mcp: Skip loading tools with invalid names
 
 ### New Features
 - comfy: Add `outpaint` workflow for extending images
 - comfy: Add `--denoise` option for outpainting
 - tools: Add MCP remote tool support and `/mcp-refresh` command
-- chat: Add `/list-mcp-tools` command and show MCP tools in `/list-tools`
-- docs: Document MCP tool usage in README
-- cli: Show per-provider summary after `/mcp-refresh`
 
 ### Internal
 - documentation: Add AGENTS.md and introduction video link
