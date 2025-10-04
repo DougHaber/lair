@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import re
 import sys
@@ -8,169 +10,64 @@ import pytest
 
 import lair
 
+from tests.helpers import ChatSessionDouble, RecordingReporting, SessionManagerDouble
+
 
 def import_commands():
-    mod = types.ModuleType("lair.cli.chat_interface")
-    mod.ChatInterface = object
-    sys.modules["lair.cli.chat_interface"] = mod
+    module = types.ModuleType("lair.cli.chat_interface")
+    module.ChatInterface = object
+    sys.modules["lair.cli.chat_interface"] = module
     return importlib.import_module("lair.cli.chat_interface_commands")
 
 
 commands = import_commands()
 
 
-class DummyReporting:
-    def __init__(self):
-        self.messages = []
-
-    def system_message(self, message, **kwargs):
-        self.messages.append(("system", message))
-
-    def user_error(self, message):
-        self.messages.append(("error", message))
-
-    def llm_output(self, message):
-        self.messages.append(("llm", message))
-
-    def print_rich(self, message):
-        self.messages.append(("rich", message))
-
-    def print_highlighted_json(self, message):
-        self.messages.append(("json", message))
-
-    def style(self, text, style=None):
-        return text
-
-
-class SimpleHistory:
-    def __init__(self):
-        self.messages = []
-
-    def add_message(self, role, content):
-        self.messages.append({"role": role, "content": content})
-
-    def num_messages(self):
-        return len(self.messages)
-
-    def get_messages(self):
-        return list(self.messages)
-
-    def get_messages_as_jsonl_string(self):
-        import json
-
-        return "\n".join(json.dumps(m) for m in self.messages)
-
-    def set_history(self, messages):
-        self.messages = list(messages)
-
-    def clear(self):
-        self.messages = []
-
-
-class DummyChatSession:
-    def __init__(self):
-        self.history = SimpleHistory()
-        self.session_id = 1
-        self.session_alias = None
-        self.session_title = None
-        self.last_prompt = None
-        self.last_response = None
-        self.saved = None
-        self.loaded = None
-
-    def save_to_file(self, filename):
-        self.saved = filename
-
-    def load_from_file(self, filename):
-        self.loaded = filename
-
-    def import_state(self, other):
-        pass
-
-
 class UnknownSessionError(Exception):
-    pass
+    """Exception raised when a session id or alias cannot be resolved."""
 
 
-class DummySessionManager:
-    def __init__(self):
-        self.sessions = {1: {"alias": None, "title": None}}
-        self.aliases = {}
+class _TestingSessionManager(SessionManagerDouble):
+    """Session manager that mirrors production behaviour but raises test-specific errors."""
 
-    def get_session_id(self, id_or_alias, raise_exception=True):
-        try:
-            sid = int(id_or_alias)
-            if sid in self.sessions:
-                return sid
-        except ValueError:
-            if id_or_alias in self.aliases:
-                return self.aliases[id_or_alias]
-        if raise_exception:
-            raise UnknownSessionError("Unknown")
-        return None
-
-    def is_alias_available(self, alias):
-        if alias is None:
-            return True
-        try:
-            int(alias)
-            return False
-        except ValueError:
-            return alias not in self.aliases
-
-    def set_alias(self, sid, new_alias):
-        sid = self.get_session_id(sid)
-        for a in list(self.aliases):
-            if self.aliases[a] == sid:
-                del self.aliases[a]
-        if new_alias:
-            self.aliases[new_alias] = sid
-        self.sessions.setdefault(sid, {})["alias"] = new_alias
-
-    def delete_sessions(self, items):
-        for item in items:
-            sid = self.get_session_id(item)
-            self.sessions.pop(sid, None)
-            for a in list(self.aliases):
-                if self.aliases[a] == sid:
-                    del self.aliases[a]
-
-    def set_title(self, sid, title):
-        sid = self.get_session_id(sid)
-        self.sessions.setdefault(sid, {})["title"] = title
-
-
-@contextmanager
-def dummy_defer():
-    yield
+    def get_session_id(self, id_or_alias, raise_exception=True):  # type: ignore[override]
+        result = super().get_session_id(id_or_alias, raise_exception=False)
+        if result is None:
+            if raise_exception:
+                raise UnknownSessionError("Unknown")
+            return None
+        return result
 
 
 class DummyCI(commands.ChatInterfaceCommands):
+    """Concrete ``ChatInterfaceCommands`` wired to in-memory doubles."""
+
     def __init__(self):
-        self.chat_session = DummyChatSession()
-        self.reporting = DummyReporting()
-        self.session_manager = DummySessionManager()
-        self.commands = {}
+        self.chat_session = ChatSessionDouble()
+        self.reporting = RecordingReporting()
+        self.session_manager = _TestingSessionManager()
+        self.commands: dict[str, dict[str, object]] = {}
+        self.session_manager.add_from_chat_session(self.chat_session)
 
     def _rebuild_chat_session(self):
-        pass
+        return None
 
-    # minimal stubs used in tests
     def print_modes_report(self):
-        pass
+        return None
 
     def print_current_model_report(self):
-        pass
+        return None
 
-    def print_config_report(self, *a, **k):
-        pass
+    def print_config_report(self, *args, **kwargs):
+        return None
 
     def _new_chat_session(self):
-        self.chat_session = DummyChatSession()
-        self.session_manager.sessions[self.chat_session.session_id] = {}
+        self.chat_session = ChatSessionDouble()
+        self.session_manager.add_from_chat_session(self.chat_session)
 
     def _switch_to_session(self, id_or_alias):
-        self.chat_session.session_id = self.session_manager.get_session_id(id_or_alias)
+        session_id = self.session_manager.get_session_id(id_or_alias)
+        self.chat_session.session_id = session_id
 
     def _get_embedded_response(self, message, position):
         matches = re.findall(r"\((.*?)\)", message)
@@ -179,11 +76,16 @@ class DummyCI(commands.ChatInterfaceCommands):
         return matches[position]
 
 
+@contextmanager
+def dummy_defer():
+    yield
+
+
 @pytest.fixture(autouse=True)
 def patch_unknown(monkeypatch):
-    dummy_mod = types.ModuleType("lair.sessions.session_manager")
-    dummy_mod.UnknownSessionException = UnknownSessionError
-    sys.modules["lair.sessions.session_manager"] = dummy_mod
+    dummy_module = types.ModuleType("lair.sessions.session_manager")
+    dummy_module.UnknownSessionException = UnknownSessionError
+    sys.modules["lair.sessions.session_manager"] = dummy_module
     yield
     sys.modules.pop("lair.sessions.session_manager", None)
 
@@ -196,37 +98,33 @@ def test_register_command_duplicate():
     ci = make_ci()
     ci.register_command("/t", lambda *a: None, "d")
     assert "/t" in ci.commands
-    try:
+    with pytest.raises(Exception) as exc_info:
         ci.register_command("/t", lambda *a: None, "d")
-    except Exception as exc:
-        assert "Already registered" in str(exc)
-    else:
-        pytest.fail("Exception not raised")
+    assert "Already registered" in str(exc_info.value)
 
 
 def test_extract_variants(monkeypatch, caplog):
     ci = make_ci()
     ci.chat_session.last_response = "(foo)"
-    # invalid position
     monkeypatch.setattr(lair.util, "safe_int", lambda x: x)
     with caplog.at_level("ERROR"):
         ci.command_extract("/extract", ["x"], "x")
     assert "Position must be an integer" in caplog.text
+
     caplog.clear()
-    # save to file
     saved = {}
     monkeypatch.setattr(lair.util, "safe_int", int)
-    monkeypatch.setattr(lair.util, "save_file", lambda f, c: saved.update({f: c}))
+    monkeypatch.setattr(lair.util, "save_file", lambda filename, content: saved.update({filename: content}))
     ci.command_extract("/extract", ["0", "f"], "0 f")
     assert saved["f"].strip() == "foo"
-    assert any("Section saved" in m[1] for m in ci.reporting.messages)
+    assert any("Section saved" in message for _, message in ci.reporting.messages)
+
     caplog.clear()
-    # no section
     with caplog.at_level("ERROR"):
         ci.command_extract("/extract", ["1"], "1")
     assert "No matching section" in caplog.text
+
     caplog.clear()
-    # last_response missing
     ci.chat_session.last_response = None
     with caplog.at_level("ERROR"):
         ci.command_extract("/extract", [], "")
@@ -235,51 +133,49 @@ def test_extract_variants(monkeypatch, caplog):
 
 def test_history_edit_paths(monkeypatch, caplog):
     ci = make_ci()
-    # editor cancelled
-    monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *a, **k: None)
+    monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *args, **kwargs: None)
     ci.command_history_edit("/history-edit", [], "")
     assert ("error", "History was not modified.") in ci.reporting.messages
-    ci.reporting.messages.clear()
-    # decode error
-    monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *a, **k: "bad")
 
-    def bad_decode(_):
+    ci.reporting.messages.clear()
+    monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *args, **kwargs: "bad")
+
+    def bad_decode(_) -> list[dict[str, object]]:
         raise ValueError("oops")
 
     monkeypatch.setattr(lair.util, "decode_jsonl", bad_decode)
     with caplog.at_level("ERROR"):
         ci.command_history_edit("/history-edit", [], "")
     assert "Failed to decode edited history JSONL" in caplog.text
+
     caplog.clear()
-    # blank string
-    monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *a, **k: "   ")
-    monkeypatch.setattr(lair.util, "decode_jsonl", lambda s: [])
+    monkeypatch.setattr(lair.util, "edit_content_in_editor", lambda *args, **kwargs: "   ")
+    monkeypatch.setattr(lair.util, "decode_jsonl", lambda _: [])
     ci.command_history_edit("/history-edit", [], "")
-    assert any("History updated" in m[1] for m in ci.reporting.messages)
+    assert any("History updated" in message for _, message in ci.reporting.messages)
 
 
 def test_last_prompt_and_response(monkeypatch, caplog):
     ci = make_ci()
-    # no last prompt
     with caplog.at_level("WARNING"):
         ci.command_last_prompt("/last-prompt", [], "")
     assert "No last prompt found" in caplog.text
+
     caplog.clear()
-    # save prompt
     ci.chat_session.last_prompt = "prompt"
     saved = {}
-    monkeypatch.setattr(lair.util, "save_file", lambda f, c: saved.update({f: c}))
+    monkeypatch.setattr(lair.util, "save_file", lambda filename, content: saved.update({filename: content}))
     ci.command_last_prompt("/last-prompt", ["p"], "p")
     assert saved["p"].strip() == "prompt"
+
     caplog.clear()
-    # last response none
     with caplog.at_level("WARNING"):
         ci.command_last_response("/last-response", [], "")
     assert "No last response found" in caplog.text
+
     caplog.clear()
-    # save response
     ci.chat_session.last_response = "resp"
-    monkeypatch.setattr(lair.util, "save_file", lambda f, c: saved.update({f: c}))
+    monkeypatch.setattr(lair.util, "save_file", lambda filename, content: saved.update({filename: content}))
     ci.command_last_response("/last-response", ["r"], "r")
     assert saved["r"].strip() == "resp"
 
@@ -289,8 +185,9 @@ def test_list_settings_help(monkeypatch):
     monkeypatch.setattr(commands, "ErrorRaisingArgumentParser", commands.ErrorRaisingArgumentParser)
     monkeypatch.setattr(commands, "ArgumentParserHelpException", commands.ArgumentParserHelpException)
     monkeypatch.setattr(commands, "ArgumentParserExitException", commands.ArgumentParserExitException)
-    result = []
-    monkeypatch.setattr(ci.reporting, "system_message", lambda m, **k: result.append(m))
+
+    result: list[str] = []
+    monkeypatch.setattr(ci.reporting, "system_message", lambda message, **kwargs: result.append(message))
     ci.command_list_settings("/list-settings", [], "--help")
     assert result and "usage" in result[0]
 
@@ -299,63 +196,69 @@ def test_load_alias_conflict(monkeypatch):
     ci = make_ci()
     ci.chat_session.session_alias = "a"
     monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: False)
-    monkeypatch.setattr(ci.chat_session, "load_from_file", lambda f: None)
+    monkeypatch.setattr(ci.chat_session, "load_from_file", lambda _: None)
     monkeypatch.setattr(lair.events, "defer_events", lambda: dummy_defer())
     ci.command_load("/load", ["file"], "file")
     assert ci.chat_session.session_alias is None
-    assert any("Session loaded" in m[1] for m in ci.reporting.messages)
+    assert any("Session loaded" in message for _, message in ci.reporting.messages)
 
 
 def test_messages(monkeypatch, caplog):
     ci = make_ci()
-    # no messages
     with caplog.at_level("WARNING"):
         ci.command_messages("/messages", [], "")
     assert "No messages found" in caplog.text
+
     caplog.clear()
     ci.chat_session.history.add_message("user", "hi")
     saved = {}
-    monkeypatch.setattr(lair.util, "save_file", lambda f, c: saved.update({f: c}))
+    monkeypatch.setattr(lair.util, "save_file", lambda filename, content: saved.update({filename: content}))
     ci.command_messages("/messages", ["out"], "out")
     assert "out" in saved
+
     ci.reporting.messages.clear()
     caplog.clear()
     ci.command_messages("/messages", [], "")
-    assert any(m[0] == "json" for m in ci.reporting.messages)
+    assert any(kind == "json" for kind, _ in ci.reporting.messages)
 
 
 def test_mode_and_model(monkeypatch):
     ci = make_ci()
-    called = []
+    called: list[str | tuple[str, str]] = []
     monkeypatch.setattr(ci, "print_modes_report", lambda: called.append("m"))
     ci.command_mode("/mode", [], "")
     assert called == ["m"]
+
     called.clear()
-    monkeypatch.setattr(lair.config, "change_mode", lambda x: called.append(x))
-    monkeypatch.setattr(lair.sessions, "get_chat_session", lambda t: DummyChatSession())
+    monkeypatch.setattr(lair.config, "change_mode", lambda mode: called.append(mode))
+    monkeypatch.setattr(lair.sessions, "get_chat_session", lambda target: ChatSessionDouble())
     ci.command_mode("/mode", ["openai"], "openai")
     assert "openai" in called
-    out = []
-    monkeypatch.setattr(ci, "print_current_model_report", lambda: out.append("p"))
+
+    output: list[object] = []
+    monkeypatch.setattr(ci, "print_current_model_report", lambda: output.append("p"))
     ci.command_model("/model", [], "")
-    assert out == ["p"]
-    monkeypatch.setattr(lair.config, "set", lambda k, v: out.append((k, v)))
+    assert output == ["p"]
+
+    monkeypatch.setattr(lair.config, "set", lambda key, value: output.append((key, value)))
     ci.command_model("/model", ["m"], "m")
-    assert ("model.name", "m") in out
+    assert ("model.name", "m") in output
 
 
 def test_prompt_and_session_alias(monkeypatch):
     ci = make_ci()
-    monkeypatch.setattr(lair.config, "set", lambda k, v: ci.reporting.system_message(k + v))
+    monkeypatch.setattr(lair.config, "set", lambda key, value: ci.reporting.system_message(key + value))
     ci.command_prompt("/prompt", ["hello"], "hello")
-    assert any("session.system_prompt_templatehello" in m[1] for m in ci.reporting.messages)
+    assert any("session.system_prompt_templatehello" in message for _, message in ci.reporting.messages)
+
     ci.reporting.messages.clear()
-    monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda a: False)
+    monkeypatch.setattr(ci.session_manager, "is_alias_available", lambda alias: False)
     monkeypatch.setattr(lair.util, "safe_int", int)
     ci.command_session_alias("/session-alias", ["1", "2"], "1 2")
     assert ("error", "ERROR: Aliases may not be integers") in ci.reporting.messages
+
     ci.reporting.messages.clear()
-    monkeypatch.setattr(lair.util, "safe_int", lambda x: x)
+    monkeypatch.setattr(lair.util, "safe_int", lambda value: value)
     ci.command_session_alias("/session-alias", ["1", "dup"], "1 dup")
     assert ("error", "ERROR: That alias is unavailable") in ci.reporting.messages
 
@@ -365,6 +268,7 @@ def test_set_unknown(monkeypatch):
     monkeypatch.setattr(ci, "print_config_report", lambda: ci.reporting.system_message("config"))
     ci.command_set("/set", [], "")
     assert ("system", "config") in ci.reporting.messages
+
     ci.reporting.messages.clear()
     ci.command_set("/set", ["bad"], "bad")
     assert ("error", "ERROR: Unknown key: bad") in ci.reporting.messages

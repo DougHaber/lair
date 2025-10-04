@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import importlib
 import sys
 import types
 
-from lair.components.history.chat_history import ChatHistory
-from lair.logging import logger
+from tests.helpers import ChatSessionDouble, RecordingReporting
 
 
 def import_commands():
@@ -13,68 +14,44 @@ def import_commands():
     return importlib.import_module("lair.cli.chat_interface_commands")
 
 
-class DummyReporting:
-    def __init__(self):
-        self.messages = []
+class TestChatInterfaceCommands:
+    def make_interface(self):
+        commands = import_commands()
 
-    def system_message(self, message, **kwargs):
-        self.messages.append(("system", message))
+        class CI(commands.ChatInterfaceCommands):
+            def __init__(self):
+                self.chat_session = ChatSessionDouble()
+                self.reporting = RecordingReporting()
+                self.session_manager = None
 
-    def user_error(self, message):
-        self.messages.append(("error", message))
+        return CI()
 
-    def print_rich(self, *args, **kwargs):
-        pass
+    def test_command_clear(self):
+        ci = self.make_interface()
+        ci.chat_session.history.add_message("user", "hi")
+        ci.command_clear("/clear", [], "")
+        assert ci.chat_session.history.num_messages() == 0
+        assert ci.chat_session.session_title is None
+        assert ("system", "Conversation history cleared") in ci.reporting.messages
 
-    def table_system(self, *args, **kwargs):
-        pass
+    def test_command_debug_toggle(self):
+        ci = self.make_interface()
+        from lair.logging import logger
 
+        original_level = logger.level
+        ci.command_debug("/debug", [], "")
+        first_level = logger.level
+        ci.command_debug("/debug", [], "")
+        second_level = logger.level
 
-class DummyChatSession:
-    def __init__(self):
-        self.history = ChatHistory()
-        self.session_title = "title"
-        self.last_prompt = "prompt"
-        self.last_response = "response"
+        assert first_level != original_level
+        assert second_level != first_level
 
-
-def make_interface():
-    commands = import_commands()
-
-    class CI(commands.ChatInterfaceCommands):
-        def __init__(self):
-            self.chat_session = DummyChatSession()
-            self.reporting = DummyReporting()
-            self.session_manager = None
-
-    return CI()
-
-
-def test_command_clear():
-    ci = make_interface()
-    ci.chat_session.history.add_message("user", "hi")
-    ci.command_clear("/clear", [], "")
-    assert ci.chat_session.history.num_messages() == 0
-    assert ci.chat_session.session_title is None
-    assert ("system", "Conversation history cleared") in ci.reporting.messages
-
-
-def test_command_debug_toggle():
-    ci = make_interface()
-    orig = logger.level
-    ci.command_debug("/debug", [], "")
-    first = logger.level
-    ci.command_debug("/debug", [], "")
-    second = logger.level
-    assert first != orig
-    assert second != first
-
-
-def test_command_history_slice():
-    ci = make_interface()
-    for i in range(5):
-        ci.chat_session.history.add_message("user", str(i))
-    ci.command_history_slice("/history-slice", ["1:3"], "1:3")
-    msgs = ci.chat_session.history.get_messages()
-    assert [m["content"] for m in msgs] == ["1", "2"]
-    assert any("History updated" in m[1] for m in ci.reporting.messages)
+    def test_command_history_slice(self):
+        ci = self.make_interface()
+        for index in range(5):
+            ci.chat_session.history.add_message("user", str(index))
+        ci.command_history_slice("/history-slice", ["1:3"], "1:3")
+        messages = ci.chat_session.history.get_messages()
+        assert [message["content"] for message in messages] == ["1", "2"]
+        assert any("History updated" in message for _, message in ci.reporting.messages)

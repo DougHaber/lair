@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # ruff: noqa: E402
 import sys
 import types
@@ -8,66 +10,42 @@ import lair
 from lair.cli.chat_interface_reports import ChatInterfaceReports
 from lair.logging import logger
 
+from tests.helpers import ChatSessionDouble, RecordingReporting, SessionManagerDouble
+
 sys.modules.pop("pdfplumber", None)
-
-
-class DummyReporting:
-    def __init__(self):
-        self.messages = []
-        self.tables = []
-
-    def system_message(self, message, **kwargs):
-        self.messages.append(("system", message))
-
-    def message(self, message, **kwargs):
-        self.messages.append(("message", message))
-
-    def table_system(self, rows, **kwargs):
-        self.tables.append(("table", rows))
-
-    def table_from_dicts_system(self, rows, **kwargs):
-        self.tables.append(("dict", rows))
-
-    def style(self, text, style=None):
-        return f"{style}:{text}" if style else text
-
-    def color_bool(self, value, true_str="yes", false_str="-", false_style="dim"):
-        return true_str if value else f"{false_style}:{false_str}"
-
-
-class DummyChatSession:
-    def __init__(self, *, messages=None, models=None, tools=None, session_id=1):
-        self.session_id = session_id
-        self.history = types.SimpleNamespace(get_messages=lambda: list(messages or []))
-        self._models = list(models or [])
-        self.tool_set = types.SimpleNamespace(get_all_tools=lambda *args, **kwargs: list(tools or []))
-
-    def list_models(self):
-        return list(self._models)
-
-
-class DummySessionManager:
-    def __init__(self, sessions=None):
-        self._sessions = list(sessions or [])
-
-    def all_sessions(self):
-        return list(self._sessions)
 
 
 def make_ci(*, messages=None, models=None, tools=None, sessions=None):
     ci = ChatInterfaceReports()
-    ci.reporting = DummyReporting()
+    ci.reporting = RecordingReporting()
     ci.commands = {"/cmd": {"description": "desc"}}
     ci._get_shortcut_details = lambda: {"S": "shortcut"}
-    ci.chat_session = DummyChatSession(messages=messages, models=models, tools=tools)
-    ci.session_manager = DummySessionManager(sessions=sessions)
+
+    tool_set = types.SimpleNamespace(
+        get_all_tools=lambda load_manifest=False: [dict(tool) for tool in tools or []]
+    )
+
+    ci.chat_session = ChatSessionDouble(
+        tool_set=tool_set,
+        models=models or [{"id": "model-a"}, {"id": "model-b"}],
+        messages=messages,
+    )
+
+    manager = SessionManagerDouble()
+    if sessions:
+        for snapshot in sessions:
+            manager.sessions[snapshot["id"]] = dict(snapshot)
+            alias = snapshot.get("alias")
+            if alias:
+                manager.aliases[alias] = snapshot["id"]
+    ci.session_manager = manager
     return ci
 
 
 def test_print_config_report_unknown_baseline(monkeypatch):
     ci = make_ci()
-    captured = []
-    monkeypatch.setattr(logger, "error", lambda msg: captured.append(msg))
+    captured: list[str] = []
+    monkeypatch.setattr(logger, "error", lambda message: captured.append(message))
     ci.print_config_report(baseline="unknown")
     assert captured == ["Unknown mode: unknown"]
     assert ci.reporting.messages == []
@@ -75,26 +53,30 @@ def test_print_config_report_unknown_baseline(monkeypatch):
 
 def test_print_config_report_differences(monkeypatch):
     ci = make_ci()
-    old_model = lair.config.get("model.name")
+    original_model = lair.config.get("model.name")
     lair.config.set("model.name", "new-model", no_event=True)
     try:
         ci.print_config_report(show_only_differences=True, filter_regex=r"^model\.name$")
     finally:
-        lair.config.set("model.name", old_model, no_event=True)
-    assert (
-        "table",
-        [["model.name", f"{lair.config.get('chat.set_command.modified_style')}:new-model"]],
-    ) in ci.reporting.tables
+        lair.config.set("model.name", original_model, no_event=True)
+    expected = [
+        ["model.name", f"{lair.config.get('chat.set_command.modified_style')}:new-model"],
+    ]
+    assert ("table", expected) in ci.reporting.tables
 
 
 def test_print_history_limits():
-    msgs = [{"role": "user", "content": "a"}, {"role": "assistant", "content": "b"}]
-    ci = make_ci(messages=msgs)
+    history_messages = [
+        {"role": "user", "content": "a"},
+        {"role": "assistant", "content": "b"},
+    ]
+    ci = make_ci(messages=history_messages)
     ci.print_history(num_messages=1)
-    assert ci.reporting.messages == [("message", msgs[1])]
-    ci2 = make_ci(messages=[])
-    ci2.print_history()
-    assert ci2.reporting.messages == []
+    assert ci.reporting.messages == [("message", history_messages[1])]
+
+    ci_empty = make_ci(messages=[])
+    ci_empty.print_history()
+    assert ci_empty.reporting.messages == []
 
 
 def test_models_and_modes_and_tools_reports():
@@ -103,7 +85,6 @@ def test_models_and_modes_and_tools_reports():
     assert ci._models == [{"id": "a"}, {"id": "b"}]
     ci.print_modes_report()
     ci.print_tools_report()
-    # three tables: models, modes, tools
     assert len(ci.reporting.tables) == 3
 
 
@@ -114,7 +95,8 @@ def test_print_mcp_tools_report():
     ]
     ci = make_ci(tools=tools)
     ci.print_mcp_tools_report()
-    assert ci.reporting.tables and ci.reporting.tables[0][1][0]["name"] == "a"
+    assert ci.reporting.tables
+    assert ci.reporting.tables[0][1][0]["name"] == "a"
 
 
 def test_print_tools_report_includes_mcp():
@@ -141,15 +123,14 @@ def test_print_help_and_current_model():
     ci = make_ci()
     ci.print_help()
     ci.print_current_model_report()
-    # expect two tables from help and one from current model
     assert len(ci.reporting.tables) == 3
 
 
 def test_iter_config_rows_unmodified():
     ci = make_ci()
     rows = list(ci._iter_config_rows(False, r"^model\.name$", None))
-    expected = ["model.name", f"{lair.config.get('chat.set_command.modified_style')}:" + lair.config.get("model.name")]
-    assert rows[0] == expected
+    expected_value = f"{lair.config.get('chat.set_command.modified_style')}:" + lair.config.get("model.name")
+    assert rows[0] == ["model.name", expected_value]
 
 
 def test_print_config_report_baseline_no_keys():
@@ -163,8 +144,6 @@ def test_iter_config_rows_unmodified_style():
     ci = make_ci()
     key = "chat.enable_toolbar"
     rows = list(ci._iter_config_rows(False, rf"^{key}$", None))
-    expected = [key, f"{lair.config.get('chat.set_command.unmodified_style')}:" + str(lair.config.get(key))]
-    assert rows == [expected]
-
-    # When show_only_differences is True the row is omitted
+    expected = f"{lair.config.get('chat.set_command.unmodified_style')}:" + str(lair.config.get(key))
+    assert rows == [[key, expected]]
     assert list(ci._iter_config_rows(True, rf"^{key}$", None)) == []

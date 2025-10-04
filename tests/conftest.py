@@ -1,34 +1,19 @@
-import sys
-import types
+from __future__ import annotations
 
-modules_to_stub = [
-    "diffusers",
-    "transformers",
-    "torch",
-    "comfy_script",
-    "lair.comfy_caller",
-    "trafilatura",
-    "PIL",
-    "duckduckgo_search",
-    "requests",
-    "libtmux",
-    "lmdb",
-    "openai",
-]
+import pytest
 
-for name in modules_to_stub:
-    module = sys.modules.setdefault(name, types.ModuleType(name))
-    if name == "duckduckgo_search":
-        module.DDGS = object
-    elif name == "pdfplumber":
-        # pdfplumber is only used in tests and may not be installed. Provide a
-        # minimal stub so monkeypatching works without raising AttributeError.
-        module.open = lambda *args, **kwargs: None
+from tests.helpers import stub_optional_dependencies
+
+stub_optional_dependencies()
 
 
 def pytest_collection_modifyitems(config, items):
-    import pytest
+    """Apply the ``unit`` marker to tests that do not opt into ``integration``.
 
+    Args:
+        config: Pytest configuration object.
+        items: Collected test items to mutate.
+    """
     for item in items:
         if "integration" not in item.keywords:
             item.add_marker(pytest.mark.unit)

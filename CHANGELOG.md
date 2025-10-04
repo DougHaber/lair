@@ -22,6 +22,7 @@
 - documentation: Add AGENTS.md and introduction video link
 - internal: update code for new ruff version
 - tests: Enforce 90% minimum test coverage and add many new tests.
+- tests: Consolidate chat interface test doubles into shared helpers and harden command coverage.
 - docker: Add lair into youtube image
 - internal: resolve mypy type errors across multiple modules
 - internal: add docstrings and type annotations for history utilities
@@ -213,4 +214,3 @@
 ### New Features
 - add `chat` module, w/ auto-complete, file based sessions, & markdown rendering
 - add `util` module for CLI scripting with image support
-

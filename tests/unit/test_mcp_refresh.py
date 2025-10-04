@@ -67,7 +67,7 @@ def test_mcp_refresh_no_providers(monkeypatch):
     lair.config.set("tools.mcp.providers", "", no_event=True)
 
     ci.command_mcp_refresh("/mcp-refresh", [], "")
-    assert ("warning", "No MCP providers configured") in ci.reporting.messages
+    assert ("warning", "No MCP providers enabled") in ci.reporting.messages
 
 
 def test_mcp_refresh_no_tools(monkeypatch):
