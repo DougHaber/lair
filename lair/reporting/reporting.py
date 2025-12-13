@@ -496,6 +496,32 @@ class Reporting(metaclass=ReportingSingletoneMeta):
 
         return "\n".join(lines)
 
+    def _default_range_styles(self) -> list[str]:
+        return [
+            "rgb(51,0,0)",
+            "rgb(102,0,0)",
+            "rgb(153,0,0)",
+            "rgb(204,0,0)",
+            "rgb(255,0,0)",
+            "rgb(51,51,0)",
+            "rgb(102,102,0)",
+            "rgb(153,153,0)",
+            "rgb(204,204,0)",
+            "rgb(255,255,0)",
+            "rgb(0,51,0)",
+            "rgb(0,102,0)",
+            "rgb(0,153,0)",
+            "rgb(0,204,0)",
+            "rgb(0,255,0)",
+        ]
+
+    def _normalize_range_percent(self, value: float, minimum: float, maximum: float) -> float:
+        span = maximum - minimum
+        if span == 0:
+            return 0.0
+        percent = (value - minimum) / span
+        return max(0.0, min(1.0, percent))
+
     def get_style_by_range(
         self,
         value: float,
@@ -508,31 +534,16 @@ class Reporting(metaclass=ReportingSingletoneMeta):
         styles: Sequence[str] | None = None,
     ) -> str:
         """Color a value based on where it falls within a range."""
-        if styles is None:
-            styles = [
-                "rgb(51,0,0)",
-                "rgb(102,0,0)",
-                "rgb(153,0,0)",
-                "rgb(204,0,0)",
-                "rgb(255,0,0)",
-                "rgb(51,51,0)",
-                "rgb(102,102,0)",
-                "rgb(153,153,0)",
-                "rgb(204,204,0)",
-                "rgb(255,255,0)",
-                "rgb(0,51,0)",
-                "rgb(0,102,0)",
-                "rgb(0,153,0)",
-                "rgb(0,204,0)",
-                "rgb(0,255,0)",
-            ]
-        index_percent = (value - minimum) / (maximum - minimum)
+        style_list = list(styles) if styles else self._default_range_styles()
+
+        index_percent = self._normalize_range_percent(value, minimum, maximum)
         if log:
             index_percent = math.log(1 + index_percent, 2)
         if inverse:
             index_percent = 1 - index_percent
 
-        return styles[round(len(styles) * index_percent)]
+        index = int(round((len(style_list) - 1) * index_percent))
+        return style_list[index]
 
     def color_gt_lt(
         self,

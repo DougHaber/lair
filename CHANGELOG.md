@@ -6,7 +6,10 @@
 - util: Avoid adding empty user messages when using util sessions
 - mcp: Load manifests via JSON-RPC and avoid refreshing when tools are disabled
 - mcp: Support initialization handshake, SSE responses, and pagination
+- reporting: Fix `get_style_by_range()` IndexError at range maximum
 - tests: Restore missing `tests.helpers` modules so `pytest` collects correctly
+- tests: Enable branch coverage by default (`--cov-branch`)
+- tests: Run pytest in parallel by default (`-n auto`)
 - tests: Increase coverage for chat interface reports
 - comfyscript: Restart watch thread correctly
 - comfy: Raise ValueError for invalid image path type

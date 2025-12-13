@@ -9,7 +9,6 @@ from contextlib import contextmanager
 import pytest
 
 import lair
-
 from tests.helpers import ChatSessionDouble, RecordingReporting, SessionManagerDouble
 
 

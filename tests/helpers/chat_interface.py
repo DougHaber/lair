@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import importlib
 
+from prompt_toolkit import application
+
 import lair
 import lair.reporting
 import lair.sessions
-from prompt_toolkit import application
-
 from tests.helpers import ChatSessionDouble, RecordingReporting, SessionManagerDouble, stub_optional_dependencies
 
 

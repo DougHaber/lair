@@ -183,3 +183,9 @@ def test_get_style_by_range_defaults(monkeypatch):
     assert style.startswith("rgb(")
     style_log = rep.get_style_by_range(50, log=True)
     assert style_log.startswith("rgb(")
+
+    # Boundaries and out-of-range values should not raise.
+    assert rep.get_style_by_range(0).startswith("rgb(")
+    assert rep.get_style_by_range(100).startswith("rgb(")
+    assert rep.get_style_by_range(-1).startswith("rgb(")
+    assert rep.get_style_by_range(101).startswith("rgb(")

@@ -9,7 +9,6 @@ import pdfplumber  # noqa: F401,E402
 import lair
 from lair.cli.chat_interface_reports import ChatInterfaceReports
 from lair.logging import logger
-
 from tests.helpers import ChatSessionDouble, RecordingReporting, SessionManagerDouble
 
 sys.modules.pop("pdfplumber", None)
@@ -21,9 +20,7 @@ def make_ci(*, messages=None, models=None, tools=None, sessions=None):
     ci.commands = {"/cmd": {"description": "desc"}}
     ci._get_shortcut_details = lambda: {"S": "shortcut"}
 
-    tool_set = types.SimpleNamespace(
-        get_all_tools=lambda load_manifest=False: [dict(tool) for tool in tools or []]
-    )
+    tool_set = types.SimpleNamespace(get_all_tools=lambda load_manifest=False: [dict(tool) for tool in tools or []])
 
     ci.chat_session = ChatSessionDouble(
         tool_set=tool_set,

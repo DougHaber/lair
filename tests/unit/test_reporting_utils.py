@@ -80,8 +80,12 @@ def test_misc_helpers(monkeypatch):
     rep = make_reporting(monkeypatch)
     lines = rep.messages_to_str([{"role": "a", "content": "b"}])
     assert "A: b" in lines
-    style = rep.get_style_by_range(50, minimum=0, maximum=100, styles=["a", "b"], inverse=True)
-    assert style in {"a", "b"}
+    assert rep.get_style_by_range(0, minimum=0, maximum=100, styles=["a", "b", "c"]) == "a"
+    assert rep.get_style_by_range(100, minimum=0, maximum=100, styles=["a", "b", "c"]) == "c"
+    assert rep.get_style_by_range(-1, minimum=0, maximum=100, styles=["a", "b", "c"]) == "a"
+    assert rep.get_style_by_range(101, minimum=0, maximum=100, styles=["a", "b", "c"]) == "c"
+    assert rep.get_style_by_range(100, minimum=0, maximum=100, styles=["a", "b", "c"], inverse=True) == "a"
+    assert rep.get_style_by_range(100, minimum=0, maximum=100, styles=["a", "b", "c"], log=True) == "c"
     assert rep.color_gt_lt(1, center=0) == "green"
     assert rep.color_gt_lt(-1, center=0) == "red"
     assert rep.color_gt_lt(0, center=0) == "gray"
