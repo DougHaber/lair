@@ -1,3 +1,37 @@
+# WIP - v0.8.2+dev
+
+### Bug Fixes
+- comfy: Fix `ltxv-i2v` default model version
+- util: Fix issue where image attachments stopped working
+- util: Avoid adding empty user messages when using util sessions
+- mcp: Load manifests via JSON-RPC and avoid refreshing when tools are disabled
+- mcp: Support initialization handshake, SSE responses, and pagination
+- tests: Increase coverage for chat interface reports
+- comfyscript: Restart watch thread correctly
+- comfy: Raise ValueError for invalid image path type
+- tests: Stub prompt_toolkit run_in_terminal to remove warnings
+- tests: Support environments where `openai_local` mode is renamed
+- cli: Fix session alias prompt so pressing enter keeps or removes the alias
+
+### New Features
+- comfy: Add `outpaint` workflow for extending images
+- comfy: Add `--denoise` option for outpainting
+- tools: Add MCP remote tool support and `/mcp-refresh` command
+
+### Internal
+- documentation: Add AGENTS.md and introduction video link
+- internal: update code for new ruff version
+- tests: Enforce 90% minimum test coverage and add many new tests.
+- tests: Consolidate chat interface test doubles into shared helpers and harden command coverage.
+- docker: Add lair into youtube image
+- internal: resolve mypy type errors across multiple modules
+- internal: add docstrings and type annotations for history utilities
+- documentation: Expand README outpainting example
+- tools: improve docstrings and type hints for ToolSet
+- cleanup: refactor workflow and tool call helpers for readability
+- internal: Enforce strict ruff checks, ruff formatting, and mypy validation
+- util: Add documentation and type hints to prompt template
+
 # v0.8.1 - Bug fixes
 
 ### Bug Fixes

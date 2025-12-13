@@ -1,44 +1,90 @@
+"""Utilities for managing tool classes and invoking their handlers."""
+
+from collections.abc import Callable, Iterable
+from typing import Any, cast
+
 import lair.components.tools
 from lair.logging import logger
 
+from .mcp_tool import MCPTool
 
-class ToolSet():
-    def __init__(self, *, tools=None):
-        """
-        Create a collection of tools
 
-        Arguments:
-           tools: A list of tool classes to include. When not provided, the default tools are included
+class ToolSet:
+    """Container for managing and invoking individual tools."""
+
+    def __init__(self, *, tools: list[type] | None = None) -> None:
         """
-        self.requested_tools = None
-        self.tools = {}  # function name -> {}
+        Initialize the tool set.
+
+        Args:
+            tools: List of tool classes to include. When ``None`` the default
+                tools defined by :mod:`lair.components.tools` are used.
+
+        """
+        self.requested_tools: list[type] | None = None
+        self.tools: dict[str, dict[str, Any]] = {}
+        self.mcp_tool: MCPTool | None = None
+        self.tools.clear()
+        self.mcp_tool = None
         self._init_tools(tools)
 
-    def _init_tools(self, tools):
-        self.requested_tools = lair.components.tools.DEFAULT_TOOLS if tools is None else tools
-
-        # Instantiate each tool collection and register the tools in our ToolSet() instance
-        for tool in self.requested_tools:
-            tool().add_to_tool_set(self)
-
-    def update_tools(self, tools=None):
+    def _init_tools(self, tools: list[type] | None) -> None:
         """
-        Recreate all tools in the tool set
+        Instantiate each tool class and register its tools.
 
-        Arguments:
-           tools: A list of tool classes to include. When not provided, the default tools are included
+        Args:
+            tools: List of tool classes to instantiate. If ``None`` the default
+                tool list is used.
+
+        """
+        requested_tools: list[type] = cast(list[type], lair.components.tools.DEFAULT_TOOLS) if tools is None else tools
+        self.requested_tools = requested_tools
+
+        for tool in requested_tools:
+            instance = tool()
+            if isinstance(instance, MCPTool):
+                self.mcp_tool = instance
+            instance.add_to_tool_set(self)
+
+    def update_tools(self, tools: list[type] | None = None) -> None:
+        """
+        Recreate the tool set with the provided tool classes.
+
+        Args:
+            tools: List of tool classes to include. When ``None`` the default
+                tools are loaded.
+
         """
         self._init_tools(tools)
 
-    def add_tool(self, *, name, flags, definition=None, definition_handler=None, handler, class_name):
+    def add_tool(
+        self,
+        *,
+        name: str,
+        flags: list[str],
+        definition: dict[str, Any] | None = None,
+        definition_handler: Callable[[], dict[str, Any]] | None = None,
+        handler: Callable[..., dict[str, Any]],
+        class_name: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """
-        Register a new tool
+        Register a new tool in the collection.
 
-        Arguments:
-          flags: A list of config keys, each of which must be true for the tool to be enabled
-          definition: The structured definition of the function and its parameter in OpenAI API format
-          definition_handler: A function that returns a definition, allowing for dynamic definitions.
-              When provided, definition_handler takes precedence over definition
+        Args:
+            name: Unique name used to call the tool.
+            flags: Configuration flags required for the tool to be enabled.
+            definition: Structured definition of the function in OpenAI format.
+            definition_handler: Callable returning a definition at runtime.
+                Takes precedence over ``definition`` when provided.
+            handler: Callable executed when the tool is invoked.
+            class_name: Name of the implementing class.
+            metadata: Optional metadata to associate with the tool.
+
+        Raises:
+            ValueError: If a tool with the same name already exists or if both
+                ``definition`` and ``definition_handler`` are missing.
+
         """
         if name in self.tools:
             raise ValueError(f"ToolSet.add_tool(): A tool named '{name}' is already registered")
@@ -46,58 +92,77 @@ class ToolSet():
             raise ValueError("ToolSet.add_tool(): Either a definition or a definition_handler must be provided")
 
         self.tools[name] = {
-            'class_name': class_name,
-            'definition': definition,
-            'definition_handler': definition_handler,
-            'flags': flags,
-            'handler': handler,
-            'name': name,
+            "class_name": class_name,
+            "definition": definition,
+            "definition_handler": definition_handler,
+            "flags": flags,
+            "handler": handler,
+            "name": name,
         }
+        if metadata:
+            self.tools[name].update(metadata)
 
-    def get_tools(self):
-        if not lair.config.get('tools.enabled'):
+    def get_tools(self) -> list[dict[str, Any]]:
+        """Return tools that are currently enabled."""
+        if self.mcp_tool and lair.config.get("tools.enabled"):
+            self.mcp_tool.ensure_manifest()
+        if not lair.config.get("tools.enabled"):
             return []
 
         enabled_tools = []
         for tool in self.tools.values():
-            if not self.all_flags_enabled(tool['flags']):
+            if not self.all_flags_enabled(tool["flags"]):
                 continue
 
             enabled_tools.append(tool)
 
         return enabled_tools
 
-    def all_flags_enabled(self, flags):
-        for flag in flags:
-            if not lair.config.get(flag):
-                return False
+    def all_flags_enabled(self, flags: Iterable[str]) -> bool:
+        """Return ``True`` if all configuration flags evaluate to truthy."""
+        return all(lair.config.get(flag) for flag in flags)
 
-        return True
-
-    def get_all_tools(self):
-        """
-        Return all tools, adding in an extra 'enabled' field
-        """
+    def get_all_tools(self, *, load_manifest: bool = False) -> list[dict[str, Any]] | None:
+        """Return metadata for all tools with an ``enabled`` field."""
+        if load_manifest and self.mcp_tool and lair.config.get("tools.enabled"):
+            self.mcp_tool.ensure_manifest()
         all_tools = []
         for tool in self.tools.values():
-            tool['enabled'] = lair.config.get('tools.enabled') and self.all_flags_enabled(tool['flags']) is True
+            tool["enabled"] = lair.config.get("tools.enabled") and self.all_flags_enabled(tool["flags"]) is True
             all_tools.append(tool)
 
         return all_tools or None
 
-    def _get_definition(self, tool):
-        return tool['definition_handler']() if tool['definition_handler'] else tool['definition']
+    def _get_definition(self, tool: dict[str, Any]) -> dict[str, Any]:
+        """Return the structured definition for ``tool``."""
+        return tool["definition_handler"]() if tool["definition_handler"] else tool["definition"]
 
-    def get_definitions(self):
+    def get_definitions(self) -> list[dict[str, Any]]:
+        """Return definitions for all enabled tools."""
         tools = self.get_tools()
         return [self._get_definition(tool) for tool in tools]
 
-    def call_tool(self, name, arguments, tool_call_id):
+    def call_tool(self, name: str, arguments: dict[str, Any], tool_call_id: str) -> dict[str, Any]:
+        """
+        Invoke a tool handler with the provided arguments.
+
+        Args:
+            name: The name of the tool to call.
+            arguments: Arguments to pass to the tool handler.
+            tool_call_id: Identifier for the tool call used for logging.
+
+        Returns:
+            A dictionary containing the tool output or an ``error`` key when the
+            call fails or the tool is unknown.
+
+        """
         logger.debug(f"Tool call: {name}({arguments})  [{tool_call_id}]")
+        if self.mcp_tool and lair.config.get("tools.enabled"):
+            self.mcp_tool.ensure_manifest()
         if name not in self.tools:
             return {"error": f"Unknown tool: {name}"}
 
         try:
-            return self.tools[name]['handler'](**arguments)
+            return self.tools[name]["handler"](**arguments)
         except Exception as error:
             return {"error": f"Call failed: {error}"}

@@ -42,6 +42,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
       - [Search Tool](#search-tool)
       - [File Tool](#file-tool)
       - [Tmux Tool](#tmux-tool)
+      - [MCP Tool](#mcp-tool)
     - [One-off Chat](#one-off-chat)
     - [Extracting Embedded Responses](#extracting-embedded-responses)
     - [Modifying Chat History](#modifying-chat-history)
@@ -56,6 +57,7 @@ Modules: [Chat](#chat---command-line-chat-interface) |
     - [ltxv-prompt - LTX Video Prompt Generation via Florence2](#ltxv-prompt---ltx-video-prompt-generation-via-florence2)
     - [hunyuan-video-t2v - Hunyuan Video Text to Video](#hunyuan-video-t2v---hunyuan-video-text-to-video)
     - [upscale - Enlarge Images and Enhance Quality](#upscale---enlarge-images-and-enhance-quality)
+    - [outpaint - Extend Images](#outpaint---extend-images)
 - [Util](#util)
   - [Util Examples](#util-examples)
     - [Generating Content](#generating-content)
@@ -69,9 +71,14 @@ Modules: [Chat](#chat---command-line-chat-interface) |
 
 ## Overview
 
-Lair is a command-line toolkit for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Designed with AI developers in mind, Lair simplifies the process of scripting AI-powered workflows and includes tools for prompt experimentation and testing.
+Lair is a command-line tool for working with generative AI. It provides a feature-rich chat interface and utilities for interacting with both language models (LLMs) and diffusion models. Lair aims to make generative AI accessible from the command line and easy to use with shell scripting. It's chat interface provides many keyboard shorcuts and tools for helping experiment with prompt engineering.
 
 The open-source version of Lair is a partial rewrite of the original closed-source project. The original included additional features such as an agent framework, evolutionary programming tools for LLMs, and a utility for generating non-temporal videos from image diffusion models. While some traces of these features may still exist in the code, many are not currently included in the open-source release. Future updates may reintroduce select functionality from the original version.
+
+**Introduction Video**
+
+[![Lair CLI Introduction](images/lair-into-youtube.jpg)](https://www.youtube.com/watch?v=mWQFoS2Xge8)
+
 
 ## Features
 
@@ -97,6 +104,7 @@ The open-source version of Lair is a partial rewrite of the original closed-sour
   * Python Tool: Run python code inside of a container
   * Search Tool: Search the web or news with DuckDuckGo
   * Tmux Tool: Interact with terminals in a Tmux sesion (**Experimental**)
+  * MCP Tool: Load remote tools from MCP providers
 
 ## Future
 
@@ -218,6 +226,7 @@ The prompt and toolbar can be customized via `chat.*` settings.
 | /list-models     | Display a list of available models for the current session                                                              |
 | /list-settings   | Show and search settings  (for usage, run `/list-settings --help`)                                                      |
 | /list-tools      | Show tools and their status                                                                                             |
+| /list-mcp-tools  | Show tools discovered via MCP manifests                                                             |
 | /load            | Load a session from a file  (usage: `/load [filename?]`, default filename is `chat_session.json`)                       |
 | /messages        | Display or save the JSON message history as JSONL (usage: `/messages [filename?]`)                                      |
 | /mode            | Show or select a mode  (usage: `/mode [name?]`)                                                                         |
@@ -483,6 +492,7 @@ Each tool has its own configuration namespace and an individual `enabled` flag, 
 Tools are only compatible with models that support them. Attempting to use tools with unsupported models may result in errors or unpredictable behavior.
 
 The chat CLI provides the `/list-tools` command to display all available tools and their current status.
+Use `/list-mcp-tools` to see only tools loaded from MCP provider manifests.
 
 Tools can be quickly toggled on or off using the `ESC-T` shortcut.
 
@@ -601,6 +611,26 @@ The stream includes all window output (stdout, stderr, and echoed input). By def
 **Log Management:**
 
 All terminal output is saved to files in `~/.lair/tmux-logs/` by default. This path and filename can be configured using `tools.tmux.capture_file_name`. These log files are not automatically deleted and can be used for monitoring or as a record of terminal activity.
+
+
+##### MCP Tool
+
+The MCP tool allows Lair to dynamically load tools from remote providers following the
+[MCP specification](https://github.com/openai/openai-cookbook/tree/main/examples/multi-tool-agent#mcp-specification).
+When enabled, the MCP tool retrieves a manifest from one or more provider URLs.
+Each provider is contacted via a JSON-RPC request with method ``tools/list``.
+The available tools are registered from the manifest and become accessible just
+like built-in tools.
+
+MCP tools are disabled by default. To enable them, set ``tools.enabled`` and
+``tools.mcp.enabled`` to ``true``. Provider URLs are specified one per line in
+``tools.mcp.providers``. If changes are made on the provider side, run the
+``/mcp-refresh`` command in the chat interface to reload the manifest. The
+refresh output lists each provider URL with the number of tools found or
+displays a warning when none are available.
+
+The timeout for both manifest requests and tool calls is controlled by
+``tools.mcp.timeout`` and defaults to ``10`` seconds.
 
 
 #### One-off Chat
@@ -1152,6 +1182,54 @@ The `--recursive` / `-r` flag enables recursive processing of directory trees. O
 ```sh
 # Upscale all images in a directory and its subdirectories
 $ lair comfy upscale --recursive images/
+```
+
+#### outpaint - Extend Images
+
+Outpainting expands an image by generating new content outside of its
+original borders. It uses an inpainting model and requires specifying how
+much padding to add around the source image.
+
+**Configuration**
+
+Settings are under the `comfy.outpaint.*` namespace and include options for
+padding, sampler, scheduler and other diffusion parameters. The `--denoise`
+flag controls how strongly the outpainted area is blended with the original
+image.
+
+**Usage Example**
+
+```sh
+$ lair comfy outpaint example.png
+```
+
+### Example
+
+Starting with this painting of Benjamin Franklin:
+
+![start](https://github.com/user-attachments/assets/52b9d329-6359-4d6f-8a35-1e4b36291383)
+
+We can grow the sides and the bottom and give him some food:
+
+![start-outpainted](https://github.com/user-attachments/assets/2670d060-b1bd-4d3c-9dc0-7278346abbba)
+
+Models seem to have a sweet spot of input sizes they work well with, and they often do better with multiple smaller outpainting steps instead of big jumps. The above was generated by running a small script for a few cycles that resizes the new result back down. The rescaling each cycle definitely harms the quality. While there are better techniques, at the current time Lair might choose not to support them natively. Here is an example script that was used to generate the above image.
+
+```sh
+#!/bin/bash
+
+set -ex
+convert benjamin.jpg -resize x768 start.png
+
+while true; do
+    lair comfy outpaint start.png \
+         -R 0x32x64x32 \
+         -g 16 \
+         -f 64 \
+         -p 'Seamless scene of Ben Franklin sitting in chair, cheeseburger, french fries, soda with straw' \
+         -n 'frame, border'
+    convert start-outpainted.png -resize x768 start.png
+done
 ```
 
 ## Util
