@@ -1,86 +1,53 @@
-"""Lair configuration management utilities."""
-
 import os
 import sys
-from collections.abc import Iterable, Mapping
-from typing import cast
 
 import lair.util
 from lair.logging import logger  # noqa
 
 
-class ConfigUnknownKeyError(Exception):
-    """Raised when attempting to access an undefined configuration key."""
-
+class ConfigUnknownKeyException(Exception):
     pass
 
 
-class ConfigInvalidTypeError(Exception):
-    """Raised when a value cannot be cast to the expected configuration type."""
-
+class ConfigInvalidType(Exception):
     pass
 
 
-def _parse_inherit(value: str | Iterable[str]) -> list[str]:
-    """
-    Normalize the `_inherit` option to a list of mode names.
+class Configuration():
 
-    Args:
-        value: The raw `_inherit` value which may be a string or an iterable of
-            strings.
-
-    Returns:
-        A list of mode names to inherit from.
-
-    """
-    if isinstance(value, str):
-        cleaned = value.strip()
-        if cleaned.startswith("[") and cleaned.endswith("]"):
-            cleaned = cleaned[1:-1]
-        if not cleaned:
-            return []
-        return [part.strip().strip("'").strip('"') for part in cleaned.split(",") if part.strip()]
-    return list(value)
-
-
-class Configuration:
-    """Runtime and file-based configuration manager."""
-
-    def __init__(self) -> None:
-        """Initialize configuration modes and load user overrides."""
-        self.modes: dict[str, dict[str, object]] = {}
-        self.explicit_mode_settings: dict[str, dict[str, object]] = {}
-        self.types: dict[str, type] = {}  # Preserve the valid type for each key (key -> type)
+    def __init__(self):
+        self.modes = {}
+        self.explicit_mode_settings = {}
+        self.types = {}  # Preserve the valid type for each key (key -> type)
         self._init_default_mode()
-        self.default_settings = self.modes["_default"].copy()  # Immutable copy of the defaults
+        self.default_settings = self.modes['_default'].copy()  # Immutable copy of the defaults
 
-        self.modes["_active"] = self.modes["_default"].copy()
-        self.active = self.modes["_active"]
-        self.active_mode = "_default"
+        self.modes['_active'] = self.modes['_default'].copy()
+        self.active = self.modes['_active']
+        self.active_mode = '_default'
 
-        if not os.path.isdir(os.path.expanduser("~/.lair/")):
+        if not os.path.isdir(os.path.expanduser('~/.lair/')):
             self._init_config_dir()
 
         self._load_config()
 
-    def _load_config(self) -> None:
-        """Load configuration from ``~/.lair/config.yaml`` if it exists."""
-        config_filename = os.path.expanduser("~/.lair/config.yaml")
+    def _load_config(self):
+        config_filename = os.path.expanduser('~/.lair/config.yaml')
         if os.path.isfile(config_filename):
             config = lair.util.parse_yaml_file(config_filename)
             self._add_config(config)
 
-    def _init_default_mode(self) -> None:
-        """Populate the ``_default`` mode from package settings."""
-        self.modes["_default"] = lair.util.parse_yaml_text(lair.util.read_package_file("lair.files", "settings.yaml"))
-        default_mode = self.modes["_default"]
+    def _init_default_mode(self):
+        self.modes['_default'] = lair.util.parse_yaml_text(
+            lair.util.read_package_file('lair.files', 'settings.yaml'))
+        default_mode = self.modes['_default']
 
         # Track the valid types, supporting overrides for null
         null_types = {
-            "__null_float": float,
-            "__null_int": int,
-            "__null_str": str,
-            "__null_bool": bool,
+            '__null_float': float,
+            '__null_int': int,
+            '__null_str': str,
+            '__null_bool': bool,
         }
         for key, value in default_mode.items():
             if not isinstance(value, str):
@@ -91,64 +58,55 @@ class Configuration:
             else:
                 self.types[key] = type(value)
 
-    def _init_config_dir(self) -> None:
-        """Create the ``~/.lair`` directory with a default configuration file."""
-        os.mkdir(os.path.expanduser("~/.lair/"))
+    def _init_config_dir(self):
+        os.mkdir(os.path.expanduser('~/.lair/'))
 
-        config_yaml = lair.util.read_package_file("lair.files", "config.yaml")
-        with open(os.path.expanduser("~/.lair/config.yaml"), "w") as fd:
+        config_yaml = lair.util.read_package_file('lair.files', 'config.yaml')
+        with open(os.path.expanduser('~/.lair/config.yaml'), 'w') as fd:
             fd.write(config_yaml)
 
-    def _add_config(self, config: Mapping[str, dict[str, object] | str]) -> None:
-        """Merge a configuration dictionary into the existing modes."""
-        default_mode: str | None = None
+    def _add_config(self, config):
+        default_mode = None
 
         for mode, mode_config in config.items():
-            if mode == "default_mode":
-                default_mode = str(config[mode])
+            if mode == 'default_mode':  # Default mode definition -- Not a real mode
+                default_mode = config[mode]
             else:
-                self._process_mode_config(mode, cast(Mapping[str, object], mode_config))
+                if mode not in self.modes:
+                    # A newly defined mode starts with a copy of the defaults
+                    self.modes[mode] = self.modes['_default'].copy()
+                    # We also need a copy of only the keys that are explicitly set for inheritance
+                    self.explicit_mode_settings[mode] = mode_config.copy()
+
+                # If there is an `_inherit` section, copy each mode's settings in order
+                for inherit_from_mode in mode_config.get('_inherit', []):
+                    self.modes[mode].update(self.explicit_mode_settings[inherit_from_mode])
+
+                # Finally, give precedence to the mode's own settings
+                self.modes[mode].update(mode_config)
 
         if default_mode is None:
             return
         elif default_mode not in self.modes:
-            sys.exit(f"ERROR: Configuration file's default_mode is not found: {default_mode}")
+            sys.exit("ERROR: Configuration file's default_mode is not found: %s" % default_mode)
         else:
             self.change_mode(default_mode)
 
-    def _process_mode_config(self, mode: str, mode_config: Mapping[str, object]) -> None:
-        mode_dict = dict(mode_config)
-        if mode not in self.modes:
-            self.modes[mode] = self.modes["_default"].copy()
-            self.explicit_mode_settings[mode] = mode_dict.copy()
-
-        inherit = _parse_inherit(cast(str | Iterable[str], mode_dict.get("_inherit", [])))
-        for inherit_from_mode in inherit:
-            self.modes[mode].update(self.explicit_mode_settings.get(inherit_from_mode, {}))
-
-        self.modes[mode].update(mode_dict)
-
-    def change_mode(self, mode: str) -> None:
-        """Switch to a different configuration mode."""
+    def change_mode(self, mode):
         if mode not in self.modes:
             raise Exception(f"Unknown mode: {mode}")
 
         # Reset `_active` to a fresh copy of the selected mode
-        self.modes["_active"] = self.modes[mode].copy()
-        self.active = self.modes["_active"]
+        self.modes['_active'] = self.modes[mode].copy()
+        self.active = self.modes['_active']
         self.active_mode = mode
 
-        lair.events.fire("config.change_mode")
-        lair.events.fire("config.update")
+        lair.events.fire('config.change_mode')
+        lair.events.fire('config.update')
 
-    def update(self, entries: Mapping[str, object], *, force: bool = False) -> None:
+    def update(self, entries, *, force=False):
         """
-        Update only the active runtime configuration.
-
-        Args:
-            entries: Key-value pairs to update.
-            force: Bypass type checking when ``True``.
-
+        Updates only apply to the active runtime configuration.
         """
         if force:
             self.active.update(entries)
@@ -156,96 +114,53 @@ class Configuration:
             for key, value in entries.items():
                 self.set(key, value, no_event=True)
 
-        lair.events.fire("config.update")
+        lair.events.fire('config.update')
 
-    def get(self, key: str, allow_not_found: bool = False, default: object | None = None) -> object | None:
+    def get(self, key, allow_not_found=False, default=None):
         """
-        Return a value from the active mode.
-
-        Args:
-            key: Configuration key to retrieve.
-            allow_not_found: Return ``default`` instead of raising when the key is missing.
-            default: Value to return when the key is not found and ``allow_not_found`` is ``True``.
-
-        Returns:
-            The configuration value.
-
-        Raises:
-            ValueError: If ``key`` is not defined and ``allow_not_found`` is ``False``.
-
+        Retrieve a value from the active mode, failing if undefined unless `allow_not_found` is True.
         """
         if allow_not_found:
             return self.active.get(key, default)
-        if key in self.active:
+        elif key in self.active:
             return self.active[key]
-        raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {key}")
+        else:
+            raise ValueError(f"Configuration.get(): Attempt to retrieve unknown key: {key}")
 
-    def set(self, key: str, value: object, *, force: bool = False, no_event: bool = False) -> None:
-        """
-        Set a configuration value with type validation.
-
-        Args:
-            key: Configuration key to modify.
-            value: New value for the key.
-            force: Bypass type checking when ``True``.
-            no_event: Do not fire update events when ``True``.
-
-        Raises:
-            ConfigUnknownKeyError: If ``key`` is not defined.
-            ConfigInvalidTypeError: If ``value`` cannot be converted to the expected type.
-
-        """
-        if key == "_inherit":
+    def set(self, key, value, *, force=False, no_event=False):
+        """Only allow setting to the existing type."""
+        if key == '_inherit':
             self.active[key] = value
             return
+        elif key not in self.modes['_default']:
+            raise ConfigUnknownKeyException("Unknown Key: %s" % key)
 
-        self._validate_key(key)
-
-        try:
-            casted = self._cast_value(key, value)
-            casted = self._ensure_type(key, casted)
-        except ValueError as error:
-            raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}'") from error
-
-        self._store_value(key, casted, no_event)
-
-    def _validate_key(self, key: str) -> None:
-        if key not in self.modes["_default"]:
-            raise ConfigUnknownKeyError(f"Unknown Key: {key}")
-
-    def _ensure_type(self, key: str, value: object) -> object:
-        if value is not None and not isinstance(value, self.types[key]):
-            return self.types[key](value)
-        return value
-
-    def _store_value(self, key: str, value: object, no_event: bool) -> None:
-        self.active[key] = value
-        if not no_event:
-            lair.events.fire("config.update")
-
-    def _cast_value(self, key: str, value: object) -> object:
-        """Cast ``value`` to the appropriate type for ``key`` if possible."""
+        no_cast = False
         current_type = self.types[key]
         if current_type is bool:
-            return self._cast_bool(key, value)
+            if value in {True, 'true', 'True'}:
+                value = True
+            elif value in {False, 'false', 'False'}:
+                value = False
+            else:
+                raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}' [key={key}]")
+        elif value is None and current_type is str:
+            value = ''
+        elif (value == '' or value is None) and current_type in {bool, int, float}:
+            value = None
+            no_cast = True
 
-        if value is None and current_type is str:
-            return ""
+        try:
+            if not no_cast and value is not None:
+                value = current_type(value)
+            self.active[key] = value
+            if not no_event:
+                lair.events.fire('config.update')
+        except ValueError:
+            raise ConfigInvalidType(f"value '{value}' cannot be cast as '{current_type}'")
 
-        if (value == "" or value is None) and current_type in {bool, int, float}:
-            return None
-
-        return value
-
-    def _cast_bool(self, key: str, value: object) -> bool:
-        if value in {True, "true", "True"}:
-            return True
-        if value in {False, "false", "False"}:
-            return False
-        raise ConfigInvalidTypeError(f"value '{value}' cannot be cast as '{self.types[key]}' [key={key}]")
-
-    def reload(self) -> None:
-        """Reload configuration from disk without altering mode definitions."""
+    def reload(self):
+        """Ensure `_active` is properly reset instead of modifying mode definitions."""
         active_mode = self.active_mode
 
         self.modes = {}
@@ -253,17 +168,19 @@ class Configuration:
         self._init_default_mode()
 
         if active_mode not in self.modes:
-            active_mode = "_default"
+            active_mode = '_default'
 
         # Always start with a fresh copy for `_active`
-        self.modes["_active"] = self.modes[active_mode].copy()
-        self.active = self.modes["_active"]
+        self.modes['_active'] = self.modes[active_mode].copy()
+        self.active = self.modes['_active']
         self.active_mode = active_mode
 
         self._load_config()
 
-        lair.events.fire("config.update")
+        lair.events.fire('config.update')
 
-    def get_modified_config(self) -> dict[str, object]:
-        """Return the active configuration values that differ from the defaults."""
+    def get_modified_config(self):
+        """
+        Return a dictionary of the active configuration's settings that don't match the defaults.
+        """
         return {k: v for k, v in self.active.items() if self.default_settings.get(k) != v}

@@ -13,7 +13,6 @@ __pycache__
 MANIFEST
 build
 dist
-.coverage
 
 # Misc
 .env
