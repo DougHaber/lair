@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import traceback
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import lair
 from lair.components.tools.tool_set import ToolSet
@@ -91,10 +91,10 @@ class PythonTool:
     def _format_output(
         self,
         *,
-        error: Optional[str] = None,
-        stdout: Optional[str] = None,
-        stderr: Optional[str] = None,
-        exit_status: Optional[int] = None,
+        error: str | None = None,
+        stdout: str | None = None,
+        stderr: str | None = None,
+        exit_status: int | None = None,
     ) -> dict[str, Any]:
         """
         Normalize subprocess output for return to the caller.
@@ -144,7 +144,7 @@ class PythonTool:
             return self._handle_exception(error)
 
     def _run_python_inner(self, script: str) -> dict[str, Any]:
-        container_id: Optional[str] = None
+        container_id: str | None = None
         temp_file_path, container_path = self._create_temp_script(script)
         try:
             container_id, start_status = self._start_container(temp_file_path, container_path)
@@ -196,7 +196,7 @@ class PythonTool:
             return None, proc.returncode
         return proc.stdout.strip(), None
 
-    def _get_container_output(self, container_id: str) -> tuple[Optional[int], str, str]:
+    def _get_container_output(self, container_id: str) -> tuple[int | None, str, str]:
         run = subprocess.run
         try:
             wait_proc = run(

@@ -1,7 +1,7 @@
 """Tools for performing DuckDuckGo web and news searches."""
 
-from collections.abc import Iterable, Mapping
-from typing import Any, Callable, cast
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, cast
 
 import requests
 import trafilatura

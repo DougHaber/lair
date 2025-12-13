@@ -4,7 +4,6 @@ import itertools
 import weakref
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from typing import Optional
 
 from lair.logging import logger
 
@@ -19,7 +18,7 @@ _deferred_events: list[tuple[str, object]] = []
 _squash_duplicates = True
 
 
-def subscribe(event_name: str, handler: Callable[[object], object], instance: Optional[object] = None) -> int:
+def subscribe(event_name: str, handler: Callable[[object], object], instance: object | None = None) -> int:
     """
     Subscribe a handler to an event.
 

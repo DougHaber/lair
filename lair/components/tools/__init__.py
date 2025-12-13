@@ -1,7 +1,5 @@
 """Utility functions and defaults for the built-in tooling system."""
 
-from typing import Optional
-
 from .file_tool import FileTool
 from .mcp_tool import MCPTool
 from .python_tool import PythonTool
@@ -27,7 +25,7 @@ TOOLS: dict[str, type] = {
 }
 
 
-def get_tool_class_by_name(name: str) -> Optional[type]:
+def get_tool_class_by_name(name: str) -> type | None:
     """
     Return the registered tool class for ``name`` if it exists.
 

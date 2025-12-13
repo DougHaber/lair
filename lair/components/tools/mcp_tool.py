@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, Any, Callable, cast
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, cast
 
 import requests
 

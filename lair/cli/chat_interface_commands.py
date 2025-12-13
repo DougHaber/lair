@@ -3,7 +3,8 @@
 import json
 import os
 import shlex
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import lair
 import lair.sessions as sessions
