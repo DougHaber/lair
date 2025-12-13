@@ -38,13 +38,13 @@ Lair is a command line tool for working with generative AI.
 - Configuration files use YAML.
 - Do not exceed a McCabe `max_complexity` of 5.
 - Code readability is extremely important.
-- All Python docstrings must follow a structured format with sections like Args, Returns, and Raises, using a consistent style (e.g., Google or NumPy).
+- All Python docstrings must follow a structured format with sections like Args, Returns, and Raises, using a consistent Google docstring style.
 
 ### General
 
 - Never install new dependencies unless explicitly asked to do so.
 - NEVER do anything to change the scope or strictness of any validation (ruff check, ruff format, mypy, etc) unless explicitly asked.
-- NEVER USE noqa!
+- NEVER USE noqa! (mostly)
   - If you really have a great reason, you MUST put the reason in the comment.
   - This should be extremely rare.
 - Lair has a configuration system that allows end users to configure and theme nearly everything.
@@ -69,10 +69,8 @@ The `CHANGELOG.md` file should be appended with new entries for any new features
 
 Before submitting any pull requests that modify Python code or documentation, you must run the following checks and ensure they succeed:
 
-1. `python -m compileall -q lair`
-2. `ruff check lair`
-3. `ruff format lair`
-4. `mypy lair`
-5. `pytest`
+```
+poetry run ruff check --fix && poetry run ruff format && poetry run mypy lair && poetry run pytest
+```
 
 All tests and validations must pass without issues. Never turn off any validations, tests, or coverage requirements.
